@@ -1,1504 +1,846 @@
+```html
 <!DOCTYPE html>
 <html lang="gl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UD4 - Manipulación de datos (DML)</title>
+    <title>UD5 - Programación de bases de datos</title>
     <link rel="stylesheet" href="../../css/estilos.css">
 </head>
 <body>
 
 <main>
 
-    <h1>UD4. Manipulación de datos e xestión de transaccións</h1>
+    <h1>UD5. Programación de bases de datos</h1>
 
-    <h2>Bloque 1. Manipulación de datos (DML)</h2>
+    <h2>Bloque 1. Introdución á programación e guións SQL</h2>
 
     <p>
-        Neste bloque estudaranse as operacións que permiten inserir, modificar
-        e eliminar rexistros nunha base de datos relacional. Tamén se analizará
-        como as claves primarias, as claves foráneas e as regras de integridade
-        referencial condicionan estas operacións.
+        A programación de bases de datos permite automatizar operacións,
+        organizar tarefas e incorporar lóxica de negocio directamente no
+        sistema xestor de bases de datos.
+    </p>
+
+    <p>
+        Nesta unidade utilizaremos <strong>MariaDB</strong>, instalado
+        nunha máquina virtual Debian, e <strong>MySQL Workbench</strong>
+        como ferramenta de administración e edición de instrucións SQL.
     </p>
 
     <div class="callout">
-        <strong>Entorno de traballo:</strong>
-        Os exemplos utilizan MariaDB como sistema xestor de bases de datos
-        e MySQL Workbench como ferramenta cliente para executar as sentenzas SQL.
+        <strong>Obxectivos do bloque</strong>
+        <ul>
+            <li>Comprender que significa programar dentro dunha base de datos.</li>
+            <li>Diferenciar SQL declarativo e SQL procedemental.</li>
+            <li>Identificar tarefas que poden automatizarse mediante guións.</li>
+            <li>Coñecer as ferramentas para editar e executar ficheiros SQL.</li>
+            <li>Crear e executar os primeiros guións SQL en MariaDB.</li>
+        </ul>
     </div>
 
-    <h2>1. Introdución á manipulación de datos</h2>
+    <h2>1. Introdución á programación de bases de datos</h2>
 
-    <h3>1.1. Que é a manipulación de datos?</h3>
+    <h3>1.1. Que é a programación de bases de datos?</h3>
 
     <p>
-        Unha base de datos almacena información organizada en táboas.
-        Unha vez creadas as táboas e definidas as súas relacións, é necesario
-        realizar operacións para incorporar novos rexistros, modificar
-        información existente ou eliminar datos que xa non sexan necesarios.
+        A programación de bases de datos consiste en utilizar instrucións
+        e estruturas lóxicas para realizar operacións sobre a información
+        almacenada nun sistema xestor de bases de datos (SXBD).
     </p>
 
     <p>
-        Estas operacións realízanse mediante sentenzas SQL.
-        As instrucións utilizadas para inserir, actualizar e eliminar
-        información pertencen ao grupo denominado
-        <strong>DML</strong> (<em>Data Manipulation Language</em>),
-        é dicir, linguaxe de manipulación de datos.
+        Nunha base de datos non só podemos almacenar información e
+        recuperala mediante consultas. Tamén podemos definir operacións
+        que realicen cálculos, comproben condicións, repitan tarefas
+        ou respondan automaticamente a determinados acontecementos.
     </p>
 
-    <h3>1.2. Diferenzas entre DDL, DML e DCL</h3>
+    <p>
+        Por exemplo, nunha base de datos dunha academia podemos necesitar:
+    </p>
+
+    <ul>
+        <li>Calcular automaticamente o número de alumnos matriculados.</li>
+        <li>Comprobar se existen prazas dispoñibles nun curso.</li>
+        <li>Actualizar o estado dunha matrícula.</li>
+        <li>Rexistrar os cambios realizados sobre determinadas táboas.</li>
+        <li>Xerar información estatística de maneira periódica.</li>
+    </ul>
 
     <p>
-        SQL inclúe diferentes grupos de sentenzas segundo a súa finalidade.
-        É importante distinguir entre modificar a estrutura dunha base
-        de datos, modificar os datos almacenados e administrar os permisos
-        dos usuarios.
+        Estas operacións poden realizarse mediante instrucións SQL
+        individuais, pero tamén podemos agrupalas en programas que se
+        executen cando sexa necesario.
+    </p>
+
+    <h3>1.2. SQL declarativo e SQL procedemental</h3>
+
+    <p>
+        SQL é unha linguaxe principalmente declarativa. Isto significa
+        que indicamos ao sistema xestor que resultado queremos obter
+        ou que modificación queremos realizar, sen especificar todos
+        os pasos internos necesarios para conseguilo.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Exemplo de SQL declarativo</h4>
+
+        <p>Queremos consultar os alumnos matriculados nun curso:</p>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id = 1;</code></pre>
+
+        <p>
+            Indicamos que información queremos recuperar. MariaDB
+            decide como executar internamente a consulta.
+        </p>
+    </div>
+
+    <p>
+        Pola contra, a programación procedemental permite especificar
+        unha secuencia de instrucións que se executan seguindo unha
+        lóxica determinada.
+    </p>
+
+    <p>
+        Neste tipo de programación podemos utilizar:
+    </p>
+
+    <ul>
+        <li>Variables para almacenar valores temporais.</li>
+        <li>Condicións para tomar decisións.</li>
+        <li>Bucles para repetir operacións.</li>
+        <li>Procedementos para agrupar instrucións.</li>
+        <li>Funcións para realizar cálculos e devolver resultados.</li>
+        <li>Controladores para xestionar situacións de erro.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h4>Exemplo de SQL procedemental</h4>
+
+        <p>
+            O seguinte exemplo mostra unha estrutura condicional
+            que poderemos utilizar posteriormente dentro dun
+            procedemento almacenado:
+        </p>
+
+        <pre><code>IF nota &gt;= 5 THEN
+    SET resultado = 'Aprobado';
+ELSE
+    SET resultado = 'Suspenso';
+END IF;</code></pre>
+
+        <p>
+            Neste caso, o programa comproba unha condición e
+            executa unha instrución diferente dependendo do resultado.
+        </p>
+    </div>
+
+    <h3>1.3. Programación no servidor de bases de datos</h3>
+
+    <p>
+        A programación pode realizarse no equipo cliente, mediante
+        unha aplicación externa, ou directamente no servidor de bases
+        de datos.
+    </p>
+
+    <p>
+        MariaDB incorpora mecanismos que permiten almacenar e executar
+        programas no propio servidor. Entre eles destacan:
     </p>
 
     <table>
         <thead>
             <tr>
-                <th>Grupo</th>
-                <th>Finalidade</th>
-                <th>Sentenzas habituais</th>
+                <th>Elemento</th>
+                <th>Descrición</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>
-                    <strong>DDL</strong><br>
-                    Data Definition Language
-                </td>
-                <td>
-                    Crear, modificar ou eliminar estruturas da base de datos,
-                    como bases de datos, táboas, columnas, índices e restricións.
-                </td>
-                <td>
-                    <code>CREATE</code>,
-                    <code>ALTER</code>,
-                    <code>DROP</code>,
-                    <code>TRUNCATE</code>
-                </td>
+                <td>Guións SQL</td>
+                <td>Ficheiros que conteñen instrucións SQL que se executan de forma secuencial.</td>
             </tr>
             <tr>
-                <td>
-                    <strong>DML</strong><br>
-                    Data Manipulation Language
-                </td>
-                <td>
-                    Inserir, modificar e eliminar rexistros almacenados
-                    nas táboas.
-                </td>
-                <td>
-                    <code>INSERT</code>,
-                    <code>UPDATE</code>,
-                    <code>DELETE</code>
-                </td>
+                <td>Procedementos almacenados</td>
+                <td>Conxuntos de instrucións gardados na base de datos e executados mediante unha chamada.</td>
             </tr>
             <tr>
-                <td>
-                    <strong>DCL</strong><br>
-                    Data Control Language
-                </td>
-                <td>
-                    Administrar os permisos e privilexios dos usuarios
-                    sobre os obxectos da base de datos.
-                </td>
-                <td>
-                    <code>GRANT</code>,
-                    <code>REVOKE</code>
-                </td>
+                <td>Funcións</td>
+                <td>Programas que realizan unha operación e devolven un valor.</td>
+            </tr>
+            <tr>
+                <td>Disparadores (triggers)</td>
+                <td>Programas que se executan automaticamente cando se producen determinadas operacións sobre unha táboa.</td>
+            </tr>
+            <tr>
+                <td>Eventos</td>
+                <td>Tarefas que o servidor executa automaticamente nun momento ou intervalo programado.</td>
             </tr>
         </tbody>
     </table>
 
+    <h3>1.4. Vantaxes da programación no servidor</h3>
+
+    <ul>
+        <li>
+            <strong>Automatización:</strong> permite executar tarefas
+            sen que un usuario teña que repetir manualmente todas
+            as operacións.
+        </li>
+        <li>
+            <strong>Reutilización:</strong> unha mesma operación pode
+            definirse unha vez e utilizarse desde diferentes aplicacións.
+        </li>
+        <li>
+            <strong>Centralización:</strong> a lóxica de determinadas
+            operacións permanece no servidor da base de datos.
+        </li>
+        <li>
+            <strong>Integridade:</strong> permite establecer comprobacións
+            e regras para controlar as modificacións da información.
+        </li>
+        <li>
+            <strong>Seguridade:</strong> é posible conceder permisos
+            para executar determinados procedementos sen proporcionar
+            acceso directo a todas as táboas.
+        </li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Importante:</strong> non toda a lóxica dunha aplicación
+        debe trasladarse á base de datos. É necesario decidir que
+        operacións deben executarse no servidor e cales corresponden
+        á aplicación cliente.
+    </div>
+
+    <h2>2. Automatización de tarefas mediante guións SQL</h2>
+
+    <h3>2.1. Que é un guión SQL?</h3>
+
     <p>
-        As consultas realizadas mediante <code>SELECT</code> adoitan
-        clasificarse nun grupo específico denominado DQL
-        (<em>Data Query Language</em>), aínda que frecuentemente
-        se estudan xunto coas operacións de manipulación de datos.
+        Un guión SQL é un ficheiro de texto que contén unha ou varias
+        instrucións SQL. Estas instrucións poden executarse de maneira
+        secuencial para realizar unha tarefa ou un conxunto de operacións.
+    </p>
+
+    <p>
+        Normalmente, os guións SQL gárdanse en ficheiros coa extensión
+        <code>.sql</code>.
+    </p>
+
+    <p>
+        A diferenza dunha consulta individual, un guión permite agrupar
+        varias operacións relacionadas e executalas conxuntamente.
+    </p>
+
+    <h3>2.2. Aplicacións dos guións SQL</h3>
+
+    <p>Podemos utilizar guións SQL para diferentes finalidades:</p>
+
+    <ul>
+        <li>
+            <strong>Creación de bases de datos:</strong> crear unha
+            base de datos e todas as súas táboas.
+        </li>
+        <li>
+            <strong>Carga de información:</strong> inserir rexistros
+            iniciais mediante instrucións INSERT.
+        </li>
+        <li>
+            <strong>Configuración:</strong> establecer parámetros
+            ou preparar os elementos necesarios para unha aplicación.
+        </li>
+        <li>
+            <strong>Administración:</strong> crear usuarios, asignar
+            permisos e modificar estruturas.
+        </li>
+        <li>
+            <strong>Mantemento:</strong> executar operacións periódicas
+            ou tarefas de actualización.
+        </li>
+        <li>
+            <strong>Programación:</strong> crear procedementos,
+            funcións, eventos e disparadores.
+        </li>
+    </ul>
+
+    <h3>2.3. Estrutura dun ficheiro SQL</h3>
+
+    <p>
+        Un ficheiro SQL pode conter instrucións de diferentes tipos.
+        O servidor execútaas seguindo a orde na que aparecen,
+        respectando as dependencias entre elas.
     </p>
 
     <div class="ejemplo">
-        <h3>Exemplo: diferenzas entre os grupos de sentenzas</h3>
+        <h4>Exemplo: creación e preparación dunha base de datos</h4>
 
-        <pre><code>-- DDL: crea unha táboa
-CREATE TABLE categorias (
-    id INT PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL
+        <pre><code>-- Creación da base de datos
+CREATE DATABASE IF NOT EXISTS academia;
+
+-- Selección da base de datos
+USE academia;
+
+-- Creación dunha táboa
+CREATE TABLE IF NOT EXISTS cursos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    horas INT NOT NULL
 );
 
--- DML: insire un rexistro
-INSERT INTO categorias (id, nome)
-VALUES (1, 'Informática');
+-- Inserción de datos
+INSERT INTO cursos (nombre, horas)
+VALUES
+    ('DAW', 200),
+    ('DAM', 200),
+    ('ASIR', 180);
 
--- DML: modifica un rexistro
-UPDATE categorias
-SET nome = 'Sistemas informáticos'
-WHERE id = 1;
-
--- DML: elimina un rexistro
-DELETE FROM categorias
-WHERE id = 1;
-
--- DCL: concede un permiso
-GRANT SELECT ON academia.categorias
-TO 'consulta'@'localhost';</code></pre>
+-- Consulta da información
+SELECT * FROM cursos;</code></pre>
     </div>
 
-    <h3>1.3. Ferramentas para modificar datos</h3>
-
     <p>
-        As operacións DML poden executarse utilizando diferentes ferramentas:
+        Neste exemplo, o ficheiro realiza varias tarefas consecutivas:
     </p>
 
-    <ul>
-        <li>
-            <strong>Consola de MariaDB:</strong>
-            permite conectarse directamente ao servidor e executar
-            sentenzas SQL mediante unha terminal.
-        </li>
-        <li>
-            <strong>MySQL Workbench:</strong>
-            ofrece un editor SQL desde o que se poden escribir e executar
-            sentenzas, consultar resultados e revisar erros.
-        </li>
-        <li>
-            <strong>Aplicacións:</strong>
-            os programas desenvolvidos en linguaxes como PHP, Java ou Python
-            poden conectarse ao servidor e executar operacións DML mediante
-            os seus controladores.
-        </li>
-    </ul>
+    <ol>
+        <li>Crea a base de datos se non existe.</li>
+        <li>Selecciona a base de datos de traballo.</li>
+        <li>Crea unha táboa.</li>
+        <li>Insire varios rexistros.</li>
+        <li>Consulta os datos introducidos.</li>
+    </ol>
+
+    <h3>2.4. Comentarios nos guións SQL</h3>
 
     <p>
-        A ferramenta utilizada non modifica o significado da sentenza SQL.
-        Unha mesma instrución <code>INSERT</code> executarase de maneira
-        equivalente desde a consola ou desde Workbench, sempre que se
-        utilice a mesma conexión e o usuario dispoña dos permisos necesarios.
+        Os comentarios permiten documentar o código e explicar
+        a finalidade das instrucións. O servidor non os interpreta
+        como operacións SQL.
     </p>
 
-    <h3>1.4. Seleccionar a base de datos de traballo</h3>
+    <p>MariaDB admite diferentes formas de introducir comentarios:</p>
 
-    <p>
-        Antes de executar as sentenzas, é necesario seleccionar a base
-        de datos sobre a que se vai traballar. En MariaDB pódese facer
-        mediante a instrución <code>USE</code>.
-    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Sintaxe</th>
+                <th>Descrición</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Unha liña</td>
+                <td><code>-- Comentario</code></td>
+                <td>O comentario comeza con dous guións seguidos dun espazo.</td>
+            </tr>
+            <tr>
+                <td>Unha liña</td>
+                <td><code># Comentario</code></td>
+                <td>Outra forma de introducir comentarios nunha liña.</td>
+            </tr>
+            <tr>
+                <td>Varias liñas</td>
+                <td><code>/* Comentario */</code></td>
+                <td>Permite escribir comentarios que ocupen varias liñas.</td>
+            </tr>
+        </tbody>
+    </table>
 
-    <pre><code>-- Consultar as bases de datos existentes
-SHOW DATABASES;
+    <div class="ejemplo">
+        <h4>Exemplo de documentación dun guión</h4>
+
+        <pre><code>/*
+    Base de datos: academia
+    Finalidade: almacenar información dos cursos
+    Autor: Departamento de informática
+*/
+
+-- Crear a base de datos
+CREATE DATABASE academia;
 
 -- Seleccionar a base de datos
-USE academia;
+USE academia;</code></pre>
+    </div>
 
--- Comprobar a base de datos seleccionada
-SELECT DATABASE();</code></pre>
-
-    <p>
-        En MySQL Workbench tamén se pode seleccionar o esquema no panel
-        de esquemas. É importante comprobar sempre que se está traballando
-        sobre a base de datos correcta.
-    </p>
-
-    <h2>2. Base de datos de exemplo</h2>
+    <h3>2.5. O punto e coma como delimitador</h3>
 
     <p>
-        Para os exemplos deste bloque utilizarase unha pequena base de datos
-        de xestión académica. Estará formada polas seguintes táboas:
+        En SQL, o punto e coma (<code>;</code>) utilízase habitualmente
+        para indicar o final dunha instrución.
     </p>
 
-    <ul>
-        <li><code>cursos</code>: almacena os cursos dispoñibles.</li>
-        <li><code>alumnos</code>: almacena os datos do alumnado.</li>
-        <li><code>asignaturas</code>: almacena as materias impartidas.</li>
-        <li><code>matriculas</code>: relaciona o alumnado coas asignaturas.</li>
-    </ul>
-
-    <p>
-        As relacións entre estas táboas son:
-    </p>
-
-    <ul>
-        <li>Un curso pode ter moitos alumnos.</li>
-        <li>Un alumno pertence a un curso.</li>
-        <li>Un alumno pode matricularse en varias asignaturas.</li>
-        <li>Unha asignatura pode ter varios alumnos matriculados.</li>
-    </ul>
-
-    <div class="ejemplo">
-        <h3>Creación da base de datos e das táboas</h3>
-
-        <pre><code>CREATE DATABASE IF NOT EXISTS academia;
+    <pre><code>CREATE DATABASE academia;
 
 USE academia;
 
-CREATE TABLE cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(20) NOT NULL UNIQUE
-) ENGINE=InnoDB;
+SHOW DATABASES;</code></pre>
 
-CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    email VARCHAR(120) UNIQUE,
-    data_alta DATE NOT NULL,
-    activo BOOLEAN NOT NULL DEFAULT TRUE,
-    curso_id INT,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-) ENGINE=InnoDB;
-
-CREATE TABLE asignaturas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL UNIQUE
-) ENGINE=InnoDB;
-
-CREATE TABLE matriculas (
-    alumno_id INT NOT NULL,
-    asignatura_id INT NOT NULL,
-    data DATE NOT NULL,
-    nota DECIMAL(4,2),
-
-    PRIMARY KEY (alumno_id, asignatura_id),
-
-    CONSTRAINT fk_matriculas_alumnos
-        FOREIGN KEY (alumno_id)
-        REFERENCES alumnos(id),
-
-    CONSTRAINT fk_matriculas_asignaturas
-        FOREIGN KEY (asignatura_id)
-        REFERENCES asignaturas(id),
-
-    CONSTRAINT chk_nota
-        CHECK (nota IS NULL OR (nota >= 0 AND nota <= 10))
-) ENGINE=InnoDB;</code></pre>
-    </div>
+    <p>
+        Cada unha destas instrucións remata cun punto e coma.
+        Isto permite ao servidor identificar onde termina unha
+        operación e comeza a seguinte.
+    </p>
 
     <div class="callout">
-        <strong>Importante:</strong>
-        Utilízase o motor de almacenamento <code>InnoDB</code>, que admite
-        claves foráneas e transaccións. As restricións definidas nas táboas
-        son comprobadas polo servidor cando se executan as operacións DML.
+        <strong>Relación co SQL procedemental:</strong> cando
+        posteriormente creemos procedementos e funcións, atoparemos
+        instrucións que conteñen varios puntos e coma internos.
+        Para iso utilizaremos o comando <code>DELIMITER</code>,
+        que permite cambiar temporalmente o delimitador utilizado
+        polo cliente SQL.
     </div>
 
-    <h2>3. Inserción de rexistros: INSERT</h2>
+    <h2>3. Ferramentas para editar guións SQL</h2>
 
-    <h3>3.1. Sintaxe básica</h3>
-
-    <p>
-        A sentenza <code>INSERT INTO</code> permite engadir novos rexistros
-        a unha táboa. Na súa forma básica, indícase a táboa, as columnas
-        que recibirán os datos e os valores correspondentes.
-    </p>
-
-    <pre><code>INSERT INTO nome_taboa (columna1, columna2, columna3)
-VALUES (valor1, valor2, valor3);</code></pre>
+    <h3>3.1. MySQL Workbench</h3>
 
     <p>
-        Os valores deben corresponderse coas columnas indicadas e respectar
-        os seus tipos de datos e as restricións definidas na táboa.
-    </p>
-
-    <h3>3.2. Inserir un rexistro</h3>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO cursos (nome)
-VALUES ('DAW1');
-
-INSERT INTO cursos (nome)
-VALUES ('DAM1');
-
-INSERT INTO asignaturas (nome)
-VALUES ('Bases de datos');</code></pre>
-
-        <p>
-            Como o campo <code>id</code> está definido como
-            <code>AUTO_INCREMENT</code>, MariaDB xera automaticamente
-            o seu valor. Non é necesario indicalo na sentenza.
-        </p>
-    </div>
-
-    <h3>3.3. Consultar os datos inseridos</h3>
-
-    <p>
-        Despois de inserir datos, pódese comprobar o resultado mediante
-        unha consulta <code>SELECT</code>.
-    </p>
-
-    <pre><code>SELECT * FROM cursos;
-
-SELECT * FROM asignaturas;</code></pre>
-
-    <h3>3.4. Orde e correspondencia dos valores</h3>
-
-    <p>
-        Cando se indican as columnas, os valores de <code>VALUES</code>
-        asígnanse seguindo exactamente esa orde. Non é obrigatorio
-        manter a orde física das columnas da táboa.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO alumnos (
-    email,
-    nome,
-    data_alta,
-    curso_id
-)
-VALUES (
-    'ana@example.com',
-    'Ana García',
-    '2026-09-15',
-    1
-);</code></pre>
-
-        <p>
-            Aínda que <code>email</code> aparece antes que
-            <code>nome</code>, os valores asígnanse correctamente
-            porque se respectou a orde indicada na lista de columnas.
-        </p>
-    </div>
-
-    <div class="advertencia">
-        <strong>Evitar sempre que sexa posible:</strong>
-        inserir valores sen indicar as columnas. Se se omite a lista
-        de columnas, é necesario proporcionar un valor para todas
-        as columnas da táboa e respectar a súa orde de definición.
-        Ademais, un cambio posterior na estrutura pode provocar
-        que a sentenza deixe de funcionar.
-    </div>
-
-    <h2>4. Inserción especificando columnas, NULL e valores por defecto</h2>
-
-    <h3>4.1. Omitir columnas opcionais</h3>
-
-    <p>
-        Cando unha columna admite valores por defecto ou
-        <code>NULL</code>, pode omitirse da lista de columnas.
-        MariaDB asignará o valor por defecto se existe; noutro caso,
-        asignará <code>NULL</code> se a columna o permite.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO alumnos (
-    nome,
-    data_alta,
-    curso_id
-)
-VALUES (
-    'Luis López',
-    '2026-09-16',
-    1
-);</code></pre>
-
-        <p>
-            Neste caso, <code>email</code> queda a <code>NULL</code>
-            porque admite valores nulos e <code>activo</code> recibe
-            o seu valor por defecto, <code>TRUE</code>.
-        </p>
-    </div>
-
-    <h3>4.2. O valor NULL</h3>
-
-    <p>
-        <code>NULL</code> representa a ausencia dun valor coñecido
-        ou aplicable. Non equivale a cero, a unha cadea baleira
-        nin ao texto <code>'NULL'</code>.
-    </p>
-
-    <pre><code>INSERT INTO alumnos (
-    nome,
-    email,
-    data_alta
-)
-VALUES (
-    'Marta Fernández',
-    NULL,
-    '2026-09-17'
-);</code></pre>
-
-    <p>
-        Para comprobar se unha columna contén valores nulos
-        utilízanse os operadores <code>IS NULL</code> e
-        <code>IS NOT NULL</code>.
-    </p>
-
-    <pre><code>-- Alumnos sen correo electrónico
-SELECT nome
-FROM alumnos
-WHERE email IS NULL;
-
--- Alumnos cun correo electrónico
-SELECT nome
-FROM alumnos
-WHERE email IS NOT NULL;</code></pre>
-
-    <div class="advertencia">
-        <strong>Erro frecuente:</strong>
-        non se debe escribir <code>email = NULL</code> para buscar
-        valores nulos. Débese utilizar <code>IS NULL</code>.
-        As comparacións habituais non funcionan cos valores NULL
-        do mesmo xeito que cos valores normais.
-    </div>
-
-    <h3>4.3. Valores por defecto</h3>
-
-    <p>
-        Unha columna pode ter un valor predeterminado definido
-        mediante a cláusula <code>DEFAULT</code>. Ese valor
-        utilízase cando se omite a columna na inserción ou cando
-        se indica expresamente a palabra <code>DEFAULT</code>.
-    </p>
-
-    <pre><code>-- Utiliza o valor por defecto de activo
-INSERT INTO alumnos (nome, data_alta)
-VALUES ('Pedro Rodríguez', '2026-09-18');
-
--- Indica expresamente que se utilice o valor por defecto
-INSERT INTO alumnos (nome, data_alta, activo)
-VALUES ('Laura Martínez', '2026-09-19', DEFAULT);</code></pre>
-
-    <h3>4.4. Campos AUTO_INCREMENT</h3>
-
-    <p>
-        Unha columna declarada como <code>AUTO_INCREMENT</code>
-        xera automaticamente un identificador cando se insire
-        un rexistro sen proporcionar un valor para ela.
-        É habitual utilizar este tipo de columnas como claves primarias.
-    </p>
-
-    <pre><code>INSERT INTO cursos (nome)
-VALUES ('ASIR1');
-
-SELECT LAST_INSERT_ID();</code></pre>
-
-    <p>
-        A función <code>LAST_INSERT_ID()</code> devolve o último
-        identificador xerado na conexión actual. Resulta útil
-        cando se necesita coñecer o identificador asignado
-        a un rexistro que acaba de inserirse.
+        MySQL Workbench é unha ferramenta gráfica que permite
+        administrar bases de datos e traballar con instrucións SQL.
+        Aínda que o seu nome fai referencia a MySQL, tamén podemos
+        utilizala para conectarnos a un servidor MariaDB compatible.
     </p>
 
     <p>
-        Tamén se pode indicar <code>NULL</code> ou <code>0</code>
-        para solicitar a xeración automática nas configuracións
-        habituais de MariaDB, aínda que a forma máis clara
-        e recomendable é omitir a columna.
+        No noso contorno, Workbench estará instalado no equipo
+        anfitrión e conectarase ao servidor MariaDB que se executa
+        na máquina virtual Debian.
     </p>
 
-    <h2>5. Inserción de múltiples rexistros</h2>
+    <p>Entre as súas funcionalidades destacan:</p>
 
-    <h3>5.1. Varios rexistros cunha única sentenza</h3>
+    <ul>
+        <li>Crear e editar consultas SQL.</li>
+        <li>Executar instrucións individuais ou varios comandos.</li>
+        <li>Visualizar os resultados das consultas.</li>
+        <li>Gardar e abrir ficheiros SQL.</li>
+        <li>Administrar bases de datos e táboas.</li>
+        <li>Consultar os erros producidos durante a execución.</li>
+    </ul>
+
+    <h3>3.2. O editor SQL de Workbench</h3>
 
     <p>
-        Pódense inserir varias filas nunha única operación separando
-        cada conxunto de valores mediante comas. Esta forma reduce
-        o número de sentenzas que é necesario executar.
+        Cando establecemos unha conexión co servidor MariaDB,
+        podemos abrir unha pestana de consulta SQL.
     </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO cursos (nome)
-VALUES
-    ('DAW2'),
-    ('DAM2'),
-    ('ASIR2');</code></pre>
-    </div>
-
-    <h3>5.2. Inserción de varios alumnos</h3>
-
-    <pre><code>INSERT INTO alumnos (
-    nome,
-    email,
-    data_alta,
-    curso_id
-)
-VALUES
-    ('Carlos Sánchez', 'carlos@example.com', '2026-09-20', 1),
-    ('Elena González', 'elena@example.com', '2026-09-20', 1),
-    ('Javier Pérez', 'javier@example.com', '2026-09-21', 2);</code></pre>
 
     <p>
-        Cada fila debe conter o mesmo número de valores e manter
-        a correspondencia coas columnas indicadas. Ademais,
-        todos os rexistros deben cumprir as restricións da táboa.
+        Nesta pestana escribimos as instrucións que queremos executar.
+        Workbench permite executar:
     </p>
 
-    <h3>5.3. Inserir datos a partir dunha consulta</h3>
+    <ul>
+        <li>A instrución situada no cursor.</li>
+        <li>Unha selección de instrucións.</li>
+        <li>O conxunto de instrucións do editor.</li>
+    </ul>
 
     <p>
-        MariaDB permite inserir nunha táboa o resultado dunha consulta
-        mediante <code>INSERT INTO ... SELECT</code>. Esta operación
-        estudarase con máis detalle no bloque dedicado ás subconsultas
-        e ás ordes de edición.
+        Os resultados aparecen na zona inferior do editor,
+        mentres que os erros e as mensaxes de execución
+        se mostran no panel de saída.
     </p>
 
-    <pre><code>-- Exemplo de estrutura:
--- require que exista unha táboa de destino compatible.
+    <h3>3.3. Gardar e abrir ficheiros SQL</h3>
 
-INSERT INTO alumnos_copia (id, nome)
-SELECT id, nome
-FROM alumnos;</code></pre>
+    <p>
+        Para conservar os guións podemos gardalos en ficheiros
+        coa extensión <code>.sql</code>.
+    </p>
+
+    <p>
+        Por exemplo, podemos organizar os ficheiros dunha práctica
+        do seguinte xeito:
+    </p>
+
+    <pre><code>practica_ud5/
+|
+|-- 01_creacion_bd.sql
+|-- 02_insercion_datos.sql
+|-- 03_consultas.sql
+|-- 04_procedementos.sql
+|-- 05_funcions.sql
+|-- 06_triggers.sql
+|
+|-- README.txt</code></pre>
+
+    <p>
+        Esta organización permite separar as diferentes tarefas
+        e facilita a reutilización e o mantemento dos guións.
+    </p>
+
+    <h3>3.4. Outros editores de texto</h3>
+
+    <p>
+        Os ficheiros SQL son ficheiros de texto plano, polo que
+        tamén podemos editalos mediante outros programas:
+    </p>
+
+    <ul>
+        <li>Visual Studio Code.</li>
+        <li>Notepad++.</li>
+        <li>Gedit ou outros editores de Linux.</li>
+        <li>Kate.</li>
+        <li>Vim ou Nano desde o terminal.</li>
+    </ul>
+
+    <p>
+        Estes editores permiten escribir e organizar o código
+        sen necesidade de manter unha conexión activa co servidor.
+        A execución deberá realizarse posteriormente mediante
+        unha ferramenta cliente.
+    </p>
+
+    <h2>4. Métodos de execución de guións SQL</h2>
+
+    <p>
+        Unha vez creado un ficheiro SQL, necesitamos envialo ao
+        servidor MariaDB para que execute as instrucións que contén.
+        Existen diferentes métodos para facelo.
+    </p>
+
+    <h3>4.1. Execución desde MySQL Workbench</h3>
+
+    <p>
+        Podemos executar un guión directamente desde o editor SQL
+        de Workbench.
+    </p>
+
+    <ol>
+        <li>Establecer a conexión co servidor MariaDB da máquina virtual Debian.</li>
+        <li>Abrir un novo editor SQL.</li>
+        <li>Abrir un ficheiro existente ou escribir as instrucións.</li>
+        <li>Seleccionar as instrucións que queremos executar ou executar o guión completo.</li>
+        <li>Comprobar os resultados e as posibles mensaxes de erro.</li>
+    </ol>
 
     <div class="callout">
-        <strong>Idea clave:</strong>
-        en <code>INSERT ... SELECT</code> non se utiliza a cláusula
-        <code>VALUES</code>. Os rexistros que se insiren proceden
-        das filas devoltas pola consulta.
+        <strong>Importante:</strong> Workbench actúa como cliente.
+        As instrucións SQL envíanse ao servidor MariaDB, que é
+        o encargado de procesalas e executar as operacións.
     </div>
 
-    <h2>6. Actualización de rexistros: UPDATE</h2>
-
-    <h3>6.1. Sintaxe básica</h3>
+    <h3>4.2. Execución desde a consola de Debian</h3>
 
     <p>
-        A sentenza <code>UPDATE</code> permite modificar os valores
-        dunha ou varias columnas dos rexistros que cumpren
-        unha determinada condición.
+        MariaDB proporciona unha ferramenta de liña de comandos
+        chamada <code>mariadb</code>. Mediante ela podemos conectarnos
+        ao servidor e executar instrucións SQL directamente.
     </p>
 
-    <pre><code>UPDATE nome_taboa
-SET columna1 = valor1,
-    columna2 = valor2
-WHERE condicion;</code></pre>
+    <p>Para iniciar unha sesión interactiva podemos utilizar:</p>
+
+    <pre><code>mariadb -u usuario -p</code></pre>
 
     <p>
-        A cláusula <code>SET</code> indica que columnas se modifican
-        e que valores reciben. A cláusula <code>WHERE</code>
-        determina que rexistros se ven afectados.
+        O parámetro <code>-u</code> indica o usuario co que queremos
+        conectarnos e <code>-p</code> solicita o contrasinal.
     </p>
 
-    <h3>6.2. Actualizar un rexistro</h3>
+    <p>
+        Tamén podemos indicar directamente a base de datos que
+        queremos utilizar:
+    </p>
+
+    <pre><code>mariadb -u usuario -p academia</code></pre>
+
+    <p>
+        Unha vez conectados, podemos introducir instrucións SQL
+        de forma interactiva:
+    </p>
+
+    <pre><code>MariaDB [(none)]&gt; SHOW DATABASES;
+
+MariaDB [(none)]&gt; USE academia;
+
+MariaDB [academia]&gt; SHOW TABLES;
+
+MariaDB [academia]&gt; SELECT * FROM cursos;</code></pre>
+
+    <h3>4.3. Execución dun ficheiro desde a consola</h3>
+
+    <p>
+        Ademais de introducir instrucións manualmente, podemos
+        executar directamente un ficheiro SQL.
+    </p>
+
+    <p>
+        Unha forma de facelo é utilizar a redirección da entrada
+        estándar desde o terminal:
+    </p>
+
+    <pre><code>mariadb -u usuario -p academia &lt; script.sql</code></pre>
+
+    <p>
+        Neste caso, o cliente MariaDB le o contido do ficheiro
+        e envía as instrucións ao servidor para a súa execución.
+    </p>
+
+    <p>
+        Tamén podemos conectarnos primeiro ao servidor e utilizar
+        a instrución <code>SOURCE</code>:
+    </p>
+
+    <pre><code>SOURCE /home/usuario/scripts/script.sql;</code></pre>
+
+    <p>
+        Esta instrución permite executar un ficheiro SQL desde
+        unha sesión interactiva do cliente MariaDB.
+    </p>
 
     <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>UPDATE alumnos
-SET email = 'ana.garcia@example.com'
-WHERE id = 1;</code></pre>
+        <h4>Exemplo completo de execución</h4>
 
         <p>
-            A sentenza cambia o correo electrónico da alumna
-            cuxo identificador é 1. Os demais campos permanecen
-            sen modificacións.
+            Supoñamos que temos un ficheiro chamado
+            <code>crear_academia.sql</code> no directorio
+            <code>/home/usuario/scripts/</code>.
+        </p>
+
+        <p>Podemos executalo desde o terminal mediante:</p>
+
+        <pre><code>mariadb -u usuario -p &lt; /home/usuario/scripts/crear_academia.sql</code></pre>
+
+        <p>
+            O servidor recibirá as instrucións do ficheiro e
+            executaraas seguindo a orde na que aparecen.
         </p>
     </div>
 
-    <h3>6.3. Actualizar varios campos</h3>
-
-    <p>
-        Unha mesma sentenza pode modificar varias columnas
-        dun rexistro.
-    </p>
-
-    <pre><code>UPDATE alumnos
-SET email = 'luis.lopez@example.com',
-    activo = TRUE
-WHERE id = 2;</code></pre>
-
-    <h3>6.4. Expresións na cláusula SET</h3>
-
-    <p>
-        O novo valor dunha columna tamén pode calcularse
-        a partir do seu valor actual.
-    </p>
-
-    <pre><code>UPDATE matriculas
-SET nota = nota + 0.5
-WHERE nota IS NOT NULL;</code></pre>
-
-    <p>
-        A operación anterior incrementa en medio punto todas
-        as cualificacións que non sexan nulas. Cómpre comprobar
-        que o cálculo respecta as restricións definidas para
-        a columna.
-    </p>
-
-    <h2>7. Condicións nas actualizacións</h2>
-
-    <h3>7.1. Uso de WHERE</h3>
-
-    <p>
-        A cláusula <code>WHERE</code> permite seleccionar os rexistros
-        que se van modificar. Pode utilizar operadores de comparación,
-        operadores lóxicos e outras condicións.
-    </p>
+    <h3>4.4. Comparación dos métodos de execución</h3>
 
     <table>
         <thead>
             <tr>
-                <th>Operador</th>
-                <th>Significado</th>
-                <th>Exemplo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>=</code></td>
-                <td>Igual</td>
-                <td><code>curso_id = 1</code></td>
-            </tr>
-            <tr>
-                <td><code>&lt;&gt;</code> ou <code>!=</code></td>
-                <td>Distinto</td>
-                <td><code>activo &lt;&gt; TRUE</code></td>
-            </tr>
-            <tr>
-                <td><code>&gt;</code>, <code>&lt;</code></td>
-                <td>Maior ou menor</td>
-                <td><code>nota &gt; 5</code></td>
-            </tr>
-            <tr>
-                <td><code>&gt;=</code>, <code>&lt;=</code></td>
-                <td>Maior ou igual, menor ou igual</td>
-                <td><code>nota &gt;= 5</code></td>
-            </tr>
-            <tr>
-                <td><code>BETWEEN</code></td>
-                <td>Dentro dun intervalo, incluídos os extremos</td>
-                <td><code>nota BETWEEN 5 AND 10</code></td>
-            </tr>
-            <tr>
-                <td><code>IN</code></td>
-                <td>Pertence a unha lista de valores</td>
-                <td><code>curso_id IN (1, 2)</code></td>
-            </tr>
-            <tr>
-                <td><code>LIKE</code></td>
-                <td>Coincide cun patrón</td>
-                <td><code>nome LIKE 'Ana%'</code></td>
-            </tr>
-            <tr>
-                <td><code>IS NULL</code></td>
-                <td>O valor é nulo</td>
-                <td><code>email IS NULL</code></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h3>7.2. Operadores lóxicos AND, OR e NOT</h3>
-
-    <p>
-        Os operadores lóxicos permiten combinar varias condicións.
-    </p>
-
-    <ul>
-        <li>
-            <code>AND</code>: todas as condicións deben cumprirse.
-        </li>
-        <li>
-            <code>OR</code>: abonda con que se cumpra algunha
-            das condicións.
-        </li>
-        <li>
-            <code>NOT</code>: inverte o resultado dunha condición.
-        </li>
-    </ul>
-
-    <div class="ejemplo">
-        <h3>Exemplos</h3>
-
-        <pre><code>-- Alumnos activos do curso 1
-UPDATE alumnos
-SET email = 'pendente@example.com'
-WHERE curso_id = 1 AND activo = TRUE;
-
--- Alumnos dos cursos 1 ou 2
-UPDATE alumnos
-SET activo = FALSE
-WHERE curso_id = 1 OR curso_id = 2;
-
--- Alumnos que non teñen correo electrónico
-UPDATE alumnos
-SET email = 'sen-correo@example.com'
-WHERE email IS NULL;</code></pre>
-    </div>
-
-    <h3>7.3. Actualización de varios rexistros</h3>
-
-    <p>
-        Se a condición coincide con varias filas, MariaDB actualizará
-        todas elas. Polo tanto, non se debe asumir que unha sentenza
-        <code>UPDATE</code> modifica sempre un único rexistro.
-    </p>
-
-    <pre><code>UPDATE alumnos
-SET activo = FALSE
-WHERE curso_id = 2;</code></pre>
-
-    <p>
-        Esta sentenza desactiva todos os alumnos asociados ao curso 2.
-    </p>
-
-    <div class="advertencia">
-        <strong>Precaución con UPDATE:</strong>
-        se se omite a cláusula <code>WHERE</code>, actualizaranse
-        todas as filas da táboa. Antes de executar unha actualización
-        importante, é recomendable comprobar que rexistros selecciona
-        a condición mediante unha consulta <code>SELECT</code> equivalente.
-    </div>
-
-    <div class="ejemplo">
-        <h3>Comprobación previa</h3>
-
-        <pre><code>-- Primeiro compróbanse as filas afectadas
-SELECT id, nome, activo
-FROM alumnos
-WHERE curso_id = 2;
-
--- Despois execútase a modificación
-UPDATE alumnos
-SET activo = FALSE
-WHERE curso_id = 2;</code></pre>
-    </div>
-
-    <h2>8. Eliminación de rexistros: DELETE</h2>
-
-    <h3>8.1. Sintaxe básica</h3>
-
-    <p>
-        A sentenza <code>DELETE</code> elimina filas dunha táboa.
-        A cláusula <code>WHERE</code> determina que rexistros
-        se deben borrar.
-    </p>
-
-    <pre><code>DELETE FROM nome_taboa
-WHERE condicion;</code></pre>
-
-    <h3>8.2. Eliminar un rexistro</h3>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>DELETE FROM alumnos
-WHERE id = 5;</code></pre>
-
-        <p>
-            Elimina o alumno co identificador 5, sempre que non existan
-            rexistros relacionados que impidan o borrado polas restricións
-            de clave foránea.
-        </p>
-    </div>
-
-    <h3>8.3. Eliminar varios rexistros</h3>
-
-    <p>
-        Do mesmo xeito que ocorre con <code>UPDATE</code>,
-        a condición pode coincidir con varias filas.
-    </p>
-
-    <pre><code>DELETE FROM alumnos
-WHERE activo = FALSE;</code></pre>
-
-    <p>
-        Esta sentenza elimina todos os alumnos inactivos,
-        sempre que non existan referencias que impidan a operación.
-    </p>
-
-    <h3>8.4. Eliminar todos os rexistros dunha táboa</h3>
-
-    <p>
-        Se se executa <code>DELETE</code> sen cláusula
-        <code>WHERE</code>, elimínanse todas as filas da táboa,
-        pero a súa estrutura permanece.
-    </p>
-
-    <pre><code>DELETE FROM matriculas;</code></pre>
-
-    <p>
-        Nas táboas InnoDB, esta operación pode formar parte dunha
-        transacción e os seus cambios poden desfacerse mediante
-        <code>ROLLBACK</code> antes de confirmar a transacción.
-    </p>
-
-    <div class="advertencia">
-        <strong>Precaución con DELETE:</strong>
-        unha sentenza sen <code>WHERE</code> elimina todos os rexistros.
-        Antes de executala, comproba a táboa e a condición.
-        Nas operacións importantes, utiliza transaccións cando
-        o motor e o contexto o permitan.
-    </div>
-
-    <h2>9. Diferenzas entre DELETE, TRUNCATE e DROP</h2>
-
-    <p>
-        Aínda que as tres sentenzas poden provocar a desaparición
-        de información, non realizan a mesma operación.
-    </p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Sentenza</th>
-                <th>Que elimina?</th>
-                <th>Mantén a táboa?</th>
+                <th>Método</th>
                 <th>Características</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>DELETE</code></td>
-                <td>Unha ou varias filas, segundo a condición.</td>
-                <td>Si.</td>
-                <td>
-                    Admite <code>WHERE</code>. En InnoDB pode desfacerse
-                    mediante <code>ROLLBACK</code> se aínda non se
-                    confirmou a transacción.
-                </td>
-            </tr>
-            <tr>
-                <td><code>TRUNCATE TABLE</code></td>
-                <td>Todos os rexistros da táboa.</td>
-                <td>Si.</td>
-                <td>
-                    Non admite <code>WHERE</code>. Reinicia normalmente
-                    o contador <code>AUTO_INCREMENT</code>. É unha
-                    operación DDL e provoca unha confirmación implícita.
-                </td>
-            </tr>
-            <tr>
-                <td><code>DROP TABLE</code></td>
-                <td>A táboa completa, incluídos os datos e a definición.</td>
-                <td>Non.</td>
-                <td>
-                    Elimina a estrutura. Para volver utilizar a táboa
-                    será necesario creala de novo.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="ejemplo">
-        <h3>Exemplos</h3>
-
-        <pre><code>-- Elimina os alumnos inactivos
-DELETE FROM alumnos
-WHERE activo = FALSE;
-
--- Elimina todas as filas de matriculas
-TRUNCATE TABLE matriculas;
-
--- Elimina a táboa completa
-DROP TABLE matriculas;</code></pre>
-    </div>
-
-    <div class="advertencia">
-        <strong>Restricións de claves foráneas:</strong>
-        MariaDB pode impedir un <code>TRUNCATE TABLE</code> se outra
-        táboa contén unha clave foránea que referencia a táboa que
-        se quere baleirar. Nese caso, haberá que estudar as dependencias
-        e utilizar unha alternativa adecuada, como borrar as filas
-        na orde correcta.
-    </div>
-
-    <h2>10. Integridade referencial nas operacións DML</h2>
-
-    <h3>10.1. Que é a integridade referencial?</h3>
-
-    <p>
-        A integridade referencial garante que as relacións entre táboas
-        manteñan a súa coherencia. Establécese mediante claves foráneas
-        (<code>FOREIGN KEY</code>).
-    </p>
-
-    <p>
-        Unha clave foránea dunha táboa filla referencia unha clave primaria
-        ou unha clave única dunha táboa pai. Deste xeito, evítase que unha
-        fila filla faga referencia a un rexistro pai que non existe.
-    </p>
-
-    <h3>10.2. Exemplo de relación entre táboas</h3>
-
-    <p>
-        Na base de datos de exemplo, <code>cursos</code> é a táboa pai
-        e <code>alumnos</code> é a táboa filla. A columna
-        <code>alumnos.curso_id</code> referencia a
-        <code>cursos.id</code>.
-    </p>
-
-    <pre><code>CREATE TABLE cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(20) NOT NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    curso_id INT,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-) ENGINE=InnoDB;</code></pre>
-
-    <h3>10.3. Restricións ao inserir</h3>
-
-    <p>
-        Se se insire un alumno cun valor de <code>curso_id</code>
-        que non existe na táboa <code>cursos</code>, a operación
-        será rexeitada.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Inserción correcta</h3>
-
-        <pre><code>INSERT INTO cursos (nome)
-VALUES ('DAW1');
-
-INSERT INTO alumnos (nome, curso_id)
-VALUES ('Ana García', 1);</code></pre>
-    </div>
-
-    <div class="advertencia">
-        <h3>Inserción incorrecta</h3>
-
-        <pre><code>INSERT INTO alumnos (nome, curso_id)
-VALUES ('Luis López', 999);</code></pre>
-
-        <p>
-            Se non existe un curso co identificador 999, MariaDB
-            xera un erro de clave foránea. Non se pode crear unha
-            referencia a un rexistro inexistente.
-        </p>
-    </div>
-
-    <h3>10.4. Restricións ao actualizar</h3>
-
-    <p>
-        A integridade referencial tamén se comproba cando se modifica
-        o valor dunha clave foránea. O novo valor debe corresponder
-        a unha fila existente na táboa pai, agás que a columna
-        admita <code>NULL</code>.
-    </p>
-
-    <pre><code>-- Correcto se existe o curso 2
-UPDATE alumnos
-SET curso_id = 2
-WHERE id = 1;
-
--- Incorrecto se non existe o curso 999
-UPDATE alumnos
-SET curso_id = 999
-WHERE id = 1;</code></pre>
-
-    <h3>10.5. Restricións ao borrar</h3>
-
-    <p>
-        Se unha fila da táboa pai está sendo referenciada por filas
-        dunha táboa filla, o servidor debe aplicar a política de
-        integridade referencial definida na clave foránea.
-        Se non se estableceu unha acción que permita o borrado,
-        a operación normalmente será rexeitada.
-    </p>
-
-    <pre><code>-- Pode fallar se existen alumnos asociados ao curso 1
-DELETE FROM cursos
-WHERE id = 1;</code></pre>
-
-    <h2>11. Políticas ON DELETE e ON UPDATE</h2>
-
-    <h3>11.1. Accións referenciais</h3>
-
-    <p>
-        Ao crear unha clave foránea pódense definir as accións que
-        se aplicarán cando se modifique ou elimine o valor referenciado
-        na táboa pai.
-    </p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Acción</th>
-                <th>Comportamento</th>
                 <th>Uso habitual</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><code>RESTRICT</code></td>
-                <td>
-                    Impide modificar ou borrar a fila pai se existen
-                    filas fillas relacionadas.
-                </td>
-                <td>
-                    Evitar a eliminación de información que aínda
-                    ten dependencias.
-                </td>
+                <td>Workbench</td>
+                <td>Editor gráfico, resultados visuais e xestión das conexións.</td>
+                <td>Desenvolvemento e probas.</td>
             </tr>
             <tr>
-                <td><code>NO ACTION</code></td>
-                <td>
-                    En InnoDB de MariaDB compórtase como
-                    <code>RESTRICT</code>.
-                </td>
-                <td>
-                    Indicar que non se permite a operación se rompe
-                    a relación.
-                </td>
+                <td>Consola interactiva</td>
+                <td>Permite introducir instrucións directamente.</td>
+                <td>Administración e comprobacións.</td>
             </tr>
             <tr>
-                <td><code>CASCADE</code></td>
-                <td>
-                    Propaga a modificación ou eliminación ás filas
-                    relacionadas.
-                </td>
-                <td>
-                    Manter automaticamente a coherencia cando
-                    a fila filla non debe existir sen a pai.
-                </td>
+                <td>Execución dun ficheiro</td>
+                <td>Procesa automaticamente as instrucións dun ficheiro SQL.</td>
+                <td>Automatización e despregamento.</td>
             </tr>
             <tr>
-                <td><code>SET NULL</code></td>
-                <td>
-                    Establece a <code>NULL</code> a clave foránea
-                    das filas fillas.
-                </td>
-                <td>
-                    Conservar as filas fillas aínda que deixen
-                    de estar asociadas á fila pai.
-                </td>
+                <td>SOURCE</td>
+                <td>Executa un ficheiro desde unha sesión interactiva.</td>
+                <td>Execución de scripts xa preparados.</td>
             </tr>
         </tbody>
     </table>
 
-    <h3>11.2. ON DELETE</h3>
+    <h2>5. Boas prácticas na elaboración de guións SQL</h2>
 
     <p>
-        A cláusula <code>ON DELETE</code> determina que sucede
-        coas filas fillas cando se elimina a fila pai.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo con ON DELETE CASCADE</h3>
-
-        <pre><code>CREATE TABLE cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(20) NOT NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    curso_id INT NOT NULL,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-) ENGINE=InnoDB;</code></pre>
-
-        <p>
-            Se se elimina un curso, MariaDB elimina tamén os alumnos
-            asociados a ese curso. Esta propagación realízase
-            automaticamente.
-        </p>
-
-        <pre><code>DELETE FROM cursos
-WHERE id = 1;</code></pre>
-    </div>
-
-    <h3>11.3. ON DELETE SET NULL</h3>
-
-    <p>
-        Se se utiliza <code>SET NULL</code>, as filas fillas consérvanse,
-        pero a súa clave foránea pasa a ser nula. Polo tanto,
-        a columna da táboa filla debe admitir valores <code>NULL</code>.
-    </p>
-
-    <pre><code>CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    curso_id INT NULL,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-        ON DELETE SET NULL
-) ENGINE=InnoDB;</code></pre>
-
-    <h3>11.4. ON UPDATE</h3>
-
-    <p>
-        A cláusula <code>ON UPDATE</code> define que sucede cando
-        se modifica o valor da clave referenciada na táboa pai.
-    </p>
-
-    <pre><code>FOREIGN KEY (curso_id)
-REFERENCES cursos(id)
-ON UPDATE CASCADE;</code></pre>
-
-    <p>
-        Con <code>ON UPDATE CASCADE</code>, se cambia o identificador
-        dun curso, MariaDB actualiza automaticamente as claves foráneas
-        dos alumnos relacionados.
-    </p>
-
-    <h3>11.5. Escoller unha política adecuada</h3>
-
-    <p>
-        A política depende do significado dos datos e das regras
-        do sistema:
+        Un guión SQL debe estar organizado e documentado para
+        facilitar a súa comprensión, execución e mantemento.
     </p>
 
     <ul>
-        <li>
-            <strong>RESTRICT:</strong>
-            apropiado cando non se debe eliminar un elemento que
-            ten información dependente.
-        </li>
-        <li>
-            <strong>CASCADE:</strong>
-            apropiado cando os rexistros fillos carecen de sentido
-            sen o rexistro pai, por exemplo, as liñas dun pedido
-            que se elimina.
-        </li>
-        <li>
-            <strong>SET NULL:</strong>
-            apropiado cando se desexa conservar o rexistro fillo,
-            pero desvinculalo do pai.
-        </li>
+        <li>Utilizar nomes de ficheiros descritivos.</li>
+        <li>Organizar as instrucións por finalidade.</li>
+        <li>Incluír comentarios que expliquen as operacións importantes.</li>
+        <li>Respectar a orde de creación dos elementos da base de datos.</li>
+        <li>Utilizar indentación para facilitar a lectura.</li>
+        <li>Comprobar os resultados despois da execución.</li>
+        <li>Evitar incluír contrasinais ou información sensible nos ficheiros.</li>
+        <li>Manter copias dos guións e controlar os cambios realizados.</li>
     </ul>
 
     <div class="advertencia">
-        <strong>Atención:</strong>
-        <code>CASCADE</code> pode provocar a eliminación de moitas filas
-        mediante unha única sentenza. Antes de definir esta política,
-        hai que valorar se esa eliminación automática é realmente
-        a regra de negocio desexada.
+        <strong>Precaución coa execución repetida:</strong>
+        non todas as instrucións SQL se poden executar varias veces
+        sen consecuencias. Por exemplo, un <code>INSERT</code>
+        pode introducir rexistros duplicados e un <code>DROP TABLE</code>
+        pode eliminar información existente.
+        É importante coñecer o efecto das instrucións antes
+        de executar un guión.
     </div>
 
-    <h2>12. Resolución de erros de integridade referencial</h2>
-
-    <h3>12.1. Identificar a táboa pai e a táboa filla</h3>
+    <h2>6. Exemplo práctico: creación dun guión SQL completo</h2>
 
     <p>
-        Cando unha operación DML produce un erro de clave foránea,
-        o primeiro paso consiste en identificar que táboa contén
-        a referencia e que táboa contén o rexistro referenciado.
+        Imos preparar un ficheiro SQL que permita crear e configurar
+        unha pequena base de datos para xestionar cursos dunha academia.
     </p>
 
     <p>
-        Pódese consultar a definición dunha táboa mediante:
-    </p>
-
-    <pre><code>SHOW CREATE TABLE alumnos;</code></pre>
-
-    <p>
-        Tamén se pode consultar a información das restricións
-        no catálogo <code>INFORMATION_SCHEMA</code>.
-    </p>
-
-    <pre><code>SELECT
-    TABLE_NAME,
-    CONSTRAINT_NAME,
-    COLUMN_NAME,
-    REFERENCED_TABLE_NAME,
-    REFERENCED_COLUMN_NAME
-FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE TABLE_SCHEMA = DATABASE()
-  AND REFERENCED_TABLE_NAME IS NOT NULL;</code></pre>
-
-    <h3>12.2. Orde correcta de inserción</h3>
-
-    <p>
-        Cando se insiren datos relacionados, primeiro débense crear
-        os rexistros das táboas pai e despois os das táboas fillas.
-        Deste xeito, as claves foráneas poden apuntar a rexistros
-        que xa existen.
+        O ficheiro conterá a creación da base de datos, a creación
+        dunha táboa, a inserción de información e unha consulta
+        para comprobar o resultado.
     </p>
 
     <div class="ejemplo">
-        <h3>Exemplo de inserción ordenada</h3>
+        <h3>Ficheiro: academia.sql</h3>
 
-        <pre><code>-- 1. Primeiro insírese o curso (táboa pai)
-INSERT INTO cursos (nome)
-VALUES ('DAW1');
+        <pre><code>/*
+    UD5 - Programación de bases de datos
+    Exemplo de guión SQL
+*/
 
--- 2. Despois insírese o alumno (táboa filla)
-INSERT INTO alumnos (nome, data_alta, curso_id)
-VALUES ('Ana García', '2026-09-15', 1);
+-- Crear a base de datos
+CREATE DATABASE IF NOT EXISTS academia;
 
--- 3. Finalmente rexístrase a matrícula
-INSERT INTO matriculas (
-    alumno_id,
-    asignatura_id,
-    data,
-    nota
-)
-VALUES (1, 1, '2026-09-16', NULL);</code></pre>
+-- Seleccionar a base de datos
+USE academia;
 
-        <p>
-            A última operación require que existan previamente
-            tanto o alumno co identificador 1 como a asignatura
-            co identificador 1.
-        </p>
+-- Crear a táboa cursos
+CREATE TABLE IF NOT EXISTS cursos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    horas INT NOT NULL
+);
+
+-- Inserir información
+INSERT INTO cursos (nombre, horas)
+VALUES
+    ('DAW', 200),
+    ('DAM', 200),
+    ('ASIR', 180);
+
+-- Consultar os cursos
+SELECT
+    id,
+    nombre,
+    horas
+FROM cursos
+ORDER BY nombre;</code></pre>
     </div>
 
-    <h3>12.3. Orde correcta de eliminación</h3>
-
     <p>
-        Cando se eliminan rexistros relacionados e se utiliza
-        unha política restritiva, a orde habitual é a inversa
-        á de inserción: primeiro elimínanse as filas das táboas
-        fillas e despois as das táboas pai.
+        Este exemplo permite comprobar como podemos agrupar
+        diferentes operacións nun único ficheiro e executalas
+        desde Workbench ou desde a consola de MariaDB.
     </p>
-
-    <pre><code>-- 1. Eliminar primeiro as matrículas do alumno
-DELETE FROM matriculas
-WHERE alumno_id = 1;
-
--- 2. Despois eliminar o alumno
-DELETE FROM alumnos
-WHERE id = 1;
-
--- 3. Finalmente, se xa non ten alumnos asociados,
--- eliminar o curso
-DELETE FROM cursos
-WHERE id = 1;</code></pre>
-
-    <h3>12.4. Diagnóstico de erros frecuentes</h3>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Situación</th>
-                <th>Posible causa</th>
-                <th>Que comprobar?</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Erro ao inserir unha fila filla.</td>
-                <td>
-                    O valor da clave foránea non existe
-                    na táboa pai.
-                </td>
-                <td>
-                    Que o rexistro pai exista e que o identificador
-                    utilizado sexa correcto.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro ao actualizar unha clave foránea.</td>
-                <td>
-                    O novo valor non existe na táboa referenciada.
-                </td>
-                <td>
-                    Que o valor de destino exista ou que a columna
-                    poida admitir <code>NULL</code>.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro ao borrar unha fila pai.</td>
-                <td>
-                    Hai filas fillas que a referencian e a política
-                    impide o borrado.
-                </td>
-                <td>
-                    Localizar as filas relacionadas e revisar
-                    <code>ON DELETE</code>.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro ao inserir un valor duplicado.</td>
-                <td>
-                    Incúmprese unha clave primaria ou unha restrición
-                    <code>UNIQUE</code>.
-                </td>
-                <td>
-                    Comprobar se xa existe o identificador
-                    ou o valor único.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro por valor nulo.</td>
-                <td>
-                    Inténtase inserir <code>NULL</code> nunha columna
-                    <code>NOT NULL</code>.
-                </td>
-                <td>
-                    Revisar se se debe proporcionar un valor
-                    ou definir un valor por defecto.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>13. Boas prácticas ao modificar datos</h2>
-
-    <ol>
-        <li>
-            Seleccionar e comprobar a base de datos antes de executar
-            operacións.
-        </li>
-        <li>
-            Indicar explicitamente as columnas nas sentenzas
-            <code>INSERT</code>.
-        </li>
-        <li>
-            Utilizar condicións <code>WHERE</code> precisas
-            en <code>UPDATE</code> e <code>DELETE</code>.
-        </li>
-        <li>
-            Antes de modificar ou borrar, executar un
-            <code>SELECT</code> coa mesma condición para comprobar
-            as filas afectadas.
-        </li>
-        <li>
-            Respectar as restricións de claves primarias,
-            claves foráneas, valores únicos e columnas obrigatorias.
-        </li>
-        <li>
-            Inserir primeiro os rexistros pai e despois
-            os rexistros fillos.
-        </li>
-        <li>
-            Eliminar primeiro os rexistros fillos cando as regras
-            de integridade así o esixan.
-        </li>
-        <li>
-            Escoller as accións <code>ON DELETE</code> e
-            <code>ON UPDATE</code> segundo as regras reais
-            da aplicación.
-        </li>
-        <li>
-            Evitar utilizar <code>TRUNCATE</code> ou
-            <code>DROP</code> sen comprobar antes as súas consecuencias.
-        </li>
-        <li>
-            Utilizar transaccións nas operacións que requiran
-            poder confirmar ou desfacer os cambios.
-            Este mecanismo estudarase nun bloque posterior.
-        </li>
-    </ol>
-
-    <h2>14. Resumo das sentenzas</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Operación</th>
-                <th>Sentenza</th>
-                <th>Exemplo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Inserir un rexistro</td>
-                <td><code>INSERT INTO</code></td>
-                <td>
-                    <code>INSERT INTO cursos (nome) VALUES ('DAW1');</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Inserir varios rexistros</td>
-                <td><code>INSERT INTO ... VALUES</code></td>
-                <td>
-                    <code>INSERT INTO cursos (nome) VALUES ('DAW1'), ('DAW2');</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Inserir o resultado dunha consulta</td>
-                <td><code>INSERT INTO ... SELECT</code></td>
-                <td>
-                    <code>INSERT INTO destino (nome) SELECT nome FROM orixe;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Actualizar rexistros</td>
-                <td><code>UPDATE ... SET</code></td>
-                <td>
-                    <code>UPDATE alumnos SET activo = FALSE WHERE id = 1;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Eliminar rexistros</td>
-                <td><code>DELETE FROM</code></td>
-                <td>
-                    <code>DELETE FROM alumnos WHERE id = 1;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Baleirar unha táboa</td>
-                <td><code>TRUNCATE TABLE</code></td>
-                <td>
-                    <code>TRUNCATE TABLE matriculas;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Eliminar unha táboa</td>
-                <td><code>DROP TABLE</code></td>
-                <td>
-                    <code>DROP TABLE matriculas;</code>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>15. Guión de traballo e comprobación</h2>
-
-    <p>
-        Para practicar os contidos deste bloque, recoméndase seguir
-        esta orde de traballo en MariaDB:
-    </p>
-
-    <ol>
-        <li>Crear ou seleccionar a base de datos de exemplo.</li>
-        <li>
-            Consultar a estrutura das táboas con
-            <code>DESCRIBE</code> e <code>SHOW CREATE TABLE</code>.
-        </li>
-        <li>Inserir rexistros nas táboas pai.</li>
-        <li>
-            Inserir rexistros nas táboas fillas utilizando
-            identificadores existentes.
-        </li>
-        <li>Consultar os rexistros para comprobar as insercións.</li>
-        <li>
-            Actualizar un ou varios rexistros utilizando
-            condicións específicas.
-        </li>
-        <li>
-            Comprobar previamente con <code>SELECT</code> que filas
-            se verán afectadas por cada actualización ou borrado.
-        </li>
-        <li>
-            Probar unha inserción cunha clave foránea inexistente
-            e analizar o erro obtido.
-        </li>
-        <li>
-            Probar o borrado dun rexistro pai que teña filas fillas
-            relacionadas.
-        </li>
-        <li>
-            Revisar as regras <code>ON DELETE</code> e
-            <code>ON UPDATE</code> das claves foráneas.
-        </li>
-        <li>
-            Eliminar os rexistros na orde adecuada e comprobar
-            o estado final das táboas.
-        </li>
-    </ol>
 
     <div class="callout">
-        <strong>Obxectivo do bloque:</strong>
-        ser capaz de inserir, actualizar e eliminar información
-        mediante SQL, comprendendo como afectan estas operacións
-        ás relacións entre táboas e aplicando as medidas necesarias
-        para conservar a integridade e a consistencia dos datos.
+        <strong>Resultado esperado:</strong> ao executar o guión
+        obteremos unha base de datos chamada <code>academia</code>,
+        cunha táboa <code>cursos</code> que conterá tres rexistros.
     </div>
+
+    <h2>7. Resumo dos conceptos principais</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Idea principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>SQL declarativo</td>
+                <td>Indica que resultado queremos obter.</td>
+            </tr>
+            <tr>
+                <td>SQL procedemental</td>
+                <td>Permite definir unha secuencia de operacións e decisións.</td>
+            </tr>
+            <tr>
+                <td>Programación no servidor</td>
+                <td>Executa lóxica directamente no SXBD.</td>
+            </tr>
+            <tr>
+                <td>Guión SQL</td>
+                <td>Ficheiro de texto que agrupa instrucións SQL.</td>
+            </tr>
+            <tr>
+                <td>Extensión .sql</td>
+                <td>Extensión habitual dos ficheiros SQL.</td>
+            </tr>
+            <tr>
+                <td>DELIMITER</td>
+                <td>Permite cambiar o delimitador utilizado polo cliente SQL.</td>
+            </tr>
+            <tr>
+                <td>MySQL Workbench</td>
+                <td>Ferramenta gráfica para editar e executar SQL.</td>
+            </tr>
+            <tr>
+                <td>Cliente mariadb</td>
+                <td>Ferramenta de consola para conectarse ao servidor.</td>
+            </tr>
+            <tr>
+                <td>SOURCE</td>
+                <td>Executa un ficheiro SQL desde unha sesión interactiva.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>8. Exercicios prácticos</h2>
+
+    <p>
+        Os seguintes exercicios permiten practicar os conceptos
+        explicados neste bloque utilizando a máquina virtual Debian
+        co servidor MariaDB e MySQL Workbench.
+    </p>
+
+    <h3>Exercicio 1. Creación dun ficheiro SQL</h3>
+
+    <ol>
+        <li>Crear un ficheiro SQL que conteña instrucións para crear unha base de datos chamada <code>empresa</code>.</li>
+        <li>Crear unha táboa chamada <code>departamentos</code> con campos para identificar o departamento, o seu nome e a súa localización.</li>
+        <li>Inserir varios rexistros na táboa.</li>
+        <li>Engadir comentarios para documentar as diferentes operacións.</li>
+        <li>Incluír unha consulta que permita visualizar toda a información almacenada.</li>
+    </ol>
+
+    <h3>Exercicio 2. Execución desde Workbench</h3>
+
+    <ol>
+        <li>Abrir o ficheiro creado no exercicio anterior desde MySQL Workbench.</li>
+        <li>Establecer a conexión co servidor MariaDB da máquina virtual Debian.</li>
+        <li>Executar o guión SQL completo.</li>
+        <li>Comprobar a creación da base de datos e da táboa.</li>
+        <li>Verificar que os rexistros se inseriron correctamente.</li>
+    </ol>
+
+    <h3>Exercicio 3. Execución desde a consola</h3>
+
+    <ol>
+        <li>Copiar o ficheiro SQL á máquina virtual Debian.</li>
+        <li>Executar o ficheiro desde o terminal utilizando o cliente <code>mariadb</code>.</li>
+        <li>Comprobar que as operacións se realizaron correctamente.</li>
+        <li>Executar novamente algunhas das instrucións e observar o comportamento do servidor.</li>
+    </ol>
+
+    <h3>Exercicio 4. Comparación de ferramentas</h3>
+
+    <p>
+        Executar un mesmo ficheiro SQL desde MySQL Workbench
+        e desde a consola de MariaDB. Comparar os dous métodos
+        de execución e identificar as diferenzas na presentación
+        dos resultados e das mensaxes de erro.
+    </p>
+
+    <hr>
+
+    <p>
+        <strong>Fin do bloque 1.</strong> Nos seguintes apartados
+        estudaremos como utilizar variables e funcións de MariaDB
+        para construír programas SQL máis flexibles e dinámicos.
+    </p>
 
 </main>
 
 </body>
 </html>
+```
