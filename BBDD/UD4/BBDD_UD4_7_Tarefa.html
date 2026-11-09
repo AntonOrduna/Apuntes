@@ -3,1502 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UD4 - Manipulación de datos (DML)</title>
+    <title>UD4 - Práctica integradora: xestión dunha tenda en liña</title>
     <link rel="stylesheet" href="../../css/estilos.css">
 </head>
 <body>
 
-<main>
+<div class="container">
+<main class="content">
 
-    <h1>UD4. Manipulación de datos e xestión de transaccións</h1>
-
-    <h2>Bloque 1. Manipulación de datos (DML)</h2>
+    <h1 class="document-title">UD4. Práctica integradora: xestión dunha tenda en liña</h1>
 
     <p>
-        Neste bloque estudaranse as operacións que permiten inserir, modificar
-        e eliminar rexistros nunha base de datos relacional. Tamén se analizará
-        como as claves primarias, as claves foráneas e as regras de integridade
-        referencial condicionan estas operacións.
+        Nesta práctica desenvolverase unha solución para a xestión dos datos
+        dunha pequena tenda en liña mediante MariaDB. Traballarase coa inserción,
+        modificación e eliminación de rexistros, o uso de subconsultas, a
+        elaboración de guións SQL, as transaccións e os mecanismos de integridade
+        e control da concorrencia.
     </p>
 
     <div class="callout">
-        <strong>Entorno de traballo:</strong>
-        Os exemplos utilizan MariaDB como sistema xestor de bases de datos
-        e MySQL Workbench como ferramenta cliente para executar as sentenzas SQL.
+        <strong>Obxectivo da práctica</strong>
+        <p>
+            Deseñar e implementar unha base de datos que permita xestionar os
+            clientes, os produtos e os pedidos dunha tenda en liña, garantindo
+            que as operacións realizadas manteñan a integridade e a consistencia
+            da información.
+        </p>
     </div>
 
-    <h2>1. Introdución á manipulación de datos</h2>
-
-    <h3>1.1. Que é a manipulación de datos?</h3>
+    <h2>1. Deseño da base de datos</h2>
 
     <p>
-        Unha base de datos almacena información organizada en táboas.
-        Unha vez creadas as táboas e definidas as súas relacións, é necesario
-        realizar operacións para incorporar novos rexistros, modificar
-        información existente ou eliminar datos que xa non sexan necesarios.
+        Crea unha base de datos chamada <code>tenda_ud4</code> para xestionar
+        a información dunha tenda en liña.
     </p>
 
-    <p>
-        Estas operacións realízanse mediante sentenzas SQL.
-        As instrucións utilizadas para inserir, actualizar e eliminar
-        información pertencen ao grupo denominado
-        <strong>DML</strong> (<em>Data Manipulation Language</em>),
-        é dicir, linguaxe de manipulación de datos.
-    </p>
-
-    <h3>1.2. Diferenzas entre DDL, DML e DCL</h3>
-
-    <p>
-        SQL inclúe diferentes grupos de sentenzas segundo a súa finalidade.
-        É importante distinguir entre modificar a estrutura dunha base
-        de datos, modificar os datos almacenados e administrar os permisos
-        dos usuarios.
-    </p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Grupo</th>
-                <th>Finalidade</th>
-                <th>Sentenzas habituais</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <strong>DDL</strong><br>
-                    Data Definition Language
-                </td>
-                <td>
-                    Crear, modificar ou eliminar estruturas da base de datos,
-                    como bases de datos, táboas, columnas, índices e restricións.
-                </td>
-                <td>
-                    <code>CREATE</code>,
-                    <code>ALTER</code>,
-                    <code>DROP</code>,
-                    <code>TRUNCATE</code>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <strong>DML</strong><br>
-                    Data Manipulation Language
-                </td>
-                <td>
-                    Inserir, modificar e eliminar rexistros almacenados
-                    nas táboas.
-                </td>
-                <td>
-                    <code>INSERT</code>,
-                    <code>UPDATE</code>,
-                    <code>DELETE</code>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <strong>DCL</strong><br>
-                    Data Control Language
-                </td>
-                <td>
-                    Administrar os permisos e privilexios dos usuarios
-                    sobre os obxectos da base de datos.
-                </td>
-                <td>
-                    <code>GRANT</code>,
-                    <code>REVOKE</code>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <p>
-        As consultas realizadas mediante <code>SELECT</code> adoitan
-        clasificarse nun grupo específico denominado DQL
-        (<em>Data Query Language</em>), aínda que frecuentemente
-        se estudan xunto coas operacións de manipulación de datos.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo: diferenzas entre os grupos de sentenzas</h3>
-
-        <pre><code>-- DDL: crea unha táboa
-CREATE TABLE categorias (
-    id INT PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL
-);
-
--- DML: insire un rexistro
-INSERT INTO categorias (id, nome)
-VALUES (1, 'Informática');
-
--- DML: modifica un rexistro
-UPDATE categorias
-SET nome = 'Sistemas informáticos'
-WHERE id = 1;
-
--- DML: elimina un rexistro
-DELETE FROM categorias
-WHERE id = 1;
-
--- DCL: concede un permiso
-GRANT SELECT ON academia.categorias
-TO 'consulta'@'localhost';</code></pre>
-    </div>
-
-    <h3>1.3. Ferramentas para modificar datos</h3>
-
-    <p>
-        As operacións DML poden executarse utilizando diferentes ferramentas:
-    </p>
+    <p>A base de datos deberá conter, como mínimo, as seguintes táboas:</p>
 
     <ul>
         <li>
-            <strong>Consola de MariaDB:</strong>
-            permite conectarse directamente ao servidor e executar
-            sentenzas SQL mediante unha terminal.
+            <strong>clientes:</strong> información dos clientes, incluíndo
+            identificador, nome, apelidos, correo electrónico e data de alta.
         </li>
         <li>
-            <strong>MySQL Workbench:</strong>
-            ofrece un editor SQL desde o que se poden escribir e executar
-            sentenzas, consultar resultados e revisar erros.
+            <strong>produtos:</strong> información dos produtos dispoñibles,
+            incluíndo identificador, nome, descrición, prezo e stock.
         </li>
         <li>
-            <strong>Aplicacións:</strong>
-            os programas desenvolvidos en linguaxes como PHP, Java ou Python
-            poden conectarse ao servidor e executar operacións DML mediante
-            os seus controladores.
+            <strong>pedidos:</strong> información dos pedidos realizados polos
+            clientes, incluíndo identificador, cliente, data e estado.
+        </li>
+        <li>
+            <strong>detalle_pedido:</strong> produtos incluídos en cada pedido,
+            xunto coa cantidade e o prezo aplicado no momento da compra.
         </li>
     </ul>
 
     <p>
-        A ferramenta utilizada non modifica o significado da sentenza SQL.
-        Unha mesma instrución <code>INSERT</code> executarase de maneira
-        equivalente desde a consola ou desde Workbench, sempre que se
-        utilice a mesma conexión e o usuario dispoña dos permisos necesarios.
+        Establece as relacións necesarias entre as táboas, tendo en conta que
+        un cliente pode realizar varios pedidos e que un pedido pode conter
+        varios produtos.
     </p>
 
-    <h3>1.4. Seleccionar a base de datos de traballo</h3>
-
     <p>
-        Antes de executar as sentenzas, é necesario seleccionar a base
-        de datos sobre a que se vai traballar. En MariaDB pódese facer
-        mediante a instrución <code>USE</code>.
+        Define as claves primarias e foráneas necesarias, así como as
+        restricións de integridade que consideres adecuadas. Utiliza o motor
+        InnoDB nas táboas.
     </p>
 
-    <pre><code>-- Consultar as bases de datos existentes
-SHOW DATABASES;
-
--- Seleccionar a base de datos
-USE academia;
-
--- Comprobar a base de datos seleccionada
-SELECT DATABASE();</code></pre>
+    <h2>2. Inserción e modificación de datos</h2>
 
     <p>
-        En MySQL Workbench tamén se pode seleccionar o esquema no panel
-        de esquemas. É importante comprobar sempre que se está traballando
-        sobre a base de datos correcta.
-    </p>
-
-    <h2>2. Base de datos de exemplo</h2>
-
-    <p>
-        Para os exemplos deste bloque utilizarase unha pequena base de datos
-        de xestión académica. Estará formada polas seguintes táboas:
+        Introduce datos suficientes para poder probar todas as operacións
+        da base de datos:
     </p>
 
     <ul>
-        <li><code>cursos</code>: almacena os cursos dispoñibles.</li>
-        <li><code>alumnos</code>: almacena os datos do alumnado.</li>
-        <li><code>asignaturas</code>: almacena as materias impartidas.</li>
-        <li><code>matriculas</code>: relaciona o alumnado coas asignaturas.</li>
+        <li>Polo menos 5 clientes diferentes.</li>
+        <li>Polo menos 8 produtos con prezos e cantidades de stock diferentes.</li>
+        <li>Varios pedidos realizados por distintos clientes.</li>
+        <li>Varios detalles asociados a cada pedido.</li>
+    </ul>
+
+    <p>Realiza diferentes operacións de manipulación de datos:</p>
+
+    <ul>
+        <li>Inserción de novos clientes e produtos.</li>
+        <li>Modificación dos datos dun cliente.</li>
+        <li>Actualización dos prezos e do stock dos produtos.</li>
+        <li>Modificación do estado de diferentes pedidos.</li>
+        <li>Eliminación de rexistros tendo en conta as relacións entre táboas.</li>
+        <li>Inserción de rexistros a partir dos resultados dunha consulta.</li>
     </ul>
 
     <p>
-        As relacións entre estas táboas son:
+        Comproba os resultados das operacións e verifica que os cambios
+        realizados non provocan inconsistencias na información.
+    </p>
+
+    <h2>3. Consultas e subconsultas nas operacións de edición</h2>
+
+    <p>
+        Realiza operacións de inserción, actualización e eliminación que
+        utilicen consultas e subconsultas para seleccionar os rexistros
+        afectados.
+    </p>
+
+    <p>Inclúe operacións que permitan:</p>
+
+    <ul>
+        <li>Obter os pedidos realizados por un cliente determinado.</li>
+        <li>Calcular o importe total dos pedidos.</li>
+        <li>Localizar produtos cun stock inferior ao stock medio.</li>
+        <li>Identificar clientes que realizaron pedidos e clientes que nunca realizaron ningún.</li>
+        <li>Localizar produtos que nunca foron incluídos nun pedido.</li>
+        <li>Identificar produtos cun prezo superior ao prezo medio.</li>
+        <li>Obter os produtos máis vendidos.</li>
+    </ul>
+
+    <p>
+        Utiliza subconsultas e operadores como <code>IN</code>,
+        <code>NOT IN</code>, <code>EXISTS</code> e <code>NOT EXISTS</code>
+        cando resulte necesario.
+    </p>
+
+    <p>
+        Realiza tamén actualizacións e eliminacións condicionadas por
+        información almacenada noutras táboas. Inclúe operacións que empreguen
+        <code>UPDATE</code> e <code>DELETE</code> combinados con consultas
+        relacionadas.
+    </p>
+
+    <h2>4. Guións SQL e procedementos almacenados</h2>
+
+    <p>
+        Desenvolve un procedemento almacenado que permita rexistrar un novo
+        pedido na tenda.
+    </p>
+
+    <p>O procedemento deberá realizar as operacións necesarias para:</p>
+
+    <ul>
+        <li>Comprobar que o cliente existe.</li>
+        <li>Comprobar que o produto solicitado existe.</li>
+        <li>Verificar que hai stock suficiente.</li>
+        <li>Crear o rexistro correspondente ao pedido.</li>
+        <li>Inserir os detalles do pedido.</li>
+        <li>Actualizar o stock dos produtos.</li>
+        <li>Calcular e almacenar o importe correspondente.</li>
+    </ul>
+
+    <p>
+        Organiza o procedemento utilizando variables, parámetros e estruturas
+        condicionais. Incorpora tamén mecanismos de control de erros para
+        evitar que unha operación incorrecta deixe datos parcialmente
+        modificados.
+    </p>
+
+    <p>
+        Inclúe chamadas ao procedemento con diferentes situacións, tanto
+        correctas como incorrectas, e comproba os resultados.
+    </p>
+
+    <h2>5. Transaccións</h2>
+
+    <p>
+        O rexistro dun pedido implica modificar varias táboas relacionadas.
+        Estas operacións deben tratarse como unha única unidade de traballo.
+    </p>
+
+    <p>
+        Utiliza transaccións para garantir que todas as operacións necesarias
+        se realizan correctamente ou, en caso de erro, se desfán os cambios.
+    </p>
+
+    <p>Realiza probas que inclúan:</p>
+
+    <ul>
+        <li>Rexistro correcto dun pedido e confirmación mediante <code>COMMIT</code>.</li>
+        <li>Cancelación dunha operación mediante <code>ROLLBACK</code>.</li>
+        <li>Unha operación que provoque un erro durante o rexistro dun pedido.</li>
+        <li>Comprobación dos datos antes e despois de confirmar unha transacción.</li>
+        <li>Utilización de puntos de restauración mediante <code>SAVEPOINT</code>.</li>
+    </ul>
+
+    <p>
+        Comproba que as operacións que se desfán non deixan modificacións
+        parciais nas táboas relacionadas.
+    </p>
+
+    <h2>6. Concorrencia e bloqueos</h2>
+
+    <p>
+        Simula o acceso simultáneo á base de datos desde dúas conexións
+        diferentes de MySQL Workbench.
+    </p>
+
+    <p>
+        Realiza probas nas que ambas conexións intenten consultar ou modificar
+        simultaneamente os mesmos rexistros.
+    </p>
+
+    <p>Analiza diferentes situacións:</p>
+
+    <ul>
+        <li>Dúas conexións que intentan modificar o stock dun mesmo produto.</li>
+        <li>Unha conexión que mantén unha transacción aberta mentres outra intenta modificar os mesmos datos.</li>
+        <li>Consultas realizadas mentres existen cambios pendentes noutra conexión.</li>
+        <li>Uso de <code>SELECT ... FOR UPDATE</code> para bloquear rexistros durante unha operación.</li>
+        <li>Situacións nas que se producen esperas ou bloqueos entre conexións.</li>
+    </ul>
+
+    <p>
+        Documenta o comportamento observado e explica como os bloqueos e os
+        niveis de illamento das transaccións afectan ás operacións simultáneas.
+    </p>
+
+    <h2>7. Integridade e consistencia dos datos</h2>
+
+    <p>
+        Comproba o funcionamento das restricións de integridade definidas
+        nas táboas da base de datos.
+    </p>
+
+    <p>Realiza probas que inclúan:</p>
+
+    <ul>
+        <li>Intentar inserir unha clave primaria duplicada.</li>
+        <li>Inserir valores nulos en campos que non os permiten.</li>
+        <li>Introducir valores duplicados en columnas con restrición <code>UNIQUE</code>.</li>
+        <li>Inserir referencias a rexistros que non existen noutras táboas.</li>
+        <li>Introducir valores que incumpran as restricións <code>CHECK</code>.</li>
+        <li>Eliminar rexistros que teñan dependencias noutras táboas.</li>
+    </ul>
+
+    <p>
+        Comproba as respostas de MariaDB ante estas operacións e explica
+        como as restricións definidas impiden que se almacenen datos
+        incorrectos.
+    </p>
+
+    <h2>8. Comprobación final</h2>
+
+    <p>
+        Unha vez rematadas as operacións, realiza unha comprobación xeral
+        da base de datos.
     </p>
 
     <ul>
-        <li>Un curso pode ter moitos alumnos.</li>
-        <li>Un alumno pertence a un curso.</li>
-        <li>Un alumno pode matricularse en varias asignaturas.</li>
-        <li>Unha asignatura pode ter varios alumnos matriculados.</li>
+        <li>Verifica que existen todas as táboas e relacións previstas.</li>
+        <li>Comproba que os pedidos están correctamente relacionados cos clientes.</li>
+        <li>Verifica que os detalles dos pedidos están relacionados cos produtos correspondentes.</li>
+        <li>Comproba que os importes e as cantidades de stock son coherentes.</li>
+        <li>Verifica que as transaccións e os procedementos funcionan correctamente.</li>
+        <li>Comproba que non existen rexistros incoherentes ou referencias incorrectas.</li>
     </ul>
 
-    <div class="ejemplo">
-        <h3>Creación da base de datos e das táboas</h3>
-
-        <pre><code>CREATE DATABASE IF NOT EXISTS academia;
-
-USE academia;
-
-CREATE TABLE cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(20) NOT NULL UNIQUE
-) ENGINE=InnoDB;
-
-CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    email VARCHAR(120) UNIQUE,
-    data_alta DATE NOT NULL,
-    activo BOOLEAN NOT NULL DEFAULT TRUE,
-    curso_id INT,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-) ENGINE=InnoDB;
-
-CREATE TABLE asignaturas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL UNIQUE
-) ENGINE=InnoDB;
-
-CREATE TABLE matriculas (
-    alumno_id INT NOT NULL,
-    asignatura_id INT NOT NULL,
-    data DATE NOT NULL,
-    nota DECIMAL(4,2),
-
-    PRIMARY KEY (alumno_id, asignatura_id),
-
-    CONSTRAINT fk_matriculas_alumnos
-        FOREIGN KEY (alumno_id)
-        REFERENCES alumnos(id),
-
-    CONSTRAINT fk_matriculas_asignaturas
-        FOREIGN KEY (asignatura_id)
-        REFERENCES asignaturas(id),
-
-    CONSTRAINT chk_nota
-        CHECK (nota IS NULL OR (nota >= 0 AND nota <= 10))
-) ENGINE=InnoDB;</code></pre>
-    </div>
+    <h2>9. Entrega da práctica</h2>
 
     <div class="callout">
-        <strong>Importante:</strong>
-        Utilízase o motor de almacenamento <code>InnoDB</code>, que admite
-        claves foráneas e transaccións. As restricións definidas nas táboas
-        son comprobadas polo servidor cando se executan as operacións DML.
-    </div>
-
-    <h2>3. Inserción de rexistros: INSERT</h2>
-
-    <h3>3.1. Sintaxe básica</h3>
-
-    <p>
-        A sentenza <code>INSERT INTO</code> permite engadir novos rexistros
-        a unha táboa. Na súa forma básica, indícase a táboa, as columnas
-        que recibirán os datos e os valores correspondentes.
-    </p>
-
-    <pre><code>INSERT INTO nome_taboa (columna1, columna2, columna3)
-VALUES (valor1, valor2, valor3);</code></pre>
-
-    <p>
-        Os valores deben corresponderse coas columnas indicadas e respectar
-        os seus tipos de datos e as restricións definidas na táboa.
-    </p>
-
-    <h3>3.2. Inserir un rexistro</h3>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO cursos (nome)
-VALUES ('DAW1');
-
-INSERT INTO cursos (nome)
-VALUES ('DAM1');
-
-INSERT INTO asignaturas (nome)
-VALUES ('Bases de datos');</code></pre>
-
+        <strong>Formato de entrega: un único documento PDF.</strong>
         <p>
-            Como o campo <code>id</code> está definido como
-            <code>AUTO_INCREMENT</code>, MariaDB xera automaticamente
-            o seu valor. Non é necesario indicalo na sentenza.
+            A entrega consistirá nun informe PDF que recolla o traballo
+            realizado durante toda a práctica. Non se deberán entregar
+            ficheiros SQL independentes.
         </p>
     </div>
 
-    <h3>3.3. Consultar os datos inseridos</h3>
-
-    <p>
-        Despois de inserir datos, pódese comprobar o resultado mediante
-        unha consulta <code>SELECT</code>.
-    </p>
-
-    <pre><code>SELECT * FROM cursos;
-
-SELECT * FROM asignaturas;</code></pre>
-
-    <h3>3.4. Orde e correspondencia dos valores</h3>
-
-    <p>
-        Cando se indican as columnas, os valores de <code>VALUES</code>
-        asígnanse seguindo exactamente esa orde. Non é obrigatorio
-        manter a orde física das columnas da táboa.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO alumnos (
-    email,
-    nome,
-    data_alta,
-    curso_id
-)
-VALUES (
-    'ana@example.com',
-    'Ana García',
-    '2026-09-15',
-    1
-);</code></pre>
-
-        <p>
-            Aínda que <code>email</code> aparece antes que
-            <code>nome</code>, os valores asígnanse correctamente
-            porque se respectou a orde indicada na lista de columnas.
-        </p>
-    </div>
-
-    <div class="advertencia">
-        <strong>Evitar sempre que sexa posible:</strong>
-        inserir valores sen indicar as columnas. Se se omite a lista
-        de columnas, é necesario proporcionar un valor para todas
-        as columnas da táboa e respectar a súa orde de definición.
-        Ademais, un cambio posterior na estrutura pode provocar
-        que a sentenza deixe de funcionar.
-    </div>
-
-    <h2>4. Inserción especificando columnas, NULL e valores por defecto</h2>
-
-    <h3>4.1. Omitir columnas opcionais</h3>
-
-    <p>
-        Cando unha columna admite valores por defecto ou
-        <code>NULL</code>, pode omitirse da lista de columnas.
-        MariaDB asignará o valor por defecto se existe; noutro caso,
-        asignará <code>NULL</code> se a columna o permite.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO alumnos (
-    nome,
-    data_alta,
-    curso_id
-)
-VALUES (
-    'Luis López',
-    '2026-09-16',
-    1
-);</code></pre>
-
-        <p>
-            Neste caso, <code>email</code> queda a <code>NULL</code>
-            porque admite valores nulos e <code>activo</code> recibe
-            o seu valor por defecto, <code>TRUE</code>.
-        </p>
-    </div>
-
-    <h3>4.2. O valor NULL</h3>
-
-    <p>
-        <code>NULL</code> representa a ausencia dun valor coñecido
-        ou aplicable. Non equivale a cero, a unha cadea baleira
-        nin ao texto <code>'NULL'</code>.
-    </p>
-
-    <pre><code>INSERT INTO alumnos (
-    nome,
-    email,
-    data_alta
-)
-VALUES (
-    'Marta Fernández',
-    NULL,
-    '2026-09-17'
-);</code></pre>
-
-    <p>
-        Para comprobar se unha columna contén valores nulos
-        utilízanse os operadores <code>IS NULL</code> e
-        <code>IS NOT NULL</code>.
-    </p>
-
-    <pre><code>-- Alumnos sen correo electrónico
-SELECT nome
-FROM alumnos
-WHERE email IS NULL;
-
--- Alumnos cun correo electrónico
-SELECT nome
-FROM alumnos
-WHERE email IS NOT NULL;</code></pre>
-
-    <div class="advertencia">
-        <strong>Erro frecuente:</strong>
-        non se debe escribir <code>email = NULL</code> para buscar
-        valores nulos. Débese utilizar <code>IS NULL</code>.
-        As comparacións habituais non funcionan cos valores NULL
-        do mesmo xeito que cos valores normais.
-    </div>
-
-    <h3>4.3. Valores por defecto</h3>
-
-    <p>
-        Unha columna pode ter un valor predeterminado definido
-        mediante a cláusula <code>DEFAULT</code>. Ese valor
-        utilízase cando se omite a columna na inserción ou cando
-        se indica expresamente a palabra <code>DEFAULT</code>.
-    </p>
-
-    <pre><code>-- Utiliza o valor por defecto de activo
-INSERT INTO alumnos (nome, data_alta)
-VALUES ('Pedro Rodríguez', '2026-09-18');
-
--- Indica expresamente que se utilice o valor por defecto
-INSERT INTO alumnos (nome, data_alta, activo)
-VALUES ('Laura Martínez', '2026-09-19', DEFAULT);</code></pre>
-
-    <h3>4.4. Campos AUTO_INCREMENT</h3>
-
-    <p>
-        Unha columna declarada como <code>AUTO_INCREMENT</code>
-        xera automaticamente un identificador cando se insire
-        un rexistro sen proporcionar un valor para ela.
-        É habitual utilizar este tipo de columnas como claves primarias.
-    </p>
-
-    <pre><code>INSERT INTO cursos (nome)
-VALUES ('ASIR1');
-
-SELECT LAST_INSERT_ID();</code></pre>
-
-    <p>
-        A función <code>LAST_INSERT_ID()</code> devolve o último
-        identificador xerado na conexión actual. Resulta útil
-        cando se necesita coñecer o identificador asignado
-        a un rexistro que acaba de inserirse.
-    </p>
-
-    <p>
-        Tamén se pode indicar <code>NULL</code> ou <code>0</code>
-        para solicitar a xeración automática nas configuracións
-        habituais de MariaDB, aínda que a forma máis clara
-        e recomendable é omitir a columna.
-    </p>
-
-    <h2>5. Inserción de múltiples rexistros</h2>
-
-    <h3>5.1. Varios rexistros cunha única sentenza</h3>
-
-    <p>
-        Pódense inserir varias filas nunha única operación separando
-        cada conxunto de valores mediante comas. Esta forma reduce
-        o número de sentenzas que é necesario executar.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>INSERT INTO cursos (nome)
-VALUES
-    ('DAW2'),
-    ('DAM2'),
-    ('ASIR2');</code></pre>
-    </div>
-
-    <h3>5.2. Inserción de varios alumnos</h3>
-
-    <pre><code>INSERT INTO alumnos (
-    nome,
-    email,
-    data_alta,
-    curso_id
-)
-VALUES
-    ('Carlos Sánchez', 'carlos@example.com', '2026-09-20', 1),
-    ('Elena González', 'elena@example.com', '2026-09-20', 1),
-    ('Javier Pérez', 'javier@example.com', '2026-09-21', 2);</code></pre>
-
-    <p>
-        Cada fila debe conter o mesmo número de valores e manter
-        a correspondencia coas columnas indicadas. Ademais,
-        todos os rexistros deben cumprir as restricións da táboa.
-    </p>
-
-    <h3>5.3. Inserir datos a partir dunha consulta</h3>
-
-    <p>
-        MariaDB permite inserir nunha táboa o resultado dunha consulta
-        mediante <code>INSERT INTO ... SELECT</code>. Esta operación
-        estudarase con máis detalle no bloque dedicado ás subconsultas
-        e ás ordes de edición.
-    </p>
-
-    <pre><code>-- Exemplo de estrutura:
--- require que exista unha táboa de destino compatible.
-
-INSERT INTO alumnos_copia (id, nome)
-SELECT id, nome
-FROM alumnos;</code></pre>
-
-    <div class="callout">
-        <strong>Idea clave:</strong>
-        en <code>INSERT ... SELECT</code> non se utiliza a cláusula
-        <code>VALUES</code>. Os rexistros que se insiren proceden
-        das filas devoltas pola consulta.
-    </div>
-
-    <h2>6. Actualización de rexistros: UPDATE</h2>
-
-    <h3>6.1. Sintaxe básica</h3>
-
-    <p>
-        A sentenza <code>UPDATE</code> permite modificar os valores
-        dunha ou varias columnas dos rexistros que cumpren
-        unha determinada condición.
-    </p>
-
-    <pre><code>UPDATE nome_taboa
-SET columna1 = valor1,
-    columna2 = valor2
-WHERE condicion;</code></pre>
-
-    <p>
-        A cláusula <code>SET</code> indica que columnas se modifican
-        e que valores reciben. A cláusula <code>WHERE</code>
-        determina que rexistros se ven afectados.
-    </p>
-
-    <h3>6.2. Actualizar un rexistro</h3>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>UPDATE alumnos
-SET email = 'ana.garcia@example.com'
-WHERE id = 1;</code></pre>
-
-        <p>
-            A sentenza cambia o correo electrónico da alumna
-            cuxo identificador é 1. Os demais campos permanecen
-            sen modificacións.
-        </p>
-    </div>
-
-    <h3>6.3. Actualizar varios campos</h3>
-
-    <p>
-        Unha mesma sentenza pode modificar varias columnas
-        dun rexistro.
-    </p>
-
-    <pre><code>UPDATE alumnos
-SET email = 'luis.lopez@example.com',
-    activo = TRUE
-WHERE id = 2;</code></pre>
-
-    <h3>6.4. Expresións na cláusula SET</h3>
-
-    <p>
-        O novo valor dunha columna tamén pode calcularse
-        a partir do seu valor actual.
-    </p>
-
-    <pre><code>UPDATE matriculas
-SET nota = nota + 0.5
-WHERE nota IS NOT NULL;</code></pre>
-
-    <p>
-        A operación anterior incrementa en medio punto todas
-        as cualificacións que non sexan nulas. Cómpre comprobar
-        que o cálculo respecta as restricións definidas para
-        a columna.
-    </p>
-
-    <h2>7. Condicións nas actualizacións</h2>
-
-    <h3>7.1. Uso de WHERE</h3>
-
-    <p>
-        A cláusula <code>WHERE</code> permite seleccionar os rexistros
-        que se van modificar. Pode utilizar operadores de comparación,
-        operadores lóxicos e outras condicións.
-    </p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Operador</th>
-                <th>Significado</th>
-                <th>Exemplo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>=</code></td>
-                <td>Igual</td>
-                <td><code>curso_id = 1</code></td>
-            </tr>
-            <tr>
-                <td><code>&lt;&gt;</code> ou <code>!=</code></td>
-                <td>Distinto</td>
-                <td><code>activo &lt;&gt; TRUE</code></td>
-            </tr>
-            <tr>
-                <td><code>&gt;</code>, <code>&lt;</code></td>
-                <td>Maior ou menor</td>
-                <td><code>nota &gt; 5</code></td>
-            </tr>
-            <tr>
-                <td><code>&gt;=</code>, <code>&lt;=</code></td>
-                <td>Maior ou igual, menor ou igual</td>
-                <td><code>nota &gt;= 5</code></td>
-            </tr>
-            <tr>
-                <td><code>BETWEEN</code></td>
-                <td>Dentro dun intervalo, incluídos os extremos</td>
-                <td><code>nota BETWEEN 5 AND 10</code></td>
-            </tr>
-            <tr>
-                <td><code>IN</code></td>
-                <td>Pertence a unha lista de valores</td>
-                <td><code>curso_id IN (1, 2)</code></td>
-            </tr>
-            <tr>
-                <td><code>LIKE</code></td>
-                <td>Coincide cun patrón</td>
-                <td><code>nome LIKE 'Ana%'</code></td>
-            </tr>
-            <tr>
-                <td><code>IS NULL</code></td>
-                <td>O valor é nulo</td>
-                <td><code>email IS NULL</code></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h3>7.2. Operadores lóxicos AND, OR e NOT</h3>
-
-    <p>
-        Os operadores lóxicos permiten combinar varias condicións.
-    </p>
-
-    <ul>
-        <li>
-            <code>AND</code>: todas as condicións deben cumprirse.
-        </li>
-        <li>
-            <code>OR</code>: abonda con que se cumpra algunha
-            das condicións.
-        </li>
-        <li>
-            <code>NOT</code>: inverte o resultado dunha condición.
-        </li>
-    </ul>
-
-    <div class="ejemplo">
-        <h3>Exemplos</h3>
-
-        <pre><code>-- Alumnos activos do curso 1
-UPDATE alumnos
-SET email = 'pendente@example.com'
-WHERE curso_id = 1 AND activo = TRUE;
-
--- Alumnos dos cursos 1 ou 2
-UPDATE alumnos
-SET activo = FALSE
-WHERE curso_id = 1 OR curso_id = 2;
-
--- Alumnos que non teñen correo electrónico
-UPDATE alumnos
-SET email = 'sen-correo@example.com'
-WHERE email IS NULL;</code></pre>
-    </div>
-
-    <h3>7.3. Actualización de varios rexistros</h3>
-
-    <p>
-        Se a condición coincide con varias filas, MariaDB actualizará
-        todas elas. Polo tanto, non se debe asumir que unha sentenza
-        <code>UPDATE</code> modifica sempre un único rexistro.
-    </p>
-
-    <pre><code>UPDATE alumnos
-SET activo = FALSE
-WHERE curso_id = 2;</code></pre>
-
-    <p>
-        Esta sentenza desactiva todos os alumnos asociados ao curso 2.
-    </p>
-
-    <div class="advertencia">
-        <strong>Precaución con UPDATE:</strong>
-        se se omite a cláusula <code>WHERE</code>, actualizaranse
-        todas as filas da táboa. Antes de executar unha actualización
-        importante, é recomendable comprobar que rexistros selecciona
-        a condición mediante unha consulta <code>SELECT</code> equivalente.
-    </div>
-
-    <div class="ejemplo">
-        <h3>Comprobación previa</h3>
-
-        <pre><code>-- Primeiro compróbanse as filas afectadas
-SELECT id, nome, activo
-FROM alumnos
-WHERE curso_id = 2;
-
--- Despois execútase a modificación
-UPDATE alumnos
-SET activo = FALSE
-WHERE curso_id = 2;</code></pre>
-    </div>
-
-    <h2>8. Eliminación de rexistros: DELETE</h2>
-
-    <h3>8.1. Sintaxe básica</h3>
-
-    <p>
-        A sentenza <code>DELETE</code> elimina filas dunha táboa.
-        A cláusula <code>WHERE</code> determina que rexistros
-        se deben borrar.
-    </p>
-
-    <pre><code>DELETE FROM nome_taboa
-WHERE condicion;</code></pre>
-
-    <h3>8.2. Eliminar un rexistro</h3>
-
-    <div class="ejemplo">
-        <h3>Exemplo</h3>
-
-        <pre><code>DELETE FROM alumnos
-WHERE id = 5;</code></pre>
-
-        <p>
-            Elimina o alumno co identificador 5, sempre que non existan
-            rexistros relacionados que impidan o borrado polas restricións
-            de clave foránea.
-        </p>
-    </div>
-
-    <h3>8.3. Eliminar varios rexistros</h3>
-
-    <p>
-        Do mesmo xeito que ocorre con <code>UPDATE</code>,
-        a condición pode coincidir con varias filas.
-    </p>
-
-    <pre><code>DELETE FROM alumnos
-WHERE activo = FALSE;</code></pre>
-
-    <p>
-        Esta sentenza elimina todos os alumnos inactivos,
-        sempre que non existan referencias que impidan a operación.
-    </p>
-
-    <h3>8.4. Eliminar todos os rexistros dunha táboa</h3>
-
-    <p>
-        Se se executa <code>DELETE</code> sen cláusula
-        <code>WHERE</code>, elimínanse todas as filas da táboa,
-        pero a súa estrutura permanece.
-    </p>
-
-    <pre><code>DELETE FROM matriculas;</code></pre>
-
-    <p>
-        Nas táboas InnoDB, esta operación pode formar parte dunha
-        transacción e os seus cambios poden desfacerse mediante
-        <code>ROLLBACK</code> antes de confirmar a transacción.
-    </p>
-
-    <div class="advertencia">
-        <strong>Precaución con DELETE:</strong>
-        unha sentenza sen <code>WHERE</code> elimina todos os rexistros.
-        Antes de executala, comproba a táboa e a condición.
-        Nas operacións importantes, utiliza transaccións cando
-        o motor e o contexto o permitan.
-    </div>
-
-    <h2>9. Diferenzas entre DELETE, TRUNCATE e DROP</h2>
-
-    <p>
-        Aínda que as tres sentenzas poden provocar a desaparición
-        de información, non realizan a mesma operación.
-    </p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Sentenza</th>
-                <th>Que elimina?</th>
-                <th>Mantén a táboa?</th>
-                <th>Características</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>DELETE</code></td>
-                <td>Unha ou varias filas, segundo a condición.</td>
-                <td>Si.</td>
-                <td>
-                    Admite <code>WHERE</code>. En InnoDB pode desfacerse
-                    mediante <code>ROLLBACK</code> se aínda non se
-                    confirmou a transacción.
-                </td>
-            </tr>
-            <tr>
-                <td><code>TRUNCATE TABLE</code></td>
-                <td>Todos os rexistros da táboa.</td>
-                <td>Si.</td>
-                <td>
-                    Non admite <code>WHERE</code>. Reinicia normalmente
-                    o contador <code>AUTO_INCREMENT</code>. É unha
-                    operación DDL e provoca unha confirmación implícita.
-                </td>
-            </tr>
-            <tr>
-                <td><code>DROP TABLE</code></td>
-                <td>A táboa completa, incluídos os datos e a definición.</td>
-                <td>Non.</td>
-                <td>
-                    Elimina a estrutura. Para volver utilizar a táboa
-                    será necesario creala de novo.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="ejemplo">
-        <h3>Exemplos</h3>
-
-        <pre><code>-- Elimina os alumnos inactivos
-DELETE FROM alumnos
-WHERE activo = FALSE;
-
--- Elimina todas as filas de matriculas
-TRUNCATE TABLE matriculas;
-
--- Elimina a táboa completa
-DROP TABLE matriculas;</code></pre>
-    </div>
-
-    <div class="advertencia">
-        <strong>Restricións de claves foráneas:</strong>
-        MariaDB pode impedir un <code>TRUNCATE TABLE</code> se outra
-        táboa contén unha clave foránea que referencia a táboa que
-        se quere baleirar. Nese caso, haberá que estudar as dependencias
-        e utilizar unha alternativa adecuada, como borrar as filas
-        na orde correcta.
-    </div>
-
-    <h2>10. Integridade referencial nas operacións DML</h2>
-
-    <h3>10.1. Que é a integridade referencial?</h3>
-
-    <p>
-        A integridade referencial garante que as relacións entre táboas
-        manteñan a súa coherencia. Establécese mediante claves foráneas
-        (<code>FOREIGN KEY</code>).
-    </p>
-
-    <p>
-        Unha clave foránea dunha táboa filla referencia unha clave primaria
-        ou unha clave única dunha táboa pai. Deste xeito, evítase que unha
-        fila filla faga referencia a un rexistro pai que non existe.
-    </p>
-
-    <h3>10.2. Exemplo de relación entre táboas</h3>
-
-    <p>
-        Na base de datos de exemplo, <code>cursos</code> é a táboa pai
-        e <code>alumnos</code> é a táboa filla. A columna
-        <code>alumnos.curso_id</code> referencia a
-        <code>cursos.id</code>.
-    </p>
-
-    <pre><code>CREATE TABLE cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(20) NOT NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    curso_id INT,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-) ENGINE=InnoDB;</code></pre>
-
-    <h3>10.3. Restricións ao inserir</h3>
-
-    <p>
-        Se se insire un alumno cun valor de <code>curso_id</code>
-        que non existe na táboa <code>cursos</code>, a operación
-        será rexeitada.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Inserción correcta</h3>
-
-        <pre><code>INSERT INTO cursos (nome)
-VALUES ('DAW1');
-
-INSERT INTO alumnos (nome, curso_id)
-VALUES ('Ana García', 1);</code></pre>
-    </div>
-
-    <div class="advertencia">
-        <h3>Inserción incorrecta</h3>
-
-        <pre><code>INSERT INTO alumnos (nome, curso_id)
-VALUES ('Luis López', 999);</code></pre>
-
-        <p>
-            Se non existe un curso co identificador 999, MariaDB
-            xera un erro de clave foránea. Non se pode crear unha
-            referencia a un rexistro inexistente.
-        </p>
-    </div>
-
-    <h3>10.4. Restricións ao actualizar</h3>
-
-    <p>
-        A integridade referencial tamén se comproba cando se modifica
-        o valor dunha clave foránea. O novo valor debe corresponder
-        a unha fila existente na táboa pai, agás que a columna
-        admita <code>NULL</code>.
-    </p>
-
-    <pre><code>-- Correcto se existe o curso 2
-UPDATE alumnos
-SET curso_id = 2
-WHERE id = 1;
-
--- Incorrecto se non existe o curso 999
-UPDATE alumnos
-SET curso_id = 999
-WHERE id = 1;</code></pre>
-
-    <h3>10.5. Restricións ao borrar</h3>
-
-    <p>
-        Se unha fila da táboa pai está sendo referenciada por filas
-        dunha táboa filla, o servidor debe aplicar a política de
-        integridade referencial definida na clave foránea.
-        Se non se estableceu unha acción que permita o borrado,
-        a operación normalmente será rexeitada.
-    </p>
-
-    <pre><code>-- Pode fallar se existen alumnos asociados ao curso 1
-DELETE FROM cursos
-WHERE id = 1;</code></pre>
-
-    <h2>11. Políticas ON DELETE e ON UPDATE</h2>
-
-    <h3>11.1. Accións referenciais</h3>
-
-    <p>
-        Ao crear unha clave foránea pódense definir as accións que
-        se aplicarán cando se modifique ou elimine o valor referenciado
-        na táboa pai.
-    </p>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Acción</th>
-                <th>Comportamento</th>
-                <th>Uso habitual</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><code>RESTRICT</code></td>
-                <td>
-                    Impide modificar ou borrar a fila pai se existen
-                    filas fillas relacionadas.
-                </td>
-                <td>
-                    Evitar a eliminación de información que aínda
-                    ten dependencias.
-                </td>
-            </tr>
-            <tr>
-                <td><code>NO ACTION</code></td>
-                <td>
-                    En InnoDB de MariaDB compórtase como
-                    <code>RESTRICT</code>.
-                </td>
-                <td>
-                    Indicar que non se permite a operación se rompe
-                    a relación.
-                </td>
-            </tr>
-            <tr>
-                <td><code>CASCADE</code></td>
-                <td>
-                    Propaga a modificación ou eliminación ás filas
-                    relacionadas.
-                </td>
-                <td>
-                    Manter automaticamente a coherencia cando
-                    a fila filla non debe existir sen a pai.
-                </td>
-            </tr>
-            <tr>
-                <td><code>SET NULL</code></td>
-                <td>
-                    Establece a <code>NULL</code> a clave foránea
-                    das filas fillas.
-                </td>
-                <td>
-                    Conservar as filas fillas aínda que deixen
-                    de estar asociadas á fila pai.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h3>11.2. ON DELETE</h3>
-
-    <p>
-        A cláusula <code>ON DELETE</code> determina que sucede
-        coas filas fillas cando se elimina a fila pai.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo con ON DELETE CASCADE</h3>
-
-        <pre><code>CREATE TABLE cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(20) NOT NULL
-) ENGINE=InnoDB;
-
-CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    curso_id INT NOT NULL,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-) ENGINE=InnoDB;</code></pre>
-
-        <p>
-            Se se elimina un curso, MariaDB elimina tamén os alumnos
-            asociados a ese curso. Esta propagación realízase
-            automaticamente.
-        </p>
-
-        <pre><code>DELETE FROM cursos
-WHERE id = 1;</code></pre>
-    </div>
-
-    <h3>11.3. ON DELETE SET NULL</h3>
-
-    <p>
-        Se se utiliza <code>SET NULL</code>, as filas fillas consérvanse,
-        pero a súa clave foránea pasa a ser nula. Polo tanto,
-        a columna da táboa filla debe admitir valores <code>NULL</code>.
-    </p>
-
-    <pre><code>CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(80) NOT NULL,
-    curso_id INT NULL,
-
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-        ON DELETE SET NULL
-) ENGINE=InnoDB;</code></pre>
-
-    <h3>11.4. ON UPDATE</h3>
-
-    <p>
-        A cláusula <code>ON UPDATE</code> define que sucede cando
-        se modifica o valor da clave referenciada na táboa pai.
-    </p>
-
-    <pre><code>FOREIGN KEY (curso_id)
-REFERENCES cursos(id)
-ON UPDATE CASCADE;</code></pre>
-
-    <p>
-        Con <code>ON UPDATE CASCADE</code>, se cambia o identificador
-        dun curso, MariaDB actualiza automaticamente as claves foráneas
-        dos alumnos relacionados.
-    </p>
-
-    <h3>11.5. Escoller unha política adecuada</h3>
-
-    <p>
-        A política depende do significado dos datos e das regras
-        do sistema:
-    </p>
-
-    <ul>
-        <li>
-            <strong>RESTRICT:</strong>
-            apropiado cando non se debe eliminar un elemento que
-            ten información dependente.
-        </li>
-        <li>
-            <strong>CASCADE:</strong>
-            apropiado cando os rexistros fillos carecen de sentido
-            sen o rexistro pai, por exemplo, as liñas dun pedido
-            que se elimina.
-        </li>
-        <li>
-            <strong>SET NULL:</strong>
-            apropiado cando se desexa conservar o rexistro fillo,
-            pero desvinculalo do pai.
-        </li>
-    </ul>
-
-    <div class="advertencia">
-        <strong>Atención:</strong>
-        <code>CASCADE</code> pode provocar a eliminación de moitas filas
-        mediante unha única sentenza. Antes de definir esta política,
-        hai que valorar se esa eliminación automática é realmente
-        a regra de negocio desexada.
-    </div>
-
-    <h2>12. Resolución de erros de integridade referencial</h2>
-
-    <h3>12.1. Identificar a táboa pai e a táboa filla</h3>
-
-    <p>
-        Cando unha operación DML produce un erro de clave foránea,
-        o primeiro paso consiste en identificar que táboa contén
-        a referencia e que táboa contén o rexistro referenciado.
-    </p>
-
-    <p>
-        Pódese consultar a definición dunha táboa mediante:
-    </p>
-
-    <pre><code>SHOW CREATE TABLE alumnos;</code></pre>
-
-    <p>
-        Tamén se pode consultar a información das restricións
-        no catálogo <code>INFORMATION_SCHEMA</code>.
-    </p>
-
-    <pre><code>SELECT
-    TABLE_NAME,
-    CONSTRAINT_NAME,
-    COLUMN_NAME,
-    REFERENCED_TABLE_NAME,
-    REFERENCED_COLUMN_NAME
-FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE TABLE_SCHEMA = DATABASE()
-  AND REFERENCED_TABLE_NAME IS NOT NULL;</code></pre>
-
-    <h3>12.2. Orde correcta de inserción</h3>
-
-    <p>
-        Cando se insiren datos relacionados, primeiro débense crear
-        os rexistros das táboas pai e despois os das táboas fillas.
-        Deste xeito, as claves foráneas poden apuntar a rexistros
-        que xa existen.
-    </p>
-
-    <div class="ejemplo">
-        <h3>Exemplo de inserción ordenada</h3>
-
-        <pre><code>-- 1. Primeiro insírese o curso (táboa pai)
-INSERT INTO cursos (nome)
-VALUES ('DAW1');
-
--- 2. Despois insírese o alumno (táboa filla)
-INSERT INTO alumnos (nome, data_alta, curso_id)
-VALUES ('Ana García', '2026-09-15', 1);
-
--- 3. Finalmente rexístrase a matrícula
-INSERT INTO matriculas (
-    alumno_id,
-    asignatura_id,
-    data,
-    nota
-)
-VALUES (1, 1, '2026-09-16', NULL);</code></pre>
-
-        <p>
-            A última operación require que existan previamente
-            tanto o alumno co identificador 1 como a asignatura
-            co identificador 1.
-        </p>
-    </div>
-
-    <h3>12.3. Orde correcta de eliminación</h3>
-
-    <p>
-        Cando se eliminan rexistros relacionados e se utiliza
-        unha política restritiva, a orde habitual é a inversa
-        á de inserción: primeiro elimínanse as filas das táboas
-        fillas e despois as das táboas pai.
-    </p>
-
-    <pre><code>-- 1. Eliminar primeiro as matrículas do alumno
-DELETE FROM matriculas
-WHERE alumno_id = 1;
-
--- 2. Despois eliminar o alumno
-DELETE FROM alumnos
-WHERE id = 1;
-
--- 3. Finalmente, se xa non ten alumnos asociados,
--- eliminar o curso
-DELETE FROM cursos
-WHERE id = 1;</code></pre>
-
-    <h3>12.4. Diagnóstico de erros frecuentes</h3>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Situación</th>
-                <th>Posible causa</th>
-                <th>Que comprobar?</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Erro ao inserir unha fila filla.</td>
-                <td>
-                    O valor da clave foránea non existe
-                    na táboa pai.
-                </td>
-                <td>
-                    Que o rexistro pai exista e que o identificador
-                    utilizado sexa correcto.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro ao actualizar unha clave foránea.</td>
-                <td>
-                    O novo valor non existe na táboa referenciada.
-                </td>
-                <td>
-                    Que o valor de destino exista ou que a columna
-                    poida admitir <code>NULL</code>.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro ao borrar unha fila pai.</td>
-                <td>
-                    Hai filas fillas que a referencian e a política
-                    impide o borrado.
-                </td>
-                <td>
-                    Localizar as filas relacionadas e revisar
-                    <code>ON DELETE</code>.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro ao inserir un valor duplicado.</td>
-                <td>
-                    Incúmprese unha clave primaria ou unha restrición
-                    <code>UNIQUE</code>.
-                </td>
-                <td>
-                    Comprobar se xa existe o identificador
-                    ou o valor único.
-                </td>
-            </tr>
-            <tr>
-                <td>Erro por valor nulo.</td>
-                <td>
-                    Inténtase inserir <code>NULL</code> nunha columna
-                    <code>NOT NULL</code>.
-                </td>
-                <td>
-                    Revisar se se debe proporcionar un valor
-                    ou definir un valor por defecto.
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>13. Boas prácticas ao modificar datos</h2>
+    <p>O documento PDF deberá incluír:</p>
 
     <ol>
         <li>
-            Seleccionar e comprobar a base de datos antes de executar
-            operacións.
+            <strong>Deseño da base de datos:</strong> descrición das táboas,
+            campos, claves primarias, claves foráneas e relacións establecidas.
         </li>
         <li>
-            Indicar explicitamente as columnas nas sentenzas
-            <code>INSERT</code>.
+            <strong>Inserción e modificación de datos:</strong> explicación
+            das operacións realizadas e capturas das sentenzas SQL e dos
+            resultados obtidos.
         </li>
         <li>
-            Utilizar condicións <code>WHERE</code> precisas
-            en <code>UPDATE</code> e <code>DELETE</code>.
+            <strong>Consultas e subconsultas:</strong> sentenzas utilizadas
+            e resultados das operacións realizadas.
         </li>
         <li>
-            Antes de modificar ou borrar, executar un
-            <code>SELECT</code> coa mesma condición para comprobar
-            as filas afectadas.
+            <strong>Guións SQL e procedementos:</strong> código desenvolvido,
+            explicación do seu funcionamento e probas de execución.
         </li>
         <li>
-            Respectar as restricións de claves primarias,
-            claves foráneas, valores únicos e columnas obrigatorias.
+            <strong>Transaccións:</strong> exemplos de confirmación,
+            cancelación e utilización de puntos de restauración, acompañados
+            das comprobacións correspondentes.
         </li>
         <li>
-            Inserir primeiro os rexistros pai e despois
-            os rexistros fillos.
+            <strong>Concorrencia:</strong> capturas das probas realizadas
+            desde as dúas conexións de Workbench e explicación dos bloqueos
+            observados.
         </li>
         <li>
-            Eliminar primeiro os rexistros fillos cando as regras
-            de integridade así o esixan.
+            <strong>Integridade:</strong> probas das restricións definidas
+            e explicación dos erros obtidos ao intentar introducir datos
+            incorrectos.
         </li>
         <li>
-            Escoller as accións <code>ON DELETE</code> e
-            <code>ON UPDATE</code> segundo as regras reais
-            da aplicación.
-        </li>
-        <li>
-            Evitar utilizar <code>TRUNCATE</code> ou
-            <code>DROP</code> sen comprobar antes as súas consecuencias.
-        </li>
-        <li>
-            Utilizar transaccións nas operacións que requiran
-            poder confirmar ou desfacer os cambios.
-            Este mecanismo estudarase nun bloque posterior.
+            <strong>Conclusión:</strong> breve valoración do traballo
+            realizado e dos problemas atopados durante o desenvolvemento.
         </li>
     </ol>
-
-    <h2>14. Resumo das sentenzas</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Operación</th>
-                <th>Sentenza</th>
-                <th>Exemplo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Inserir un rexistro</td>
-                <td><code>INSERT INTO</code></td>
-                <td>
-                    <code>INSERT INTO cursos (nome) VALUES ('DAW1');</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Inserir varios rexistros</td>
-                <td><code>INSERT INTO ... VALUES</code></td>
-                <td>
-                    <code>INSERT INTO cursos (nome) VALUES ('DAW1'), ('DAW2');</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Inserir o resultado dunha consulta</td>
-                <td><code>INSERT INTO ... SELECT</code></td>
-                <td>
-                    <code>INSERT INTO destino (nome) SELECT nome FROM orixe;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Actualizar rexistros</td>
-                <td><code>UPDATE ... SET</code></td>
-                <td>
-                    <code>UPDATE alumnos SET activo = FALSE WHERE id = 1;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Eliminar rexistros</td>
-                <td><code>DELETE FROM</code></td>
-                <td>
-                    <code>DELETE FROM alumnos WHERE id = 1;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Baleirar unha táboa</td>
-                <td><code>TRUNCATE TABLE</code></td>
-                <td>
-                    <code>TRUNCATE TABLE matriculas;</code>
-                </td>
-            </tr>
-            <tr>
-                <td>Eliminar unha táboa</td>
-                <td><code>DROP TABLE</code></td>
-                <td>
-                    <code>DROP TABLE matriculas;</code>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2>15. Guión de traballo e comprobación</h2>
 
     <p>
-        Para practicar os contidos deste bloque, recoméndase seguir
-        esta orde de traballo en MariaDB:
+        As capturas deberán permitir identificar claramente as sentenzas
+        executadas e os resultados obtidos. Cada captura deberá acompañarse
+        dunha breve explicación que indique que se está comprobando e cal
+        é o resultado esperado ou observado.
     </p>
 
-    <ol>
-        <li>Crear ou seleccionar a base de datos de exemplo.</li>
-        <li>
-            Consultar a estrutura das táboas con
-            <code>DESCRIBE</code> e <code>SHOW CREATE TABLE</code>.
-        </li>
-        <li>Inserir rexistros nas táboas pai.</li>
-        <li>
-            Inserir rexistros nas táboas fillas utilizando
-            identificadores existentes.
-        </li>
-        <li>Consultar os rexistros para comprobar as insercións.</li>
-        <li>
-            Actualizar un ou varios rexistros utilizando
-            condicións específicas.
-        </li>
-        <li>
-            Comprobar previamente con <code>SELECT</code> que filas
-            se verán afectadas por cada actualización ou borrado.
-        </li>
-        <li>
-            Probar unha inserción cunha clave foránea inexistente
-            e analizar o erro obtido.
-        </li>
-        <li>
-            Probar o borrado dun rexistro pai que teña filas fillas
-            relacionadas.
-        </li>
-        <li>
-            Revisar as regras <code>ON DELETE</code> e
-            <code>ON UPDATE</code> das claves foráneas.
-        </li>
-        <li>
-            Eliminar os rexistros na orde adecuada e comprobar
-            o estado final das táboas.
-        </li>
-    </ol>
+    <p>
+        O código SQL incluído no informe deberá ser lexible e estar organizado
+        por apartados. Non abondará con incluír capturas sen explicar as
+        operacións realizadas.
+    </p>
 
     <div class="callout">
-        <strong>Obxectivo do bloque:</strong>
-        ser capaz de inserir, actualizar e eliminar información
-        mediante SQL, comprendendo como afectan estas operacións
-        ás relacións entre táboas e aplicando as medidas necesarias
-        para conservar a integridade e a consistencia dos datos.
+        <strong>Importante</strong>
+        <p>
+            O PDF debe documentar todo o proceso, desde a creación da base
+            de datos ata as probas finais. É necesario que as explicacións
+            e as capturas permitan comprender como se desenvolveu a solución
+            e comprobar o funcionamento das operacións realizadas.
+        </p>
     </div>
 
 </main>
+</div>
 
 </body>
 </html>

@@ -13,11 +13,12 @@
     <h1>UD4. Integridade e consistencia dos datos</h1>
 
     <p>
-        Nesta última parte da unidade estudaranse os mecanismos que permiten
-        garantir que a información almacenada nunha base de datos sexa correcta,
-        coherente e fiable. Tamén se aplicarán os coñecementos adquiridos sobre
-        manipulación de datos, subconsultas, guións SQL, transaccións e concorrencia
-        mediante dous procesos prácticos integradores.
+        A integridade e a consistencia son fundamentais para garantir que
+        a información almacenada nunha base de datos sexa correcta, válida
+        e coherente. Nesta parte da unidade estudaranse as restricións que
+        permiten controlar os datos introducidos, os mecanismos para evitar
+        operacións incorrectas e a combinación de diferentes técnicas SQL
+        nun proceso completo de manipulación de información.
     </p>
 
     <h2>1. Integridade e consistencia da información</h2>
@@ -25,34 +26,33 @@
     <h3>1.1. Concepto de integridade dos datos</h3>
 
     <p>
-        A <strong>integridade dos datos</strong> é o conxunto de regras e mecanismos
-        que permiten garantir que a información almacenada nunha base de datos
-        cumpre determinadas condicións de validez e coherencia.
+        A <strong>integridade dos datos</strong> é a propiedade que garante
+        que a información almacenada nunha base de datos sexa correcta,
+        válida e cumpra as regras establecidas no seu deseño.
     </p>
 
     <p>
-        Unha base de datos non debe limitarse a almacenar información. Tamén debe
-        impedir, na medida do posible, que se introduzan datos incorrectos,
-        duplicados ou incompatibles coas relacións existentes.
-    </p>
-
-    <p>
-        Por exemplo, nunha base de datos dunha academia:
+        Unha base de datos debe evitar situacións como:
     </p>
 
     <ul>
-        <li>Non pode haber dous alumnos co mesmo identificador.</li>
-        <li>Un alumno non pode estar asociado a un curso que non existe.</li>
-        <li>O nome dun alumno non pode quedar baleiro se é obrigatorio.</li>
-        <li>A idade dun alumno debe cumprir as regras definidas pola aplicación.</li>
-        <li>Non debería permitirse unha matrícula cunha nota fóra do intervalo establecido.</li>
+        <li>Introducir dous usuarios co mesmo identificador.</li>
+        <li>Gardar un alumno sen nome ou sen os datos obrigatorios.</li>
+        <li>Matricular un alumno nun curso que non existe.</li>
+        <li>Asignar un prezo negativo a un produto.</li>
+        <li>Introducir valores duplicados nun campo que debe ser único.</li>
+        <li>Eliminar un rexistro que está sendo referenciado por outras táboas.</li>
     </ul>
+
+    <p>
+        As restricións de integridade permiten que sexa o propio sistema
+        xestor de bases de datos quen comprobe estas condicións, evitando
+        depender exclusivamente das aplicacións que acceden á información.
+    </p>
 
     <h3>1.2. Tipos de integridade</h3>
 
-    <p>
-        Podemos distinguir diferentes tipos de integridade:
-    </p>
+    <p>Podemos distinguir diferentes tipos de integridade:</p>
 
     <table>
         <thead>
@@ -65,23 +65,23 @@
         <tbody>
             <tr>
                 <td>Integridade de entidade</td>
-                <td>Identifica de forma única cada rexistro.</td>
+                <td>Identifica de maneira única cada rexistro dunha táboa.</td>
                 <td>Un alumno ten un identificador único.</td>
             </tr>
             <tr>
                 <td>Integridade referencial</td>
-                <td>Garantía de coherencia entre táboas relacionadas.</td>
-                <td>Unha matrícula debe referenciar un alumno existente.</td>
+                <td>Garante que as relacións entre táboas sexan válidas.</td>
+                <td>Unha matrícula referencia un alumno existente.</td>
             </tr>
             <tr>
                 <td>Integridade de dominio</td>
                 <td>Limita os valores que pode almacenar un campo.</td>
-                <td>Unha nota debe estar entre 0 e 10.</td>
+                <td>A idade debe ser un número positivo.</td>
             </tr>
             <tr>
-                <td>Integridade de negocio</td>
-                <td>Aplica regras específicas do funcionamento da organización.</td>
-                <td>Un alumno non pode matricularse dúas veces no mesmo módulo.</td>
+                <td>Integridade definida polo negocio</td>
+                <td>Aplica regras específicas da organización.</td>
+                <td>Un pedido non pode ter un importe negativo.</td>
             </tr>
         </tbody>
     </table>
@@ -89,120 +89,131 @@
     <h2>2. Restricións de integridade en MariaDB</h2>
 
     <p>
-        MariaDB permite definir restricións nas táboas para controlar os datos
-        que se poden inserir ou modificar. Estas restricións compróbanse durante
-        as operacións de modificación e permiten evitar moitos erros antes de
-        que os datos queden almacenados.
+        As restricións ou <em>constraints</em> son condicións que se definen
+        sobre as columnas ou táboas para controlar os valores que se poden
+        almacenar.
+    </p>
+
+    <p>
+        MariaDB comproba estas condicións cando se executan operacións
+        como <code>INSERT</code>, <code>UPDATE</code> ou <code>DELETE</code>.
+        Se unha operación incumpre unha restrición, o sistema devolve un
+        erro e non permite aplicar o cambio incorrecto.
     </p>
 
     <h3>2.1. PRIMARY KEY</h3>
 
     <p>
-        A restrición <code>PRIMARY KEY</code> identifica de maneira única cada
-        rexistro dunha táboa. Non permite valores duplicados nin valores
-        <code>NULL</code>.
+        A restrición <code>PRIMARY KEY</code> identifica de forma única
+        cada rexistro dunha táboa.
     </p>
 
     <p>
-        Unha táboa só pode ter unha clave primaria, aínda que esta pode estar
-        formada por un único campo ou por varios campos.
+        Unha clave primaria debe cumprir dúas condicións:
+    </p>
+
+    <ul>
+        <li>Non pode conter valores duplicados.</li>
+        <li>Non pode admitir valores <code>NULL</code>.</li>
+    </ul>
+
+    <p>
+        Cada táboa pode ter unha única clave primaria, aínda que esta
+        pode estar formada por varias columnas.
     </p>
 
     <pre><code>CREATE TABLE alumnos (
     id INT AUTO_INCREMENT,
+    dni VARCHAR(9) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
-    edad INT,
+    apellidos VARCHAR(150),
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;</code></pre>
 
     <p>
-        Neste exemplo, o campo <code>id</code> identifica de forma única
-        cada alumno. Ao utilizar <code>AUTO_INCREMENT</code>, MariaDB
-        xera automaticamente os identificadores.
+        Neste exemplo, o campo <code>id</code> identifica cada alumno
+        de maneira única. O atributo <code>AUTO_INCREMENT</code> permite
+        xerar automaticamente os identificadores.
     </p>
 
     <h4>Clave primaria composta</h4>
 
     <p>
-        Unha clave primaria tamén pode estar formada por varios campos.
-        É habitual nas táboas que representan relacións N:M.
+        Unha clave primaria pode estar formada por varias columnas.
+        Neste caso, a combinación dos seus valores debe ser única.
     </p>
 
     <pre><code>CREATE TABLE matriculas (
     alumno_id INT,
-    modulo_id INT,
+    asignatura_id INT,
     fecha DATE NOT NULL,
-    PRIMARY KEY (alumno_id, modulo_id)
+    PRIMARY KEY (alumno_id, asignatura_id)
 ) ENGINE=InnoDB;</code></pre>
 
     <p>
-        A combinación de <code>alumno_id</code> e <code>modulo_id</code>
-        debe ser única. Así, un mesmo alumno non pode ter dúas matrículas
-        para o mesmo módulo.
+        A combinación de <code>alumno_id</code> e
+        <code>asignatura_id</code> impide que un alumno se matricule
+        dúas veces na mesma asignatura.
     </p>
 
     <h3>2.2. FOREIGN KEY</h3>
 
     <p>
-        A restrición <code>FOREIGN KEY</code> establece unha relación entre
-        dúas táboas e garante a integridade referencial.
+        A restrición <code>FOREIGN KEY</code> establece unha relación
+        entre dúas táboas e garante a integridade referencial.
     </p>
 
     <p>
-        Unha clave foránea debe referenciar unha clave primaria ou unha
-        clave única compatible da táboa relacionada.
+        Unha clave foránea referencia normalmente a clave primaria
+        doutra táboa. O seu valor debe corresponder cun rexistro existente
+        na táboa referenciada, salvo que se permita o valor
+        <code>NULL</code>.
     </p>
 
     <pre><code>CREATE TABLE cursos (
-    id INT AUTO_INCREMENT,
-    nombre VARCHAR(50) NOT NULL,
-    PRIMARY KEY (id)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
 ) ENGINE=InnoDB;
 
 CREATE TABLE alumnos (
-    id INT AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    curso_id INT,
-    PRIMARY KEY (id),
-    CONSTRAINT fk_alumnos_cursos
-        FOREIGN KEY (curso_id)
-        REFERENCES cursos(id)
-) ENGINE=InnoDB;</code></pre>
-
-    <p>
-        A clave foránea <code>curso_id</code> impide asociar un alumno
-        a un curso que non exista na táboa <code>cursos</code>.
-    </p>
-
-    <p>
-        Se se intenta inserir un alumno cun identificador de curso
-        inexistente, MariaDB xerará un erro de integridade referencial.
-    </p>
-
-    <pre><code>INSERT INTO alumnos (nombre, curso_id)
-VALUES ('Ana García', 999);</code></pre>
-
-    <p>
-        Se non existe o curso 999, a inserción será rexeitada.
-    </p>
-
-    <h4>Accións ON DELETE e ON UPDATE</h4>
-
-    <p>
-        As claves foráneas permiten definir que sucede cando se elimina
-        ou modifica o rexistro referenciado.
-    </p>
-
-    <pre><code>CREATE TABLE alumnos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     curso_id INT,
     CONSTRAINT fk_alumnos_cursos
         FOREIGN KEY (curso_id)
         REFERENCES cursos(id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
 ) ENGINE=InnoDB;</code></pre>
+
+    <p>
+        Neste exemplo, cada alumno pode estar asociado a un curso.
+        O valor de <code>curso_id</code> debe existir previamente na
+        táboa <code>cursos</code>, ou ser <code>NULL</code> porque
+        a columna non está definida como <code>NOT NULL</code>.
+    </p>
+
+    <p>
+        Se se intenta inserir un alumno cun identificador de curso
+        inexistente, MariaDB devolverá un erro de integridade referencial.
+    </p>
+
+    <pre><code>-- Supoñamos que non existe o curso 99.
+
+INSERT INTO alumnos (nombre, curso_id)
+VALUES ('Ana López', 99);</code></pre>
+
+    <div class="advertencia">
+        Para crear unha clave foránea, as táboas deben utilizar un motor
+        compatible, como InnoDB, e as columnas relacionadas deben ter
+        tipos compatibles. A columna referenciada debe estar indexada
+        adecuadamente.
+    </div>
+
+    <h4>Políticas ON DELETE e ON UPDATE</h4>
+
+    <p>
+        MariaDB permite definir o comportamento que se aplicará cando
+        se elimine ou modifique un rexistro referenciado por outras táboas.
+    </p>
 
     <table>
         <thead>
@@ -214,7 +225,11 @@ VALUES ('Ana García', 999);</code></pre>
         <tbody>
             <tr>
                 <td>RESTRICT</td>
-                <td>Impide eliminar ou modificar o rexistro referenciado se existen referencias.</td>
+                <td>Impide eliminar ou modificar o rexistro referenciado cando existen dependencias.</td>
+            </tr>
+            <tr>
+                <td>NO ACTION</td>
+                <td>Equivale a RESTRICT en InnoDB.</td>
             </tr>
             <tr>
                 <td>CASCADE</td>
@@ -222,397 +237,449 @@ VALUES ('Ana García', 999);</code></pre>
             </tr>
             <tr>
                 <td>SET NULL</td>
-                <td>Establece a NULL os campos da clave foránea.</td>
-            </tr>
-            <tr>
-                <td>NO ACTION</td>
-                <td>En InnoDB ten un comportamento equivalente a RESTRICT.</td>
+                <td>Establece a NULL a columna da clave foránea, se o permite.</td>
             </tr>
         </tbody>
     </table>
 
+    <p>Exemplo de eliminación en cascada:</p>
+
+    <pre><code>CREATE TABLE matriculas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    alumno_id INT NOT NULL,
+    fecha DATE NOT NULL,
+    FOREIGN KEY (alumno_id)
+        REFERENCES alumnos(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;</code></pre>
+
+    <p>
+        Se se elimina un alumno, tamén se eliminarán as matrículas
+        asociadas a el.
+    </p>
+
     <div class="advertencia">
-        Para utilizar <code>ON DELETE SET NULL</code>, o campo da clave
-        foránea debe permitir valores <code>NULL</code>. Se o campo está
-        definido como <code>NOT NULL</code>, esta acción non é compatible.
+        <strong>Precaución:</strong> utilizar <code>ON DELETE CASCADE</code>
+        pode provocar a eliminación de moitos rexistros relacionados.
+        Debe empregarse só cando ese comportamento corresponda coas
+        regras do sistema.
     </div>
 
     <h3>2.3. UNIQUE</h3>
 
     <p>
-        A restrición <code>UNIQUE</code> impide que dous rexistros teñan
-        o mesmo valor nun campo ou na combinación de campos definida.
+        A restrición <code>UNIQUE</code> garante que os valores dunha
+        columna, ou dunha combinación de columnas, non se repitan.
     </p>
 
     <p>
-        É útil para garantir que determinados datos non se repitan,
-        como un correo electrónico, un nome de usuario ou un código
-        identificador.
+        A diferenza da clave primaria, unha táboa pode ter varias
+        restricións <code>UNIQUE</code>.
     </p>
 
     <pre><code>CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL,
-    CONSTRAINT uk_usuarios_email UNIQUE (email)
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    nome_usuario VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB;</code></pre>
 
     <p>
-        Se se intenta inserir outro usuario co mesmo correo electrónico,
-        a operación será rexeitada.
-    </p>
-
-    <pre><code>INSERT INTO usuarios (nombre, email)
-VALUES ('Ana', 'ana@exemplo.com');
-
-INSERT INTO usuarios (nombre, email)
-VALUES ('Luis', 'ana@exemplo.com');</code></pre>
-
-    <p>
-        A segunda inserción producirá un erro porque o correo electrónico
-        xa existe.
+        Neste exemplo, non poden existir dous usuarios co mesmo correo
+        electrónico nin co mesmo nome de usuario.
     </p>
 
     <p>
-        En MariaDB, unha restrición <code>UNIQUE</code> permite varios
-        valores <code>NULL</code>, xa que NULL non se considera igual
-        a outro NULL nas comprobacións de unicidade.
+        Tamén se pode definir unha restrición única sobre varias columnas:
+    </p>
+
+    <pre><code>CREATE TABLE reservas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sala_id INT NOT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    UNIQUE (sala_id, fecha, hora)
+) ENGINE=InnoDB;</code></pre>
+
+    <p>
+        A combinación de sala, data e hora non pode repetirse.
+        Así evítase que se rexistren dúas reservas para a mesma sala
+        no mesmo momento.
+    </p>
+
+    <p>
+        En MariaDB, unha restrición <code>UNIQUE</code> pode admitir
+        varios valores <code>NULL</code>, xa que estes non se consideran
+        valores iguais para esta comprobación.
     </p>
 
     <h3>2.4. NOT NULL</h3>
 
     <p>
-        A restrición <code>NOT NULL</code> obriga a que un campo teña
-        sempre un valor. Non permite inserir nin actualizar ese campo
-        con <code>NULL</code>.
+        A restrición <code>NOT NULL</code> obriga a que unha columna
+        teña sempre un valor. Non permite almacenar
+        <code>NULL</code>.
     </p>
 
-    <pre><code>CREATE TABLE profesores (
+    <pre><code>CREATE TABLE empregados (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    especialidad VARCHAR(100) NOT NULL,
-    telefono VARCHAR(20)
+    nome VARCHAR(100) NOT NULL,
+    apelidos VARCHAR(150) NOT NULL,
+    telefono VARCHAR(20),
+    data_alta DATE NOT NULL
 ) ENGINE=InnoDB;</code></pre>
 
     <p>
-        Neste exemplo, o nome e a especialidade son obrigatorios,
-        mentres que o teléfono é opcional.
+        Neste exemplo, o nome, os apelidos e a data de alta son
+        obrigatorios. O teléfono é opcional.
     </p>
 
-    <div class="callout">
-        <strong>Importante:</strong> un campo <code>NOT NULL</code>
-        non impide almacenar unha cadea baleira (<code>''</code>)
-        nin un valor formado por espazos. Se tamén se deben impedir
-        eses valores, será necesaria unha validación adicional.
-    </div>
+    <p>
+        Cómpre distinguir entre <code>NULL</code> e unha cadea baleira.
+        Unha cadea baleira (<code>''</code>) é un valor de texto,
+        mentres que <code>NULL</code> representa a ausencia dun valor.
+    </p>
+
+    <pre><code>-- Non permitido: nome obrigatorio.
+INSERT INTO empregados (nome, apelidos, data_alta)
+VALUES (NULL, 'Pérez García', '2026-01-10');
+
+-- Permitido: teléfono opcional.
+INSERT INTO empregados (nome, apelidos, telefono, data_alta)
+VALUES ('Ana', 'Pérez García', NULL, '2026-01-10');</code></pre>
 
     <h3>2.5. CHECK</h3>
 
     <p>
-        A restrición <code>CHECK</code> permite definir unha condición
-        que deben cumprir os valores almacenados nun campo ou nunha
-        combinación de campos.
+        A restrición <code>CHECK</code> permite definir condicións
+        que deben cumprir os valores dunha columna ou dunha fila.
     </p>
 
-    <pre><code>CREATE TABLE matriculas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    alumno_id INT NOT NULL,
-    modulo_id INT NOT NULL,
-    nota DECIMAL(4,2),
-    CONSTRAINT chk_nota
-        CHECK (nota IS NULL OR nota BETWEEN 0 AND 10)
-) ENGINE=InnoDB;</code></pre>
-
     <p>
-        A condición permite que a nota sexa NULL cando aínda non foi
-        cualificada, pero se contén un valor, este debe estar entre
-        0 e 10.
-    </p>
-
-    <p>Outros exemplos de restricións CHECK:</p>
-
-    <pre><code>-- Idade positiva
-CHECK (edad > 0)
-
--- Prezo non negativo
-CHECK (precio >= 0)
-
--- Data de finalización posterior á de inicio
-CHECK (fecha_fin >= fecha_inicio)
-
--- Stock non negativo
-CHECK (stock >= 0)</code></pre>
-
-    <p>
-        MariaDB aplica as restricións CHECK nas versións modernas.
-        Se a condición non se cumpre, a operación de inserción
-        ou actualización será rexeitada.
-    </p>
-
-    <h3>2.6. Combinar restricións</h3>
-
-    <p>
-        Nunha táboa real é habitual utilizar varias restricións
-        simultaneamente.
+        Utilízase para validar dominios de datos e regras sinxelas
+        do negocio directamente na base de datos.
     </p>
 
     <pre><code>CREATE TABLE produtos (
-    id INT AUTO_INCREMENT,
-    codigo VARCHAR(20) NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
-    precio DECIMAL(10,2) NOT NULL,
-    stock INT NOT NULL DEFAULT 0,
-
-    PRIMARY KEY (id),
-    CONSTRAINT uk_produtos_codigo
-        UNIQUE (codigo),
-    CONSTRAINT chk_produtos_precio
-        CHECK (precio >= 0),
-    CONSTRAINT chk_produtos_stock
-        CHECK (stock >= 0)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    prezo DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL,
+    CHECK (prezo >= 0),
+    CHECK (stock >= 0)
 ) ENGINE=InnoDB;</code></pre>
 
     <p>
-        Esta definición garante que:
+        Neste caso, non se permite introducir produtos cun prezo ou
+        stock negativo.
     </p>
 
-    <ul>
-        <li>Cada produto ten un identificador único.</li>
-        <li>O código do produto é obrigatorio e non se pode repetir.</li>
-        <li>O nome e o prezo son obrigatorios.</li>
-        <li>O prezo non pode ser negativo.</li>
-        <li>O stock non pode ser negativo.</li>
-        <li>Se non se indica o stock, utilizarase o valor predeterminado 0.</li>
-    </ul>
+    <p>Exemplo doutra condición:</p>
 
-    <h3>2.7. Modificar e consultar restricións</h3>
+    <pre><code>CREATE TABLE alumnos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    edad INT NOT NULL,
+    CHECK (edad >= 16 AND edad <= 100)
+) ENGINE=InnoDB;</code></pre>
 
     <p>
-        As restricións tamén se poden engadir a táboas xa existentes.
+        A idade debe estar comprendida entre 16 e 100 anos.
     </p>
 
-    <pre><code>-- Engadir unha restrición UNIQUE
-ALTER TABLE usuarios
-ADD CONSTRAINT uk_usuarios_email
-UNIQUE (email);
+    <p>
+        Tamén se poden definir restricións <code>CHECK</code> sobre
+        varias columnas:
+    </p>
 
--- Engadir unha restrición CHECK
-ALTER TABLE produtos
-ADD CONSTRAINT chk_produtos_stock
-CHECK (stock >= 0);
+    <pre><code>CREATE TABLE pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subtotal DECIMAL(10,2) NOT NULL,
+    descuento DECIMAL(10,2) NOT NULL DEFAULT 0,
+    CHECK (subtotal >= 0),
+    CHECK (descuento >= 0),
+    CHECK (descuento <= subtotal)
+) ENGINE=InnoDB;</code></pre>
 
--- Engadir unha clave foránea
-ALTER TABLE alumnos
+    <p>
+        A restrición garante que o desconto non sexa negativo nin
+        superior ao subtotal.
+    </p>
+
+    <div class="callout">
+        <strong>Nota:</strong> nas versións modernas de MariaDB,
+        as restricións <code>CHECK</code> son aplicadas polo servidor.
+        Ademais, unha condición <code>CHECK</code> non substitúe
+        a restrición <code>NOT NULL</code>: se unha expresión devolve
+        <code>UNKNOWN</code> por conter <code>NULL</code>, a comprobación
+        non a rexeita. Por iso, os campos obrigatorios deben declararse
+        tamén como <code>NOT NULL</code>.
+    </div>
+
+    <h3>2.6. Comparación das restricións</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Restrición</th>
+                <th>Finalidade</th>
+                <th>Exemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PRIMARY KEY</td>
+                <td>Identificar un rexistro de forma única.</td>
+                <td>Identificador dun alumno.</td>
+            </tr>
+            <tr>
+                <td>FOREIGN KEY</td>
+                <td>Garantir relacións entre táboas.</td>
+                <td>Curso ao que pertence un alumno.</td>
+            </tr>
+            <tr>
+                <td>UNIQUE</td>
+                <td>Evitar valores duplicados.</td>
+                <td>Correo electrónico.</td>
+            </tr>
+            <tr>
+                <td>NOT NULL</td>
+                <td>Obrigar a introducir un valor.</td>
+                <td>Nome dun alumno.</td>
+            </tr>
+            <tr>
+                <td>CHECK</td>
+                <td>Validar condicións sobre os datos.</td>
+                <td>Prezo maior ou igual a cero.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.7. Engadir e eliminar restricións</h3>
+
+    <p>
+        As restricións poden definirse ao crear unha táboa ou engadirse
+        posteriormente mediante <code>ALTER TABLE</code>.
+    </p>
+
+    <p>Engadir unha restrición CHECK:</p>
+
+    <pre><code>ALTER TABLE produtos
+ADD CONSTRAINT chk_stock
+CHECK (stock >= 0);</code></pre>
+
+    <p>Engadir unha restrición UNIQUE:</p>
+
+    <pre><code>ALTER TABLE usuarios
+ADD CONSTRAINT uq_email
+UNIQUE (email);</code></pre>
+
+    <p>Engadir unha clave foránea:</p>
+
+    <pre><code>ALTER TABLE alumnos
 ADD CONSTRAINT fk_alumnos_cursos
 FOREIGN KEY (curso_id)
 REFERENCES cursos(id);</code></pre>
 
-    <p>
-        Para eliminar unha restrición:
-    </p>
+    <p>Eliminar unha clave foránea:</p>
 
-    <pre><code>-- Eliminar unha clave foránea
-ALTER TABLE alumnos
-DROP FOREIGN KEY fk_alumnos_cursos;
+    <pre><code>ALTER TABLE alumnos
+DROP FOREIGN KEY fk_alumnos_cursos;</code></pre>
 
--- Eliminar unha restrición CHECK
-ALTER TABLE produtos
-DROP CONSTRAINT chk_produtos_stock;
+    <p>Eliminar unha restrición CHECK:</p>
 
--- Eliminar unha restrición UNIQUE
-ALTER TABLE usuarios
-DROP INDEX uk_usuarios_email;</code></pre>
+    <pre><code>ALTER TABLE produtos
+DROP CONSTRAINT chk_stock;</code></pre>
 
     <p>
-        Para consultar a definición dunha táboa e as súas restricións:
+        Para engadir unha restrición sobre unha táboa que xa contén datos,
+        estes deben cumprir previamente a condición. Se existen rexistros
+        incorrectos ou duplicados, MariaDB pode rexeitar a operación.
     </p>
-
-    <pre><code>SHOW CREATE TABLE alumnos;
-
-SHOW CREATE TABLE produtos;</code></pre>
 
     <h2>3. Medidas para garantir a consistencia das operacións</h2>
 
-    <h3>3.1. Concepto de consistencia</h3>
+    <h3>3.1. Que é a consistencia?</h3>
 
     <p>
-        A <strong>consistencia</strong> é a propiedade que garante que
-        as operacións realizadas sobre a base de datos manteñen a
-        información nun estado válido, respectando as regras e restricións
-        definidas.
+        A <strong>consistencia</strong> é a propiedade pola que unha
+        operación ou transacción mantén a base de datos nun estado válido,
+        respectando todas as restricións e regras definidas.
     </p>
 
     <p>
-        Unha operación pode modificar varios rexistros ou varias táboas.
-        O obxectivo é evitar que, se algo falla durante o proceso,
-        a base de datos quede nun estado incompleto ou incoherente.
+        Non abonda con que cada sentenza SQL se execute correctamente.
+        Cando varias operacións forman parte dun mesmo proceso, todas
+        deben completarse de maneira coherente.
     </p>
 
     <div class="ejemplo">
-        <h4>Exemplo: creación dun pedido</h4>
+        <h4>Exemplo: rexistro dun pedido</h4>
 
         <p>
-            Ao crear un pedido nunha tenda en liña é necesario realizar
-            varias operacións:
+            Ao rexistrar un pedido nunha tenda, normalmente é necesario:
         </p>
 
         <ol>
-            <li>Crear a cabeceira do pedido.</li>
+            <li>Crear o rexistro principal do pedido.</li>
             <li>Inserir as liñas correspondentes aos produtos.</li>
-            <li>Reducir o stock dos produtos.</li>
-            <li>Calcular e almacenar o importe total.</li>
+            <li>Comprobar que os produtos existen.</li>
+            <li>Verificar que hai stock suficiente.</li>
+            <li>Actualizar o stock dos produtos.</li>
+            <li>Calcular e gardar o importe total.</li>
         </ol>
 
         <p>
-            Se o pedido se crea pero falla a actualización do stock,
-            a información pode quedar incoherente.
-        </p>
-
-        <p>
+            Se se crea o pedido pero falla a inserción das liñas,
+            a base de datos podería quedar cun pedido incompleto.
             Para evitar esta situación, todas as operacións deben
-            executarse dentro dunha mesma transacción.
+            formar parte dunha mesma transacción.
         </p>
     </div>
 
     <h3>3.2. Validación dos datos</h3>
 
     <p>
-        Antes de inserir ou modificar información, é necesario comprobar
-        que os datos cumpren as regras establecidas.
+        A validación consiste en comprobar que os valores introducidos
+        cumpren as condicións necesarias antes de incorporalos ou
+        utilizalos nunha operación.
     </p>
 
     <p>
         As validacións poden realizarse en diferentes niveis:
     </p>
 
-    <ul>
-        <li>
-            <strong>Aplicación:</strong> comprobar os datos introducidos
-            polo usuario antes de enviar as operacións SQL.
-        </li>
-        <li>
-            <strong>Base de datos:</strong> utilizar restricións
-            <code>NOT NULL</code>, <code>UNIQUE</code>, <code>CHECK</code>
-            e claves foráneas.
-        </li>
-        <li>
-            <strong>Procedementos almacenados:</strong> centralizar
-            determinadas regras de negocio e validacións.
-        </li>
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Nivel</th>
+                <th>Responsabilidade</th>
+                <th>Exemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Aplicación</td>
+                <td>Comprobar os datos introducidos polo usuario.</td>
+                <td>Verificar que un formulario contén un correo válido.</td>
+            </tr>
+            <tr>
+                <td>Guión SQL</td>
+                <td>Comprobar condicións antes de executar operacións.</td>
+                <td>Verificar que existe stock suficiente.</td>
+            </tr>
+            <tr>
+                <td>Base de datos</td>
+                <td>Aplicar restricións de integridade.</td>
+                <td>CHECK, NOT NULL, UNIQUE e FOREIGN KEY.</td>
+            </tr>
+        </tbody>
+    </table>
 
     <p>
-        Por exemplo, antes de rexistrar unha venda débese comprobar
-        que existe o produto e que hai unidades suficientes.
+        É recomendable combinar estes niveis. A aplicación pode ofrecer
+        mensaxes máis claras ao usuario, pero a base de datos debe manter
+        as restricións fundamentais para impedir que calquera conexión
+        introduza información incorrecta.
     </p>
 
-    <pre><code>SELECT id, stock, precio
-FROM produtos
-WHERE id = 1;</code></pre>
-
-    <p>
-        A aplicación ou o procedemento debe comprobar o resultado
-        antes de continuar coa operación.
-    </p>
-
-    <h3>3.3. Utilización de transaccións</h3>
+    <h3>3.3. Uso de transaccións</h3>
 
     <p>
         As transaccións permiten agrupar varias operacións nunha única
-        unidade de traballo. Se todas as operacións se executan correctamente,
-        confírmanse mediante <code>COMMIT</code>. Se se produce un erro,
-        poden desfacer­se mediante <code>ROLLBACK</code>.
+        unidade de traballo. Ou ben se confirman todas, ou ben se
+        desfán os cambios realizados.
+    </p>
+
+    <p>
+        As instrucións fundamentais son:
     </p>
 
     <pre><code>START TRANSACTION;
 
-INSERT INTO pedidos (cliente_id, fecha, total)
-VALUES (1, CURRENT_DATE(), 100.00);
+-- Operacións de modificación
+INSERT INTO pedidos (...);
+INSERT INTO detalle_pedido (...);
+UPDATE produtos SET stock = ...;
 
-INSERT INTO detalle_pedido
-    (pedido_id, producto_id, cantidad, precio)
-VALUES
-    (LAST_INSERT_ID(), 1, 2, 50.00);
+-- Se todo é correcto:
+COMMIT;
 
-UPDATE produtos
-SET stock = stock - 2
-WHERE id = 1
-  AND stock >= 2;
-
-COMMIT;</code></pre>
+-- Se se produce algún problema:
+ROLLBACK;</code></pre>
 
     <p>
-        O exemplo ilustra a agrupación das operacións, pero unha
-        implementación correcta debe comprobar que a actualización
-        do stock afectou exactamente unha fila e que as insercións
-        se realizaron correctamente. Se algunha operación falla,
-        débese executar <code>ROLLBACK</code>.
+        O uso de transaccións é especialmente importante cando se modifican
+        varias táboas relacionadas.
     </p>
 
     <h3>3.4. Integridade referencial</h3>
 
     <p>
-        As claves foráneas garanten que as relacións entre táboas
-        se manteñan coherentes.
+        As claves foráneas evitan que se creen relacións con rexistros
+        inexistentes e permiten controlar o comportamento das eliminacións
+        e modificacións.
     </p>
 
     <p>
-        Por exemplo, unha liña de pedido debe referenciar un pedido
-        existente e un produto existente.
+        Por exemplo, unha liña de pedido non debería referenciar un produto
+        que non exista. A restrición de clave foránea impide que se garde
+        unha relación incorrecta.
     </p>
 
     <pre><code>CREATE TABLE detalle_pedido (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pedido_id INT NOT NULL,
-    producto_id INT NOT NULL,
-    cantidad INT NOT NULL,
-    precio DECIMAL(10,2) NOT NULL,
-
-    CONSTRAINT fk_detalle_pedido
-        FOREIGN KEY (pedido_id)
+    produto_id INT NOT NULL,
+    cantidade INT NOT NULL,
+    FOREIGN KEY (pedido_id)
         REFERENCES pedidos(id),
-
-    CONSTRAINT fk_detalle_producto
-        FOREIGN KEY (producto_id)
+    FOREIGN KEY (produto_id)
         REFERENCES produtos(id),
-
-    CONSTRAINT chk_detalle_cantidad
-        CHECK (cantidad > 0),
-
-    CONSTRAINT chk_detalle_precio
-        CHECK (precio >= 0)
+    CHECK (cantidade > 0)
 ) ENGINE=InnoDB;</code></pre>
-
-    <p>
-        Desta maneira, non será posible crear unha liña de pedido
-        asociada a un pedido ou produto inexistente.
-    </p>
 
     <h3>3.5. Control de erros</h3>
 
     <p>
-        Un proceso de modificación debe prever que poden producirse
-        erros durante a súa execución. Entre os máis habituais están:
+        Durante a execución dun proceso poden producirse erros por
+        diferentes motivos:
     </p>
 
     <ul>
-        <li>Violación dunha clave primaria ou restrición UNIQUE.</li>
-        <li>Inserción dunha clave foránea que non existe.</li>
-        <li>Incumprimento dunha restrición CHECK.</li>
-        <li>Valores obrigatorios que non se proporcionan.</li>
-        <li>Bloqueos e deadlocks.</li>
-        <li>Erros de conexión ou interrupcións durante a operación.</li>
+        <li>Un rexistro que non existe.</li>
+        <li>Unha clave duplicada.</li>
+        <li>Unha violación dunha clave foránea.</li>
+        <li>Un valor que incumpre unha restrición CHECK.</li>
+        <li>Unha actualización que non afecta a ningún rexistro.</li>
+        <li>Un problema de bloqueo ou un deadlock.</li>
+        <li>Un erro de sintaxe ou de permisos.</li>
     </ul>
 
     <p>
-        Un procedemento almacenado pode utilizar un xestor de erros
-        para desfacer a transacción cando se produce unha excepción.
+        Un proceso correcto debe detectar os erros e evitar que se
+        confirmen cambios parciais.
+    </p>
+
+    <h3>3.6. Control de erros en procedementos almacenados</h3>
+
+    <p>
+        MariaDB permite utilizar xestores de condicións mediante
+        <code>DECLARE ... HANDLER</code> para controlar erros durante
+        a execución dun procedemento almacenado.
+    </p>
+
+    <p>
+        Un patrón habitual consiste en capturar os erros SQL, executar
+        <code>ROLLBACK</code> e propagar o erro á aplicación.
     </p>
 
     <pre><code>DELIMITER //
 
 CREATE PROCEDURE crear_operacion()
 BEGIN
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         ROLLBACK;
@@ -621,60 +688,142 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Operacións de modificación
-    INSERT INTO produtos (codigo, nombre, precio, stock)
-    VALUES ('P001', 'Teclado', 25.00, 10);
+    INSERT INTO pedidos (fecha)
+    VALUES (CURRENT_DATE());
 
-    -- Confirmar se todo foi correcto
+    INSERT INTO detalle_pedido
+        (pedido_id, produto_id, cantidade)
+    VALUES
+        (LAST_INSERT_ID(), 1, 2);
+
     COMMIT;
+
 END //
 
 DELIMITER ;</code></pre>
 
     <p>
-        O controlador <code>EXIT HANDLER FOR SQLEXCEPTION</code> captura
-        os erros SQL que se produzan no bloque, executa
-        <code>ROLLBACK</code> e transmite novamente o erro mediante
-        <code>RESIGNAL</code>.
+        Neste exemplo:
+    </p>
+
+    <ul>
+        <li><code>DECLARE EXIT HANDLER</code> define o tratamento dos erros SQL.</li>
+        <li><code>ROLLBACK</code> desfai os cambios da transacción.</li>
+        <li><code>RESIGNAL</code> volve lanzar o erro para que a aplicación poida detectalo.</li>
+        <li><code>COMMIT</code> só se executa se as operacións rematan correctamente.</li>
+    </ul>
+
+    <div class="callout">
+        <strong>Importante:</strong> o exemplo é un patrón básico de
+        tratamento de erros. Nun proceso real tamén se deben validar
+        os identificadores, as cantidades, o stock e o resultado de
+        cada operación antes de confirmar a transacción.
+    </div>
+
+    <h3>3.7. Comprobar o número de filas afectadas</h3>
+
+    <p>
+        Unha operación SQL pode executarse sen erros e, con todo, non
+        modificar ningún rexistro porque a condición <code>WHERE</code>
+        non atopou coincidencias.
     </p>
 
     <p>
-        Desta maneira, a aplicación que invoque o procedemento tamén
-        pode recibir o erro e actuar en consecuencia.
+        Para comprobar o número de filas afectadas pódese utilizar
+        <code>ROW_COUNT()</code>.
     </p>
 
-    <div class="callout">
-        <strong>Boa práctica:</strong> as operacións que forman parte
-        dun mesmo proceso lóxico deben executarse nunha transacción.
-        Ademais, deben existir validacións para comprobar que se modificaron
-        os rexistros esperados antes de confirmar os cambios.
+    <pre><code>UPDATE produtos
+SET stock = stock - 2
+WHERE id = 1
+  AND stock >= 2;
+
+SELECT ROW_COUNT();</code></pre>
+
+    <p>
+        Se o resultado é 1, a operación afectou un rexistro. Se é 0,
+        non se modificou ningunha fila.
+    </p>
+
+    <p>
+        Esta comprobación é importante en operacións como:
+    </p>
+
+    <ul>
+        <li>Descontar stock dun produto.</li>
+        <li>Actualizar o saldo dunha conta.</li>
+        <li>Modificar o estado dun pedido.</li>
+        <li>Asignar un alumno a un curso.</li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Precaución:</strong> <code>ROW_COUNT()</code> debe
+        consultarse inmediatamente despois da sentenza que se quere
+        comprobar, xa que informa do resultado da última operación
+        de modificación.
     </div>
 
-    <h2>4. Práctica integradora: manipulación de datos</h2>
+    <h3>3.8. Consistencia e propiedades ACID</h3>
+
+    <p>
+        As propiedades ACID estudadas anteriormente tamén contribúen
+        a garantir a consistencia:
+    </p>
+
+    <ul>
+        <li>
+            <strong>Atomicidade:</strong> todas as operacións dunha
+            transacción se confirman ou se desfán.
+        </li>
+        <li>
+            <strong>Consistencia:</strong> a transacción debe respectar
+            as regras de integridade da base de datos.
+        </li>
+        <li>
+            <strong>Illamento:</strong> as transaccións concorrentes
+            non deben interferir de maneira incorrecta.
+        </li>
+        <li>
+            <strong>Durabilidade:</strong> os cambios confirmados
+            deben conservarse.
+        </li>
+    </ul>
+
+    <h2>4. Práctica integradora: xestión de pedidos dunha tenda</h2>
 
     <h3>4.1. Obxectivo</h3>
 
     <p>
-        Desenvolver un proceso de xestión de pedidos que implique varias
-        táboas relacionadas, inserción e modificación de datos, subconsultas,
-        guións SQL e utilización de transaccións.
+        Nesta práctica desenvolverase un proceso completo de manipulación
+        de datos para unha pequena tenda. O proceso permitirá rexistrar
+        pedidos, consultar información de varias táboas, actualizar
+        existencias e garantir que todas as operacións se realicen
+        correctamente.
     </p>
 
     <p>
-        A práctica permitirá aplicar os coñecementos adquiridos sobre
-        DML, integridade referencial, subconsultas, procedementos almacenados
-        e control de erros.
+        Utilizaranse os seguintes elementos:
     </p>
+
+    <ul>
+        <li>Creación e modificación de táboas.</li>
+        <li>Restricións de integridade.</li>
+        <li>Inserción, actualización e eliminación de rexistros.</li>
+        <li>Subconsultas e combinacións de táboas.</li>
+        <li>Procedementos almacenados e variables.</li>
+        <li>Transaccións e control de erros.</li>
+        <li>Consultas de comprobación dos resultados.</li>
+    </ul>
 
     <h3>4.2. Deseño da base de datos</h3>
 
     <p>
-        Crear unha base de datos denominada <code>tenda</code> que
-        permita xestionar clientes, produtos, pedidos e liñas de pedido.
+        A base de datos debe representar unha tenda na que existen clientes,
+        produtos, pedidos e liñas de pedido.
     </p>
 
     <p>
-        A estrutura deberá incluír as seguintes táboas:
+        O modelo debe conter as seguintes táboas:
     </p>
 
     <table>
@@ -688,18 +837,18 @@ DELIMITER ;</code></pre>
         <tbody>
             <tr>
                 <td>clientes</td>
-                <td>Identificador, nome, correo electrónico e cidade.</td>
+                <td>Identificador, nome, correo electrónico e localidade.</td>
                 <td>Un cliente pode realizar varios pedidos.</td>
             </tr>
             <tr>
                 <td>produtos</td>
-                <td>Identificador, código, nome, prezo e stock.</td>
+                <td>Identificador, nome, prezo e stock.</td>
                 <td>Un produto pode aparecer en varias liñas de pedido.</td>
             </tr>
             <tr>
                 <td>pedidos</td>
                 <td>Identificador, cliente, data e estado.</td>
-                <td>Pertence a un cliente e contén varias liñas.</td>
+                <td>Cada pedido pertence a un cliente.</td>
             </tr>
             <tr>
                 <td>detalle_pedido</td>
@@ -710,344 +859,542 @@ DELIMITER ;</code></pre>
     </table>
 
     <p>
-        As táboas deben utilizar InnoDB e incorporar as claves primarias,
-        claves foráneas e restricións necesarias para garantir a integridade
-        dos datos.
-    </p>
-
-    <h3>4.3. Inserción inicial de datos</h3>
-
-    <p>
-        Preparar un conxunto inicial de datos que permita realizar
-        as operacións posteriores:
+        As relacións principais son:
     </p>
 
     <ul>
-        <li>Un mínimo de cinco clientes.</li>
-        <li>Un mínimo de oito produtos con prezos e stocks diferentes.</li>
-        <li>Un mínimo de tres pedidos.</li>
-        <li>Varias liñas de pedido para cada pedido.</li>
+        <li>Clientes 1:N Pedidos.</li>
+        <li>Pedidos 1:N Detalle_pedido.</li>
+        <li>Produtos 1:N Detalle_pedido.</li>
+        <li>Pedidos e produtos manteñen unha relación N:M a través de detalle_pedido.</li>
     </ul>
 
+    <h3>4.3. Creación das táboas</h3>
+
     <p>
-        As insercións deben realizarse respectando a orde das relacións:
-        primeiro os rexistros das táboas independentes e despois os
-        das táboas que conteñen claves foráneas.
+        O seguinte código mostra unha posible implementación do modelo.
+        Todas as táboas utilizan InnoDB.
     </p>
 
-    <h3>4.4. Operacións de manipulación de datos</h3>
+    <pre><code>CREATE DATABASE IF NOT EXISTS tenda;
+USE tenda;
+
+CREATE TABLE clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    localidade VARCHAR(100)
+) ENGINE=InnoDB;
+
+CREATE TABLE produtos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    prezo DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    CHECK (prezo >= 0),
+    CHECK (stock >= 0)
+) ENGINE=InnoDB;
+
+CREATE TABLE pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    data_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    estado VARCHAR(20) NOT NULL DEFAULT 'PENDENTE',
+    total DECIMAL(10,2) NOT NULL DEFAULT 0,
+    FOREIGN KEY (cliente_id)
+        REFERENCES clientes(id),
+    CHECK (total >= 0),
+    CHECK (
+        estado IN (
+            'PENDENTE',
+            'CONFIRMADO',
+            'ENVIADO',
+            'CANCELADO'
+        )
+    )
+) ENGINE=InnoDB;
+
+CREATE TABLE detalle_pedido (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    produto_id INT NOT NULL,
+    cantidade INT NOT NULL,
+    prezo_unitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (pedido_id)
+        REFERENCES pedidos(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (produto_id)
+        REFERENCES produtos(id),
+    CHECK (cantidade > 0),
+    CHECK (prezo_unitario >= 0)
+) ENGINE=InnoDB;</code></pre>
 
     <p>
-        Preparar un ficheiro SQL que conteña diferentes operacións
-        de modificación da información.
+        O deseño incorpora:
     </p>
 
     <ul>
-        <li>Inserir novos clientes e produtos.</li>
-        <li>Actualizar os prezos dunha categoría ou grupo de produtos.</li>
-        <li>Modificar o stock dos produtos.</li>
-        <li>Eliminar rexistros que cumpran determinadas condicións.</li>
-        <li>Inserir novos pedidos e as súas correspondentes liñas.</li>
-        <li>Actualizar o estado dos pedidos.</li>
+        <li>Claves primarias para identificar os rexistros.</li>
+        <li>Claves foráneas para garantir as relacións.</li>
+        <li>Restricións UNIQUE para evitar correos duplicados.</li>
+        <li>Restricións NOT NULL para os datos obrigatorios.</li>
+        <li>Restricións CHECK para validar prezos, cantidades, stock e estados.</li>
+        <li>InnoDB para permitir transaccións e bloqueos.</li>
     </ul>
 
-    <h3>4.5. Operacións con subconsultas</h3>
+    <h3>4.4. Inserción de datos iniciais</h3>
 
     <p>
-        Incorporar operacións de modificación que utilicen subconsultas.
-        Como mínimo, deberán incluírse os seguintes casos:
+        Insire varios clientes e produtos para poder probar as operacións.
     </p>
 
-    <ul>
-        <li>
-            Inserir nunha táboa os clientes que cumpran unha determinada
-            condición utilizando <code>INSERT ... SELECT</code>.
-        </li>
-        <li>
-            Actualizar o prezo dos produtos cuxo stock sexa inferior
-            á media do stock almacenado.
-        </li>
-        <li>
-            Eliminar ou actualizar rexistros utilizando
-            <code>EXISTS</code> ou <code>NOT EXISTS</code>.
-        </li>
-        <li>
-            Consultar os produtos que nunca apareceron nun pedido.
-        </li>
-        <li>
-            Modificar os datos dun pedido en función da información
-            almacenada nas súas liñas.
-        </li>
-    </ul>
+    <pre><code>INSERT INTO clientes (nome, email, localidade)
+VALUES
+('Ana López', 'ana@exemplo.com', 'A Coruña'),
+('Brais Pérez', 'brais@exemplo.com', 'Lugo'),
+('Carla García', 'carla@exemplo.com', 'Vigo'),
+('Diego Fernández', 'diego@exemplo.com', 'Ourense');
 
-    <h3>4.6. Elaboración dun procedemento almacenado</h3>
+INSERT INTO produtos (nome, prezo, stock)
+VALUES
+('Teclado', 25.50, 20),
+('Rato', 15.00, 30),
+('Monitor', 180.00, 10),
+('Disco SSD', 75.00, 15),
+('Memoria USB', 8.50, 50);</code></pre>
+
+    <h3>4.5. Consultas e subconsultas</h3>
 
     <p>
-        Crear un procedemento almacenado denominado
-        <code>realizar_pedido</code> que permita rexistrar un pedido
-        e as súas liñas.
+        Antes de realizar modificacións, é necesario consultar os datos
+        e identificar as relacións existentes.
     </p>
 
-    <p>
-        O procedemento debe:
-    </p>
+    <h4>Consultar os pedidos cos datos dos clientes</h4>
 
-    <ol>
-        <li>Recibir o identificador do cliente.</li>
-        <li>Comprobar que o cliente existe.</li>
-        <li>Iniciar unha transacción.</li>
-        <li>Crear a cabeceira do pedido.</li>
-        <li>Inserir as liñas correspondentes.</li>
-        <li>Comprobar que hai stock suficiente para cada produto.</li>
-        <li>Actualizar o stock dos produtos.</li>
-        <li>Calcular o importe total do pedido.</li>
-        <li>Confirmar a transacción se todas as operacións son correctas.</li>
-        <li>Executar ROLLBACK se se produce algún erro.</li>
-    </ol>
+    <pre><code>SELECT
+    p.id AS pedido,
+    c.nome AS cliente,
+    p.data_pedido,
+    p.estado,
+    p.total
+FROM pedidos p
+INNER JOIN clientes c
+    ON p.cliente_id = c.id;</code></pre>
 
-    <p>
-        O procedemento debe utilizar parámetros de entrada e,
-        se resulta necesario, parámetros de saída para devolver
-        o identificador do pedido creado ou o seu importe total.
-    </p>
+    <h4>Consultar os produtos cun stock inferior á media</h4>
 
-    <h3>4.7. Control da consistencia</h3>
+    <pre><code>SELECT nome, stock
+FROM produtos
+WHERE stock < (
+    SELECT AVG(stock)
+    FROM produtos
+);</code></pre>
 
-    <p>
-        O proceso debe garantir que non se producen pedidos con
-        produtos inexistentes, cantidades negativas ou stocks insuficientes.
-    </p>
+    <h4>Consultar os clientes que realizaron pedidos</h4>
 
-    <p>
-        Deben comprobarse os resultados das operacións de actualización
-        mediante <code>ROW_COUNT()</code> cando sexa necesario.
-        Tamén se debe garantir que un erro nunha das operacións
-        desfaga todos os cambios realizados durante a transacción.
-    </p>
+    <pre><code>SELECT *
+FROM clientes c
+WHERE EXISTS (
+    SELECT 1
+    FROM pedidos p
+    WHERE p.cliente_id = c.id
+);</code></pre>
 
-    <h3>4.8. Comprobación dos resultados</h3>
+    <h4>Consultar os produtos que nunca se venderon</h4>
 
-    <p>
-        Ao finalizar, realizar consultas que permitan comprobar:
-    </p>
+    <pre><code>SELECT *
+FROM produtos pr
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM detalle_pedido dp
+    WHERE dp.produto_id = pr.id
+);</code></pre>
 
-    <ul>
-        <li>Os pedidos realizados por cada cliente.</li>
-        <li>As liñas e os produtos de cada pedido.</li>
-        <li>O importe total dos pedidos.</li>
-        <li>O stock restante de cada produto.</li>
-        <li>Os produtos que non se venderon.</li>
-        <li>Que non existen referencias a rexistros inexistentes.</li>
-    </ul>
+    <h4>Consultar o importe total vendido por produto</h4>
 
-    <h2>5. Práctica integradora: concorrencia e consistencia</h2>
+    <pre><code>SELECT
+    pr.id,
+    pr.nome,
+    SUM(dp.cantidade) AS unidades_vendidas,
+    SUM(dp.cantidade * dp.prezo_unitario) AS importe_total
+FROM produtos pr
+INNER JOIN detalle_pedido dp
+    ON pr.id = dp.produto_id
+GROUP BY pr.id, pr.nome
+ORDER BY importe_total DESC;</code></pre>
 
-    <h3>5.1. Obxectivo</h3>
-
-    <p>
-        Analizar o comportamento dunha base de datos cando varias conexións
-        executan operacións simultáneas sobre os mesmos rexistros.
-        A práctica permitirá comprobar os efectos dos bloqueos, os niveis
-        de illamento, as transaccións e os conflitos de concorrencia.
-    </p>
-
-    <h3>5.2. Preparación do entorno</h3>
+    <h3>4.6. Inserción de pedidos e liñas</h3>
 
     <p>
-        Utilizarase a base de datos <code>tenda</code> creada na práctica
-        anterior. É necesario dispoñer de dúas conexións independentes
-        desde MySQL Workbench.
+        Un pedido está formado por un rexistro principal e unha ou varias
+        liñas. É necesario garantir que todas as liñas pertencen a un
+        pedido existente.
     </p>
 
     <p>
-        Antes de comezar, comprobar que as táboas utilizan InnoDB:
+        Exemplo de creación dun pedido:
     </p>
 
-    <pre><code>SHOW TABLE STATUS
-FROM tenda;</code></pre>
+    <pre><code>INSERT INTO pedidos (cliente_id)
+VALUES (1);</code></pre>
 
     <p>
-        Tamén se debe consultar o nivel de illamento configurado:
+        O cliente co identificador 1 debe existir previamente.
+        Despois de inserir o pedido, pódese obter o identificador
+        xerado mediante <code>LAST_INSERT_ID()</code>.
     </p>
 
-    <pre><code>SELECT @@SESSION.tx_isolation;</code></pre>
+    <pre><code>SET @pedido_id = LAST_INSERT_ID();
 
-    <h3>5.3. Simulación de actualizacións concorrentes</h3>
+INSERT INTO detalle_pedido
+    (pedido_id, produto_id, cantidade, prezo_unitario)
+VALUES
+    (@pedido_id, 1, 2, 25.50),
+    (@pedido_id, 2, 1, 15.00);</code></pre>
 
     <p>
-        Seleccionar un produto con stock suficiente e executar
-        actualizacións desde dúas conexións diferentes.
+        Neste caso, o pedido contén dous teclados e un rato.
+        O prezo unitario queda gardado no detalle para conservar
+        o prezo aplicado no momento da compra, aínda que o prezo
+        actual do produto cambie posteriormente.
     </p>
+
+    <h3>4.7. Actualización do total dun pedido</h3>
 
     <p>
-        A primeira conexión iniciará unha transacción e modificará
-        o stock dun produto sen confirmar os cambios.
+        O importe total pode calcularse a partir das liñas de pedido.
+        É posible actualizar o rexistro principal utilizando unha
+        subconsulta:
     </p>
 
-    <pre><code>START TRANSACTION;
-
-UPDATE produtos
-SET stock = stock - 2
+    <pre><code>UPDATE pedidos
+SET total = (
+    SELECT SUM(cantidade * prezo_unitario)
+    FROM detalle_pedido
+    WHERE pedido_id = 1
+)
 WHERE id = 1;</code></pre>
 
     <p>
-        A segunda conexión intentará modificar o mesmo rexistro.
-        Observarase se a operación queda bloqueada ata que a primeira
-        transacción confirme ou desfaga os cambios.
+        Tamén se pode utilizar unha combinación de táboas para actualizar
+        o stock dos produtos en función das cantidades incluídas nun pedido.
     </p>
 
-    <h3>5.4. Análise dos niveis de illamento</h3>
+    <pre><code>UPDATE produtos p
+INNER JOIN (
+    SELECT
+        produto_id,
+        SUM(cantidade) AS unidades
+    FROM detalle_pedido
+    WHERE pedido_id = 1
+    GROUP BY produto_id
+) d ON p.id = d.produto_id
+SET p.stock = p.stock - d.unidades;</code></pre>
 
     <p>
-        Repetir unha mesma secuencia de lecturas desde dúas conexións
-        utilizando os seguintes niveis:
+        Esta operación debe executarse só despois de comprobar que
+        todos os produtos teñen stock suficiente. A comprobación
+        e a actualización deben formar parte dunha mesma transacción.
+    </p>
+
+    <h3>4.8. Procedemento almacenado para rexistrar un pedido</h3>
+
+    <p>
+        O seguinte exemplo mostra como organizar varias operacións
+        nun procedemento almacenado. O procedemento recibe un cliente,
+        un produto e unha cantidade; comproba os datos, crea o pedido,
+        insire o detalle, actualiza o stock e confirma a transacción.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE rexistrar_pedido(
+    IN p_cliente_id INT,
+    IN p_produto_id INT,
+    IN p_cantidade INT
+)
+BEGIN
+
+    DECLARE v_pedido_id INT;
+    DECLARE v_prezo DECIMAL(10,2);
+    DECLARE v_stock INT;
+    DECLARE v_existe INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Validar a cantidade.
+    IF p_cantidade <= 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'A cantidade debe ser maior que cero';
+    END IF;
+
+    -- Comprobar que existe o cliente.
+    SELECT COUNT(*)
+    INTO v_existe
+    FROM clientes
+    WHERE id = p_cliente_id;
+
+    IF v_existe = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O cliente non existe';
+    END IF;
+
+    -- Bloquear o produto e consultar o seu stock.
+    SELECT prezo, stock
+    INTO v_prezo, v_stock
+    FROM produtos
+    WHERE id = p_produto_id
+      AND activo = TRUE
+    FOR UPDATE;
+
+    -- Comprobar o stock dispoñible.
+    IF v_stock < p_cantidade THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Non hai stock suficiente';
+    END IF;
+
+    -- Crear o pedido.
+    INSERT INTO pedidos (cliente_id)
+    VALUES (p_cliente_id);
+
+    SET v_pedido_id = LAST_INSERT_ID();
+
+    -- Crear a liña do pedido.
+    INSERT INTO detalle_pedido (
+        pedido_id,
+        produto_id,
+        cantidade,
+        prezo_unitario
+    )
+    VALUES (
+        v_pedido_id,
+        p_produto_id,
+        p_cantidade,
+        v_prezo
+    );
+
+    -- Descontar o stock.
+    UPDATE produtos
+    SET stock = stock - p_cantidade
+    WHERE id = p_produto_id
+      AND stock >= p_cantidade;
+
+    IF ROW_COUNT() <> 1 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Non foi posible actualizar o stock';
+    END IF;
+
+    -- Actualizar o total.
+    UPDATE pedidos
+    SET total = p_cantidade * v_prezo,
+        estado = 'CONFIRMADO'
+    WHERE id = v_pedido_id;
+
+    COMMIT;
+
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        O procedemento incorpora diferentes mecanismos de seguridade:
     </p>
 
     <ul>
-        <li><code>READ UNCOMMITTED</code></li>
-        <li><code>READ COMMITTED</code></li>
-        <li><code>REPEATABLE READ</code></li>
-        <li><code>SERIALIZABLE</code></li>
+        <li>Parámetros de entrada para identificar o cliente, o produto e a cantidade.</li>
+        <li>Variables locais para almacenar o prezo, o stock e o identificador do pedido.</li>
+        <li>Condicionais para validar a cantidade e a existencia do cliente.</li>
+        <li><code>SELECT ... FOR UPDATE</code> para bloquear o produto durante a operación.</li>
+        <li>Unha transacción para agrupar todas as modificacións.</li>
+        <li>Un xestor de erros que executa <code>ROLLBACK</code>.</li>
+        <li><code>SIGNAL</code> para xerar erros cando non se cumpren as condicións.</li>
+        <li><code>ROW_COUNT()</code> para comprobar que o stock foi actualizado.</li>
     </ul>
 
     <p>
-        Para cada nivel, analizar se unha transacción pode observar
-        os cambios doutra e se as consultas repetidas devolven
-        os mesmos resultados.
+        O bloqueo do produto evita que dúas transaccións comproben
+        simultaneamente o mesmo stock e realicen vendas incompatibles.
+        A operación de actualización volve comprobar a cantidade dispoñible
+        como medida adicional de seguridade.
     </p>
-
-    <h3>5.5. Utilización de bloqueos explícitos</h3>
 
     <p>
-        Executar unha lectura con bloqueo exclusivo:
+        Para rexistrar un pedido:
     </p>
 
-    <pre><code>START TRANSACTION;
+    <pre><code>CALL rexistrar_pedido(1, 1, 2);</code></pre>
 
-SELECT *
+    <p>
+        Este exemplo crea un pedido para o cliente 1 con dúas unidades
+        do produto 1, sempre que o cliente e o produto existan e haxa
+        stock suficiente.
+    </p>
+
+    <div class="advertencia">
+        Este procedemento simplifica o proceso e permite engadir unha
+        única liña de produto por pedido. Nun sistema real sería necesario
+        ampliar a súa lóxica para admitir varias liñas, validar todos os
+        produtos antes de confirmar e xestionar outros aspectos como
+        descontos, impostos e cancelacións.
+    </div>
+
+    <h3>4.9. Comprobación dos resultados</h3>
+
+    <p>
+        Unha vez executado o procedemento, débense consultar as diferentes
+        táboas para verificar que os cambios se realizaron correctamente.
+    </p>
+
+    <p>Consultar os pedidos:</p>
+
+    <pre><code>SELECT *
+FROM pedidos
+ORDER BY id DESC;</code></pre>
+
+    <p>Consultar o detalle dos pedidos:</p>
+
+    <pre><code>SELECT
+    p.id AS pedido,
+    c.nome AS cliente,
+    pr.nome AS produto,
+    dp.cantidade,
+    dp.prezo_unitario,
+    dp.cantidade * dp.prezo_unitario AS importe
+FROM pedidos p
+INNER JOIN clientes c
+    ON p.cliente_id = c.id
+INNER JOIN detalle_pedido dp
+    ON p.id = dp.pedido_id
+INNER JOIN produtos pr
+    ON dp.produto_id = pr.id
+ORDER BY p.id DESC;</code></pre>
+
+    <p>Consultar o stock actualizado:</p>
+
+    <pre><code>SELECT id, nome, stock
 FROM produtos
-WHERE id = 1
-FOR UPDATE;</code></pre>
+ORDER BY id;</code></pre>
+
+    <p>Comprobar os totais dos pedidos:</p>
+
+    <pre><code>SELECT
+    p.id,
+    p.total,
+    COALESCE(
+        SUM(dp.cantidade * dp.prezo_unitario),
+        0
+    ) AS total_calculado
+FROM pedidos p
+LEFT JOIN detalle_pedido dp
+    ON p.id = dp.pedido_id
+GROUP BY p.id, p.total;</code></pre>
 
     <p>
-        Desde a segunda conexión, intentar modificar o mesmo produto.
-        Observar o comportamento e comprobar que a operación espera
-        a liberación do bloqueo.
+        O total almacenado no pedido debe coincidir co total calculado
+        a partir das súas liñas.
     </p>
+
+    <h2>5. Boas prácticas para garantir a integridade e a consistencia</h2>
 
     <p>
-        Repetir a proba utilizando un bloqueo compartido:
+        Ao deseñar procesos de manipulación de datos é recomendable
+        aplicar as seguintes medidas:
     </p>
 
-    <pre><code>START TRANSACTION;
-
-SELECT *
-FROM produtos
-WHERE id = 1
-LOCK IN SHARE MODE;</code></pre>
-
-    <p>
-        Analizar a diferenza entre ambos os tipos de bloqueo e o efecto
-        que teñen sobre as operacións concorrentes.
-    </p>
-
-    <h3>5.6. Detección e resolución de deadlocks</h3>
-
-    <p>
-        Provocar un bloqueo mutuo utilizando dúas transaccións que
-        modifiquen dous produtos en diferente orde.
-    </p>
-
-    <p>
-        Identificar:
-    </p>
-
-    <ul>
-        <li>Que rexistros bloquea cada transacción.</li>
-        <li>En que momento se produce a espera.</li>
-        <li>Que erro devolve MariaDB.</li>
-        <li>Que transacción foi cancelada.</li>
-        <li>Que cambios quedaron confirmados.</li>
-    </ul>
-
-    <p>
-        Consultar o estado de InnoDB:
-    </p>
-
-    <pre><code>SHOW ENGINE INNODB STATUS;</code></pre>
-
-    <h3>5.7. Resolución dos conflitos</h3>
-
-    <p>
-        Modificar a secuencia de operacións para reducir a posibilidade
-        de deadlocks:
-    </p>
-
-    <ul>
-        <li>Acceder aos produtos sempre na mesma orde.</li>
-        <li>Reducir a duración das transaccións.</li>
-        <li>Utilizar consultas que seleccionen só os rexistros necesarios.</li>
-        <li>Utilizar índices adecuados.</li>
-        <li>Controlar os erros e repetir as operacións canceladas cando proceda.</li>
-    </ul>
-
-    <h3>5.8. Verificación da consistencia final</h3>
-
-    <p>
-        Ao rematar as probas, realizar unha revisión dos datos almacenados.
-        Comprobar que:
-    </p>
-
-    <ul>
-        <li>Non existen stocks negativos.</li>
-        <li>Non hai pedidos asociados a clientes inexistentes.</li>
-        <li>Non hai liñas de pedido asociadas a produtos inexistentes.</li>
-        <li>Os importes dos pedidos coinciden coas súas liñas.</li>
-        <li>As transaccións canceladas non deixaron cambios parciais.</li>
-        <li>As operacións confirmadas mantiveron a integridade dos datos.</li>
-    </ul>
-
-    <h2>6. Conclusión da unidade didáctica</h2>
-
-    <p>
-        A manipulación de datos nun sistema xestor de bases de datos
-        non consiste unicamente en executar sentenzas de inserción,
-        modificación e eliminación. É necesario garantir que esas
-        operacións se realizan de maneira controlada e que a información
-        resultante mantén a súa integridade e consistencia.
-    </p>
-
-    <p>
-        Para conseguir este obxectivo, MariaDB ofrece diferentes mecanismos:
-    </p>
-
-    <ul>
+    <ol>
         <li>
-            <strong>Restricións de integridade:</strong> controlan os
-            valores e as relacións entre táboas.
+            <strong>Definir correctamente o modelo relacional.</strong>
+            Establecer claves primarias, foráneas e relacións coherentes.
         </li>
         <li>
-            <strong>Transaccións:</strong> agrupan operacións e permiten
-            confirmar ou desfacer cambios.
+            <strong>Aplicar restricións na base de datos.</strong>
+            Utilizar PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL e CHECK.
         </li>
         <li>
-            <strong>Bloqueos:</strong> coordinan o acceso simultáneo
-            de varias transaccións.
+            <strong>Validar os datos antes de modificalos.</strong>
+            Comprobar identificadores, cantidades, importes e estados.
         </li>
         <li>
-            <strong>Niveis de illamento:</strong> controlan a visibilidade
-            dos cambios entre transaccións.
+            <strong>Utilizar transaccións.</strong>
+            Agrupar as operacións que forman parte dun mesmo proceso.
         </li>
         <li>
-            <strong>Control de erros:</strong> permite reaccionar ante
-            operacións incorrectas e evitar estados inconsistentes.
+            <strong>Controlar os erros.</strong>
+            Executar ROLLBACK cando non se poida completar correctamente unha operación.
         </li>
-    </ul>
+        <li>
+            <strong>Controlar a concorrencia.</strong>
+            Utilizar bloqueos cando varias conexións poidan modificar os mesmos datos.
+        </li>
+        <li>
+            <strong>Comprobar as filas afectadas.</strong>
+            Verificar que as actualizacións e eliminacións afectan aos rexistros esperados.
+        </li>
+        <li>
+            <strong>Verificar os resultados.</strong>
+            Consultar os datos finais e comprobar que se manteñen as regras do negocio.
+        </li>
+    </ol>
+
+    <h2>6. Resumo final da UD4</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Bloque</th>
+                <th>Contidos principais</th>
+                <th>Sentenzas e elementos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Manipulación de datos</td>
+                <td>Inserción, modificación e eliminación de rexistros.</td>
+                <td>INSERT, UPDATE, DELETE, INSERT ... SELECT.</td>
+            </tr>
+            <tr>
+                <td>Subconsultas e varias táboas</td>
+                <td>Modificación de datos utilizando consultas e relacións.</td>
+                <td>IN, EXISTS, subconsultas, JOIN.</td>
+            </tr>
+            <tr>
+                <td>Guións SQL</td>
+                <td>Variables, condicións, bucles e procedementos.</td>
+                <td>DECLARE, SET, IF, WHILE, CREATE PROCEDURE, CALL.</td>
+            </tr>
+            <tr>
+                <td>Transaccións</td>
+                <td>Operacións atómicas e recuperación de cambios.</td>
+                <td>START TRANSACTION, COMMIT, ROLLBACK, SAVEPOINT.</td>
+            </tr>
+            <tr>
+                <td>Concorrencia</td>
+                <td>Bloqueos, illamento e control de accesos simultáneos.</td>
+                <td>FOR UPDATE, LOCK IN SHARE MODE, niveis de illamento.</td>
+            </tr>
+            <tr>
+                <td>Integridade</td>
+                <td>Validación e consistencia da información.</td>
+                <td>PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL, CHECK.</td>
+            </tr>
+        </tbody>
+    </table>
 
     <p>
-        A combinación destes mecanismos permite construír procesos de
-        manipulación de datos fiables, mesmo cando varias aplicacións
-        ou usuarios traballan simultaneamente sobre a mesma base de datos.
+        A manipulación segura dos datos require combinar correctamente
+        as operacións DML, as restricións de integridade, os procedementos
+        almacenados, as transaccións e os mecanismos de concorrencia.
+        O obxectivo final é garantir que a base de datos conserve sempre
+        información válida e coherente, mesmo cando se producen erros
+        ou varias conexións traballan simultaneamente.
     </p>
 
 </main>

@@ -14,11 +14,11 @@
     <h1>UD3 - Consultas SQL (V)</h1>
 
     <p>
-        Nesta última parte da unidade didáctica estudaremos como combinar
-        os resultados de varias consultas mediante <code>UNION</code>
-        e <code>UNION ALL</code>. Tamén aprenderemos a mellorar o
-        rendemento das consultas SQL, utilizar índices e interpretar
-        os plans de execución mediante <code>EXPLAIN</code>.
+        Nesta parte da unidade didáctica estudaremos como combinar os
+        resultados de varias consultas mediante <code>UNION</code> e
+        <code>UNION ALL</code>. Tamén introduciremos conceptos básicos
+        de optimización de consultas, utilización de índices e análise
+        dos plans de execución mediante <code>EXPLAIN</code>.
     </p>
 
     <!-- SESIÓN 23 -->
@@ -30,47 +30,35 @@
 
         <p>
             O operador <code>UNION</code> permite combinar os resultados
-            de dúas ou máis instrucións <code>SELECT</code> nun único
-            resultado.
+            de dúas ou máis consultas <code>SELECT</code> nun único
+            conxunto de resultados.
         </p>
 
         <p>
-            A diferenza dos <code>JOIN</code>, que combinan columnas
-            de diferentes táboas nunha mesma fila, <code>UNION</code>
-            engade os rexistros dunha consulta aos rexistros doutra.
+            Cada consulta realiza unha selección independente e
+            <code>UNION</code> combina as filas devoltas por todas elas.
         </p>
 
-        <div class="callout">
-            <strong>Idea clave:</strong>
-            <code>JOIN</code> combina información horizontalmente,
-            incorporando columnas de varias táboas. <code>UNION</code>
-            combina resultados verticalmente, engadindo filas dunha
-            consulta ás doutra.
-        </div>
-
-        <h3>23.2. Sintaxe</h3>
-
-        <pre><code>SELECT columnas
+        <pre><code>SELECT columna1, columna2
 FROM taboa1
-WHERE condicion
 
 UNION
 
-SELECT columnas
-FROM taboa2
-WHERE condicion;</code></pre>
+SELECT columna1, columna2
+FROM taboa2;</code></pre>
 
-        <p>
-            Cada consulta debe devolver o mesmo número de columnas
-            e as columnas correspondentes deben ter tipos de datos
-            compatibles.
-        </p>
+        <div class="callout">
+            <strong>Idea clave:</strong>
+            mentres que <code>JOIN</code> combina columnas de varias
+            táboas relacionadas, <code>UNION</code> combina filas
+            procedentes de varias consultas.
+        </div>
 
-        <h3>23.3. Compatibilidade entre os resultados</h3>
+        <h3>23.2. Requisitos para utilizar UNION</h3>
 
         <p>
             Para combinar varias consultas mediante <code>UNION</code>,
-            débense cumprir as seguintes condicións:
+            estas deben cumprir determinadas condicións:
         </p>
 
         <ul>
@@ -85,20 +73,12 @@ WHERE condicion;</code></pre>
             nome, pero si deben representar información compatible.
         </p>
 
-        <h3>23.4. Exemplo: combinar nomes de alumnos e profesores</h3>
+        <h3>23.3. Exemplo básico de UNION</h3>
 
         <p>
-            Supoñamos que temos dúas táboas:
-        </p>
-
-        <ul>
-            <li><code>alumnos</code>: contén os nomes dos alumnos.</li>
-            <li><code>profesores</code>: contén os nomes dos profesores.</li>
-        </ul>
-
-        <p>
-            Queremos obter unha lista única cos nomes das persoas que
-            aparecen en ambas as táboas.
+            Supoñamos que temos dúas táboas que almacenan información
+            de persoas: unha para alumnos e outra para profesores.
+            Queremos obter unha listaxe con todos os nomes.
         </p>
 
         <pre><code>SELECT nombre
@@ -110,17 +90,68 @@ SELECT nombre
 FROM profesores;</code></pre>
 
         <p>
-            O resultado inclúe os nomes das dúas táboas. Se un mesmo
-            nome aparece varias veces, <code>UNION</code> elimina
-            os rexistros duplicados.
+            O resultado contén os nomes procedentes das dúas táboas
+            nunha única columna.
         </p>
 
-        <h3>23.5. Uso de UNION ALL</h3>
+        <h3>23.4. UNION elimina os duplicados</h3>
+
+        <p>
+            Por defecto, <code>UNION</code> elimina as filas duplicadas
+            do resultado combinado.
+        </p>
+
+        <p>
+            Se unha mesma fila aparece nas dúas consultas, só se
+            mostrará unha vez.
+        </p>
+
+        <pre><code>SELECT nombre
+FROM alumnos
+
+UNION
+
+SELECT nombre
+FROM profesores;</code></pre>
+
+        <p>
+            Se existe unha persoa chamada Ana nas dúas táboas,
+            o resultado de <code>UNION</code> mostrará unha única
+            aparición desa fila.
+        </p>
+
+        <h3>23.5. Exemplo con varias columnas</h3>
+
+        <p>
+            Podemos combinar consultas que devolvan máis dunha columna,
+            sempre que cumpran os requisitos de compatibilidade.
+        </p>
+
+        <pre><code>SELECT nombre, 'Alumno' AS tipo
+FROM alumnos
+
+UNION
+
+SELECT nombre, 'Profesor' AS tipo
+FROM profesores;</code></pre>
+
+        <p>
+            A consulta combina os nomes e identifica a orixe de cada
+            rexistro mediante a columna <code>tipo</code>.
+        </p>
+
+        <p>
+            Neste caso, aínda que unha persoa teña o mesmo nome nas
+            dúas táboas, as filas non serán duplicadas porque o valor
+            da columna <code>tipo</code> será diferente.
+        </p>
+
+        <h3>23.6. UNION ALL</h3>
 
         <p>
             O operador <code>UNION ALL</code> tamén combina os resultados
-            de varias consultas, pero conserva todos os rexistros,
-            incluídos os duplicados.
+            de varias consultas, pero conserva todas as filas,
+            incluídas as duplicadas.
         </p>
 
         <pre><code>SELECT nombre
@@ -132,68 +163,92 @@ SELECT nombre
 FROM profesores;</code></pre>
 
         <p>
-            Neste caso, se unha persoa aparece nas dúas táboas ou un
-            nome está repetido dentro dunha delas, aparecerá tantas
-            veces como figure nos resultados.
+            Se un mesmo nome aparece nas dúas táboas, aparecerá dúas
+            veces no resultado.
         </p>
 
-        <h3>23.6. Diferenza entre UNION e UNION ALL</h3>
+        <h3>23.7. Comparación entre UNION e UNION ALL</h3>
 
         <table>
             <thead>
                 <tr>
                     <th>Operador</th>
-                    <th>Resultado</th>
-                    <th>Tratamento dos duplicados</th>
+                    <th>Duplicados</th>
+                    <th>Comportamento</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><code>UNION</code></td>
-                    <td>Combina os resultados.</td>
                     <td>Elimina as filas duplicadas.</td>
+                    <td>Devolve un resultado sen duplicados.</td>
                 </tr>
                 <tr>
                     <td><code>UNION ALL</code></td>
-                    <td>Combina os resultados.</td>
                     <td>Conserva as filas duplicadas.</td>
+                    <td>Devolve todas as filas das consultas.</td>
                 </tr>
             </tbody>
         </table>
 
-        <h3>23.7. Combinar consultas con condicións</h3>
+        <h3>23.8. Compatibilidade dos tipos de datos</h3>
 
         <p>
-            Cada instrución <code>SELECT</code> pode incluír as súas
-            propias condicións de filtrado.
+            As columnas correspondentes deben conter tipos de datos
+            compatibles. Por exemplo, podemos combinar dúas columnas
+            de tipo texto ou dúas columnas numéricas.
         </p>
 
-        <p>
-            Por exemplo, queremos obter os nomes dos alumnos maiores
-            de idade e os nomes dos profesores:
-        </p>
-
-        <pre><code>SELECT nombre
+        <pre><code>-- Compatible: ambas as columnas son texto
+SELECT nombre
 FROM alumnos
-WHERE edad >= 18
 
 UNION
 
 SELECT nombre
 FROM profesores;</code></pre>
 
+        <pre><code>-- Compatible: ambas as columnas son numéricas
+SELECT edad AS valor
+FROM alumnos
+
+UNION
+
+SELECT horas AS valor
+FROM cursos;</code></pre>
+
         <p>
-            A primeira consulta selecciona os alumnos maiores de idade
-            e a segunda recupera todos os profesores. Finalmente,
-            <code>UNION</code> combina ambos os resultados eliminando
-            duplicados.
+            Tamén podemos utilizar valores constantes para completar
+            as columnas necesarias:
         </p>
 
-        <h3>23.8. Combinar máis de dúas consultas</h3>
+        <pre><code>SELECT nombre, edad, 'Alumno' AS tipo
+FROM alumnos
+
+UNION ALL
+
+SELECT nombre, NULL, 'Profesor' AS tipo
+FROM profesores;</code></pre>
 
         <p>
-            Podemos utilizar varios operadores <code>UNION</code>
-            para combinar os resultados de tres ou máis consultas.
+            Neste exemplo, a segunda consulta utiliza
+            <code>NULL</code> porque non se dispón dunha columna
+            equivalente á idade dos alumnos.
+        </p>
+
+        <div class="advertencia">
+            <strong>Importante:</strong>
+            se as consultas devolven un número diferente de columnas,
+            MariaDB producirá un erro. Tamén debemos comprobar que
+            as columnas correspondentes teñen tipos de datos
+            compatibles e unha orde coherente.
+        </div>
+
+        <h3>23.9. Combinación de máis de dúas consultas</h3>
+
+        <p>
+            Podemos combinar tres ou máis consultas utilizando varios
+            operadores <code>UNION</code> ou <code>UNION ALL</code>.
         </p>
 
         <pre><code>SELECT nombre
@@ -207,82 +262,210 @@ FROM profesores
 UNION
 
 SELECT nombre
-FROM cursos;</code></pre>
+FROM clientes;</code></pre>
 
         <p>
-            Para que esta combinación sexa válida, as tres consultas
-            deben devolver unha columna compatible.
+            O resultado combina os nomes das tres táboas e elimina
+            as filas duplicadas.
         </p>
 
-        <h3>23.9. Exercicios de consolidación</h3>
+        <h3>23.10. Exercicios de consolidación</h3>
 
         <ol>
-            <li>Combina os nomes dos alumnos e dos profesores utilizando <code>UNION</code>.</li>
-            <li>Repite a consulta anterior utilizando <code>UNION ALL</code>.</li>
-            <li>Combina os alumnos maiores de idade cos profesores.</li>
-            <li>Combina os identificadores e nomes dos alumnos e profesores, sempre que as columnas sexan compatibles.</li>
-            <li>Realiza unha combinación de tres consultas utilizando <code>UNION ALL</code>.</li>
+            <li>Combina os nomes dos alumnos e dos profesores mediante <code>UNION</code>.</li>
+            <li>Repite a consulta utilizando <code>UNION ALL</code> e compara os resultados.</li>
+            <li>Combina o nome e a idade dos alumnos co nome e un valor <code>NULL</code> para os profesores.</li>
+            <li>Combina os nomes de alumnos, profesores e clientes nunha única consulta.</li>
+            <li>Combina os nomes das persoas engadindo unha columna que identifique a súa procedencia.</li>
         </ol>
     </section>
 
     <!-- SESIÓN 24 -->
 
     <section>
-        <h2>24. UNION, UNION ALL e ordenación dos resultados</h2>
+        <h2>24. Diferenzas entre UNION, UNION ALL e outras operacións de combinación</h2>
 
-        <h3>24.1. Como se eliminan os duplicados?</h3>
+        <h3>24.1. UNION e UNION ALL</h3>
 
         <p>
-            Cando utilizamos <code>UNION</code>, MariaDB elimina as filas
-            duplicadas do resultado combinado.
+            Os operadores <code>UNION</code> e <code>UNION ALL</code>
+            permiten combinar resultados de varias consultas
+            <code>SELECT</code>, pero teñen un comportamento diferente
+            respecto das filas duplicadas.
         </p>
 
         <p>
-            Considéranse duplicadas as filas nas que coinciden os valores
-            de todas as columnas devoltas pola consulta.
+            <code>UNION</code> realiza a eliminación de duplicados,
+            mentres que <code>UNION ALL</code> conserva todas as filas.
         </p>
+
+        <h3>24.2. Exemplos para comparar os resultados</h3>
 
         <p>
-            Por exemplo:
+            Supoñamos que a consulta de alumnos devolve os seguintes nomes:
         </p>
 
-        <pre><code>SELECT nombre, edad
+        <pre><code>SELECT nombre
+FROM alumnos;</code></pre>
+
+        <p>
+            E a consulta de profesores devolve:
+        </p>
+
+        <pre><code>SELECT nombre
+FROM profesores;</code></pre>
+
+        <p>
+            Se ambas as táboas conteñen o nome Ana, podemos comparar
+            os resultados:
+        </p>
+
+        <pre><code>-- Elimina duplicados
+SELECT nombre
 FROM alumnos
 
 UNION
 
-SELECT nombre, edad
-FROM antiguos_alumnos;</code></pre>
+SELECT nombre
+FROM profesores;</code></pre>
+
+        <pre><code>-- Conserva duplicados
+SELECT nombre
+FROM alumnos
+
+UNION ALL
+
+SELECT nombre
+FROM profesores;</code></pre>
+
+        <h3>24.3. Rendemento de UNION e UNION ALL</h3>
 
         <p>
-            Se unha persoa aparece nas dúas táboas co mesmo nome e idade,
-            só aparecerá unha vez no resultado.
+            <code>UNION</code> necesita identificar e eliminar as filas
+            duplicadas. Este proceso pode requirir operacións adicionais
+            de ordenación ou estruturas temporais.
         </p>
 
         <p>
-            Pola contra, se coincide o nome pero non a idade, as filas
-            considéranse diferentes e conservaranse ambas.
+            <code>UNION ALL</code> non necesita realizar esa eliminación,
+            polo que normalmente ten un custo menor.
         </p>
 
-        <h3>24.2. UNION ALL e rendemento</h3>
+        <div class="callout">
+            <strong>Recomendación:</strong>
+            utiliza <code>UNION ALL</code> cando necesites conservar
+            todas as filas e non precises eliminar duplicados.
+            Reserva <code>UNION</code> para os casos nos que realmente
+            necesites un resultado sen repeticións.
+        </div>
+
+        <h3>24.4. UNION non é o mesmo que JOIN</h3>
 
         <p>
-            <code>UNION ALL</code> non necesita eliminar os duplicados,
-            polo que normalmente require menos traballo que
-            <code>UNION</code>.
+            É importante diferenciar as operacións de combinación
+            de filas das operacións de combinación de columnas.
         </p>
 
+        <ul>
+            <li><code>UNION</code>: engade filas dunha consulta ás filas doutra.</li>
+            <li><code>UNION ALL</code>: engade todas as filas, incluídas as duplicadas.</li>
+            <li><code>JOIN</code>: combina columnas de táboas relacionadas a partir dunha condición de unión.</li>
+        </ul>
+
         <p>
-            Se sabemos que non existen duplicados ou queremos conservalos,
-            é recomendable utilizar <code>UNION ALL</code>.
+            Exemplo de <code>JOIN</code>:
         </p>
 
-        <h3>24.3. Ordenación dos resultados combinados</h3>
+        <pre><code>SELECT a.nombre,
+       c.nombre AS curso
+FROM alumnos a
+INNER JOIN cursos c
+    ON a.curso_id = c.id;</code></pre>
 
         <p>
-            Podemos ordenar o resultado dunha combinación utilizando
-            unha única cláusula <code>ORDER BY</code>, situada ao final
-            de todas as consultas.
+            Exemplo de <code>UNION</code>:
+        </p>
+
+        <pre><code>SELECT nombre
+FROM alumnos
+
+UNION
+
+SELECT nombre
+FROM profesores;</code></pre>
+
+        <h3>24.5. Outras operacións de combinación de conxuntos</h3>
+
+        <p>
+            Na teoría de conxuntos existen outras operacións, como
+            a intersección e a diferenza, que permiten seleccionar
+            os elementos comúns ou exclusivos de varios conxuntos.
+        </p>
+
+        <ul>
+            <li><strong>Unión:</strong> reúne os elementos dos dous conxuntos.</li>
+            <li><strong>Intersección:</strong> selecciona os elementos que aparecen nos dous conxuntos.</li>
+            <li><strong>Diferenza:</strong> selecciona os elementos que aparecen nun conxunto pero non no outro.</li>
+        </ul>
+
+        <p>
+            En MariaDB podemos expresar estas operacións mediante
+            combinacións de consultas, utilizando <code>UNION</code>,
+            <code>EXISTS</code>, <code>NOT EXISTS</code> e outras
+            condicións. Non debemos confundir estas operacións
+            conceptuais cos operadores SQL específicos dispoñibles
+            noutros sistemas xestores.
+        </p>
+
+        <h3>24.6. Intersección mediante EXISTS</h3>
+
+        <p>
+            Queremos obter os nomes que aparecen tanto na táboa
+            <code>alumnos</code> como na táboa <code>profesores</code>.
+        </p>
+
+        <pre><code>SELECT DISTINCT a.nombre
+FROM alumnos a
+WHERE EXISTS (
+    SELECT *
+    FROM profesores p
+    WHERE p.nombre = a.nombre
+);</code></pre>
+
+        <p>
+            A subconsulta comproba se existe un profesor co mesmo nome.
+            <code>DISTINCT</code> evita repetir os nomes se aparecen
+            varias veces na táboa de alumnos.
+        </p>
+
+        <h3>24.7. Diferenza mediante NOT EXISTS</h3>
+
+        <p>
+            Queremos obter os nomes dos alumnos que non aparecen
+            na táboa de profesores.
+        </p>
+
+        <pre><code>SELECT DISTINCT a.nombre
+FROM alumnos a
+WHERE NOT EXISTS (
+    SELECT *
+    FROM profesores p
+    WHERE p.nombre = a.nombre
+);</code></pre>
+
+        <p>
+            A subconsulta comproba se existe un profesor co mesmo nome.
+            Só se seleccionan os alumnos para os que non existe esa
+            correspondencia.
+        </p>
+
+        <h3>24.8. Ordenación dos resultados combinados</h3>
+
+        <p>
+            Podemos ordenar o resultado dunha operación
+            <code>UNION</code> ou <code>UNION ALL</code> utilizando
+            unha única cláusula <code>ORDER BY</code> ao final da
+            combinación.
         </p>
 
         <pre><code>SELECT nombre
@@ -296,243 +479,117 @@ FROM profesores
 ORDER BY nombre ASC;</code></pre>
 
         <p>
-            A cláusula <code>ORDER BY</code> aplícase ao resultado
-            completo, non a cada consulta individual.
+            A ordenación aplícase ao resultado completo, non de maneira
+            independente a cada consulta.
         </p>
 
-        <h3>24.4. Ordenación por varias columnas</h3>
+        <h3>24.9. Ordenación por varias columnas</h3>
 
         <p>
-            Tamén podemos ordenar utilizando varias columnas do
-            resultado combinado.
+            Cando as consultas devolven varias columnas, podemos
+            ordenar o resultado por máis dun campo.
         </p>
 
-        <pre><code>SELECT nombre, edad
+        <pre><code>SELECT nombre, 'Alumno' AS tipo
 FROM alumnos
 
 UNION ALL
 
-SELECT nombre, edad
-FROM antiguos_alumnos
-
-ORDER BY edad DESC, nombre ASC;</code></pre>
-
-        <p>
-            Primeiro ordénanse os rexistros pola idade de maior a menor
-            e, en caso de empate, polo nome en orde alfabética.
-        </p>
-
-        <h3>24.5. Uso de alias no resultado</h3>
-
-        <p>
-            Os nomes das columnas do resultado combinado proceden
-            da primeira consulta. Podemos definir alias nela e
-            utilizalos posteriormente na ordenación.
-        </p>
-
-        <pre><code>SELECT nombre AS persoa, edad AS anos
-FROM alumnos
-
-UNION ALL
-
-SELECT nombre, edad
+SELECT nombre, 'Profesor' AS tipo
 FROM profesores
 
-ORDER BY anos DESC;</code></pre>
+ORDER BY tipo ASC,
+         nombre ASC;</code></pre>
 
         <p>
-            Neste exemplo, o resultado terá as columnas
-            <code>persoa</code> e <code>anos</code>.
+            Primeiro ordénase polo tipo de persoa e despois polo nome.
         </p>
 
-        <h3>24.6. Uso de LIMIT</h3>
+        <div class="advertencia">
+            <strong>Importante:</strong>
+            a cláusula <code>ORDER BY</code> debe colocarse ao final
+            da combinación. Os nomes das columnas do resultado son
+            os definidos na primeira consulta. Tamén podemos utilizar
+            a posición da columna, aínda que é preferible utilizar
+            nomes ou alias claros.
+        </div>
 
-        <p>
-            Podemos limitar o número de filas devoltas polo resultado
-            combinado utilizando <code>LIMIT</code>.
-        </p>
-
-        <pre><code>SELECT nombre
-FROM alumnos
-
-UNION
-
-SELECT nombre
-FROM profesores
-
-ORDER BY nombre ASC
-LIMIT 10;</code></pre>
-
-        <p>
-            A consulta devolve os dez primeiros nomes do resultado
-            combinado, ordenados alfabeticamente.
-        </p>
-
-        <h3>24.7. Outras operacións de combinación</h3>
-
-        <p>
-            Ademais de <code>UNION</code>, existen outros operadores
-            relacionais para combinar resultados de consultas:
-        </p>
-
-        <ul>
-            <li><code>UNION</code>: combina os rexistros de ambas as consultas e elimina duplicados.</li>
-            <li><code>UNION ALL</code>: combina os rexistros conservando duplicados.</li>
-            <li><code>INTERSECT</code>: devolve os rexistros que aparecen nos dous resultados.</li>
-            <li><code>EXCEPT</code>: devolve os rexistros da primeira consulta que non aparecen na segunda.</li>
-        </ul>
-
-        <p>
-            MariaDB incorpora os operadores <code>INTERSECT</code>
-            e <code>EXCEPT</code> nas súas versións actuais. A súa
-            dispoñibilidade pode depender da versión instalada.
-        </p>
-
-        <h3>24.8. Exemplo de INTERSECT</h3>
-
-        <p>
-            O operador <code>INTERSECT</code> permite obter os valores
-            que aparecen nos resultados das dúas consultas.
-        </p>
-
-        <pre><code>SELECT nombre
-FROM alumnos
-
-INTERSECT
-
-SELECT nombre
-FROM antiguos_alumnos;</code></pre>
-
-        <p>
-            O resultado contén os nomes que aparecen nas dúas táboas.
-            Os duplicados elimínanse, salvo que se utilice a variante
-            <code>INTERSECT ALL</code> cando estea dispoñible.
-        </p>
-
-        <h3>24.9. Exemplo de EXCEPT</h3>
-
-        <p>
-            O operador <code>EXCEPT</code> devolve os rexistros da
-            primeira consulta que non aparecen na segunda.
-        </p>
-
-        <pre><code>SELECT nombre
-FROM alumnos
-
-EXCEPT
-
-SELECT nombre
-FROM antiguos_alumnos;</code></pre>
-
-        <p>
-            O resultado contén os nomes dos alumnos que non aparecen
-            na táboa de antigos alumnos.
-        </p>
-
-        <h3>24.10. Resumo das operacións</h3>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Operador</th>
-                    <th>Funcionamento</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>UNION</code></td>
-                    <td>Unión de resultados sen duplicados.</td>
-                </tr>
-                <tr>
-                    <td><code>UNION ALL</code></td>
-                    <td>Unión de resultados conservando duplicados.</td>
-                </tr>
-                <tr>
-                    <td><code>INTERSECT</code></td>
-                    <td>Rexistros comúns aos dous resultados.</td>
-                </tr>
-                <tr>
-                    <td><code>EXCEPT</code></td>
-                    <td>Rexistros do primeiro resultado que non están no segundo.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h3>24.11. Exercicios de consolidación</h3>
+        <h3>24.10. Exercicios de consolidación</h3>
 
         <ol>
-            <li>Combina os nomes dos alumnos e profesores e ordena o resultado alfabeticamente.</li>
-            <li>Obtén os dez primeiros nomes do resultado dunha combinación.</li>
-            <li>Combina dúas consultas con <code>UNION ALL</code> e ordena por idade descendente.</li>
-            <li>Obtén os nomes que aparecen tanto na táboa de alumnos como na de antigos alumnos mediante <code>INTERSECT</code>.</li>
-            <li>Obtén os alumnos que non aparecen na táboa de antigos alumnos mediante <code>EXCEPT</code>.</li>
+            <li>Combina os nomes de alumnos e profesores ordenándoos alfabeticamente.</li>
+            <li>Compara os resultados de <code>UNION</code> e <code>UNION ALL</code>.</li>
+            <li>Obtén os nomes que aparecen nas dúas táboas utilizando <code>EXISTS</code>.</li>
+            <li>Obtén os nomes dos alumnos que non aparecen na táboa de profesores.</li>
+            <li>Combina nomes e tipos de persoas, ordenando primeiro polo tipo e despois polo nome.</li>
         </ol>
     </section>
 
     <!-- SESIÓN 25 -->
 
     <section>
-        <h2>25. Optimización de consultas SQL</h2>
+        <h2>25. Optimización de consultas: selección de columnas, filtros e uso de índices</h2>
 
-        <h3>25.1. Por que é necesario optimizar as consultas?</h3>
+        <h3>25.1. Que é a optimización de consultas?</h3>
 
         <p>
-            Cando unha base de datos almacena poucos rexistros, moitas
-            consultas execútanse rapidamente. Porén, cando o volume
-            de información aumenta, algunhas consultas poden tardar
-            demasiado en devolver os resultados.
+            A optimización de consultas consiste en mellorar a forma
+            na que se executan as instrucións SQL para reducir o tempo
+            de resposta e o consumo de recursos do servidor.
         </p>
 
         <p>
-            A optimización consiste en escribir e executar consultas
-            de maneira que utilicen os recursos do sistema de forma
-            eficiente.
+            Unha consulta pode devolver o resultado correcto pero
+            necesitar demasiados recursos para obtelo. A optimización
+            busca reducir o traballo necesario para recuperar e
+            procesar os datos.
         </p>
 
         <p>
-            Unha consulta optimizada pode reducir:
+            Entre os factores que inflúen no rendemento dunha consulta
+            destacan:
         </p>
 
         <ul>
-            <li>O número de rexistros que é necesario examinar.</li>
-            <li>A cantidade de datos que se deben recuperar.</li>
-            <li>As operacións de ordenación e agrupamento.</li>
-            <li>O tempo de execución e o consumo de recursos.</li>
+            <li>Número de rexistros das táboas.</li>
+            <li>Columnas recuperadas.</li>
+            <li>Condicións de filtrado.</li>
+            <li>Índices dispoñibles.</li>
+            <li>Operacións de unión e agrupamento.</li>
+            <li>Complexidade das subconsultas.</li>
         </ul>
 
-        <h3>25.2. Seleccionar unicamente as columnas necesarias</h3>
+        <h3>25.2. Seleccionar só as columnas necesarias</h3>
 
         <p>
-            Unha práctica básica de optimización consiste en evitar
-            utilizar <code>SELECT *</code> cando non necesitamos
-            todas as columnas dunha táboa.
+            Unha das primeiras recomendacións para optimizar unha
+            consulta é evitar recuperar columnas que non necesitamos.
         </p>
 
         <p>
-            Consulta pouco específica:
+            Non é recomendable utilizar <code>SELECT *</code> en
+            consultas que só precisan unha parte da información.
         </p>
 
-        <pre><code>SELECT *
+        <pre><code>-- Consulta pouco específica
+SELECT *
+FROM alumnos;</code></pre>
+
+        <pre><code>-- Consulta máis específica
+SELECT nombre, edad
 FROM alumnos;</code></pre>
 
         <p>
-            Consulta máis eficiente cando só necesitamos dous campos:
+            A segunda consulta recupera unicamente as columnas necesarias.
+            Isto pode reducir a cantidade de información transferida
+            e procesada.
         </p>
 
-        <pre><code>SELECT nombre, edad
-FROM alumnos;</code></pre>
+        <h3>25.3. Utilizar filtros para reducir os rexistros</h3>
 
         <p>
-            Ao seleccionar unicamente as columnas necesarias reducimos
-            a cantidade de información que debe ser recuperada e
-            transferida.
-        </p>
-
-        <h3>25.3. Utilizar filtros adecuados</h3>
-
-        <p>
-            A cláusula <code>WHERE</code> permite limitar os rexistros
-            que participan nunha consulta.
+            A cláusula <code>WHERE</code> permite seleccionar os
+            rexistros que cumpren determinadas condicións.
         </p>
 
         <pre><code>SELECT nombre, edad
@@ -540,146 +597,111 @@ FROM alumnos
 WHERE edad >= 18;</code></pre>
 
         <p>
-            Esta consulta só recupera os alumnos maiores de idade.
+            Esta consulta recupera unicamente os alumnos maiores
+            ou iguais a 18 anos, en lugar de devolver todos os rexistros.
         </p>
 
         <p>
-            É recomendable aplicar os filtros necesarios e evitar
-            recuperar grandes cantidades de datos que despois non
-            se van utilizar.
+            Cando traballamos con táboas grandes, os filtros adecuados
+            poden reducir considerablemente o número de filas que
+            deben procesarse.
         </p>
 
-        <h3>25.4. Evitar funcións innecesarias nas condicións</h3>
+        <h3>25.4. Evitar operacións innecesarias sobre columnas filtradas</h3>
 
         <p>
-            Cando aplicamos unha función directamente sobre unha columna
-            nunha condición, podemos dificultar o aproveitamento dun
-            índice sobre esa columna.
+            Algunhas expresións aplicadas ás columnas dunha condición
+            poden dificultar a utilización dun índice.
         </p>
 
         <p>
-            Por exemplo:
+            Por exemplo, supoñamos que queremos obter os alumnos cunha
+            idade superior ou igual a 18:
         </p>
 
-        <pre><code>SELECT *
+        <pre><code>-- Aplicación dunha operación á columna
+SELECT nombre
 FROM alumnos
-WHERE YEAR(fecha_nacimiento) = 2005;</code></pre>
+WHERE edad + 0 >= 18;</code></pre>
 
         <p>
-            Se existe un índice sobre <code>fecha_nacimiento</code>,
-            esta expresión pode impedir que se utilice directamente
-            para localizar os rexistros.
+            É preferible expresar directamente a condición:
         </p>
 
-        <p>
-            Unha alternativa é expresar a condición mediante un
-            intervalo:
-        </p>
-
-        <pre><code>SELECT *
+        <pre><code>SELECT nombre
 FROM alumnos
-WHERE fecha_nacimiento >= '2005-01-01'
-  AND fecha_nacimiento < '2006-01-01';</code></pre>
+WHERE edad >= 18;</code></pre>
 
         <p>
-            Esta segunda forma permite que o motor poida aproveitar
-            un índice sobre o campo <code>fecha_nacimiento</code>.
-            O uso efectivo do índice dependerá do plan de execución.
+            As expresións aplicadas á columna poden impedir ou limitar
+            o uso eficiente dun índice convencional sobre esa columna.
+            O comportamento exacto depende do optimizador e da
+            expresión utilizada.
         </p>
 
         <h3>25.5. Que é un índice?</h3>
 
         <p>
             Un índice é unha estrutura de datos que permite localizar
-            rexistros dunha táboa de maneira máis rápida, evitando
-            en determinados casos ter que examinar todos os rexistros.
+            rexistros dunha táboa sen ter que revisar necesariamente
+            todos os seus rexistros.
         </p>
 
         <p>
-            Podemos comparalo co índice dun libro: en lugar de revisar
-            todas as páxinas para localizar un tema, consultamos o
-            índice para atopar directamente a súa localización.
+            Os índices funcionan de maneira similar ao índice dun libro:
+            permiten localizar información rapidamente sen ter que
+            consultar todas as páxinas.
+        </p>
+
+        <p>
+            En MariaDB con InnoDB, os índices convencionais utilizan
+            estruturas B-tree.
         </p>
 
         <div class="callout">
             <strong>Idea clave:</strong>
-            os índices poden mellorar as operacións de busca, filtrado
-            e unión de táboas, pero tamén ocupan espazo e poden facer
-            máis custosas as operacións de inserción, actualización
-            e eliminación.
+            un índice pode acelerar as consultas de busca, filtrado,
+            ordenación e unión, pero tamén ocupa espazo e pode aumentar
+            o custo das operacións de modificación dos datos.
         </div>
 
-        <h3>25.6. Crear índices</h3>
+        <h3>25.6. Crear un índice</h3>
 
         <p>
-            Podemos crear un índice sobre unha columna utilizando
-            a instrución <code>CREATE INDEX</code>.
+            Podemos crear un índice sobre unha columna mediante
+            <code>CREATE INDEX</code>.
         </p>
 
         <pre><code>CREATE INDEX idx_alumnos_edad
 ON alumnos(edad);</code></pre>
 
         <p>
-            Este índice pode axudar nas consultas que filtran ou
-            ordenan pola columna <code>edad</code>.
+            Neste exemplo creamos un índice chamado
+            <code>idx_alumnos_edad</code> sobre a columna
+            <code>edad</code> da táboa <code>alumnos</code>.
         </p>
 
         <p>
-            Para crear un índice sobre varias columnas:
+            Unha vez creado, o optimizador pode utilizalo en consultas
+            que filtren ou ordenen por esa columna, se considera que
+            resulta eficiente.
         </p>
 
-        <pre><code>CREATE INDEX idx_alumnos_curso_edad
-ON alumnos(curso_id, edad);</code></pre>
+        <h3>25.7. Consultar os índices existentes</h3>
 
         <p>
-            Este índice composto pode resultar útil en consultas que
-            utilizan ambas as columnas, especialmente cando filtran
-            primeiro por <code>curso_id</code> e tamén utilizan
-            <code>edad</code>.
-        </p>
-
-        <h3>25.7. Índices e claves</h3>
-
-        <p>
-            As claves primarias e as restricións de unicidade tamén
-            utilizan índices para garantir a identificación dos
-            rexistros e acelerar determinadas operacións.
-        </p>
-
-        <ul>
-            <li><code>PRIMARY KEY</code>: identifica de maneira única cada rexistro.</li>
-            <li><code>UNIQUE</code>: impide que se repitan determinados valores.</li>
-            <li><code>INDEX</code>: facilita a busca e recuperación de información.</li>
-        </ul>
-
-        <p>
-            As claves foráneas tamén poden beneficiarse de índices.
-            En InnoDB, MariaDB require un índice adecuado para as
-            columnas que forman unha clave foránea e pode crealo
-            automaticamente se non existe outro índice válido.
-        </p>
-
-        <h3>25.8. Consultar os índices dunha táboa</h3>
-
-        <p>
-            Podemos consultar os índices existentes mediante
+            Podemos consultar os índices dunha táboa mediante
             <code>SHOW INDEX</code>.
         </p>
 
         <pre><code>SHOW INDEX FROM alumnos;</code></pre>
 
         <p>
-            O resultado permite consultar información como:
+            O resultado mostra información sobre os índices, incluíndo
+            o seu nome, as columnas que os forman e se son únicos.
         </p>
 
-        <ul>
-            <li>O nome do índice.</li>
-            <li>A columna ou columnas incluídas.</li>
-            <li>Se permite valores duplicados.</li>
-            <li>A orde das columnas nun índice composto.</li>
-        </ul>
-
-        <h3>25.9. Eliminar índices</h3>
+        <h3>25.8. Eliminar un índice</h3>
 
         <p>
             Se un índice xa non é necesario, podemos eliminalo mediante
@@ -689,32 +711,100 @@ ON alumnos(curso_id, edad);</code></pre>
         <pre><code>DROP INDEX idx_alumnos_edad
 ON alumnos;</code></pre>
 
+        <h3>25.9. Índices e condicións de filtrado</h3>
+
         <p>
-            Non debemos eliminar índices asociados a claves ou
-            restricións sen comprobar antes as súas dependencias.
+            Os índices poden ser especialmente útiles cando realizamos
+            buscas frecuentes sobre columnas que aparecen en condicións
+            <code>WHERE</code>.
         </p>
 
-        <h3>25.10. Boas prácticas de optimización</h3>
+        <pre><code>SELECT nombre, edad
+FROM alumnos
+WHERE edad = 20;</code></pre>
+
+        <p>
+            Se existe un índice sobre <code>edad</code>, o optimizador
+            pode utilizalo para localizar os rexistros correspondentes.
+        </p>
+
+        <p>
+            Non obstante, un índice non garante sempre unha consulta
+            máis rápida. Se a condición selecciona unha parte moi
+            grande da táboa, pode resultar máis eficiente realizar
+            unha lectura completa.
+        </p>
+
+        <h3>25.10. Índices en columnas utilizadas en JOIN</h3>
+
+        <p>
+            Os índices tamén son importantes cando combinamos varias
+            táboas mediante <code>JOIN</code>.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       c.nombre AS curso
+FROM alumnos a
+INNER JOIN cursos c
+    ON a.curso_id = c.id;</code></pre>
+
+        <p>
+            Neste exemplo, o campo <code>cursos.id</code> normalmente
+            terá un índice porque é a clave primaria. A columna
+            <code>alumnos.curso_id</code> tamén pode beneficiarse
+            dun índice para facilitar a localización dos alumnos
+            asociados a cada curso.
+        </p>
+
+        <pre><code>CREATE INDEX idx_alumnos_curso
+ON alumnos(curso_id);</code></pre>
+
+        <h3>25.11. Índices compostos</h3>
+
+        <p>
+            Podemos crear índices que inclúan varias columnas.
+            Estes índices coñécense como índices compostos.
+        </p>
+
+        <pre><code>CREATE INDEX idx_alumnos_edad_nombre
+ON alumnos(edad, nombre);</code></pre>
+
+        <p>
+            A orde das columnas é importante. Un índice composto
+            sobre <code>(edad, nombre)</code> pode resultar útil
+            para consultas que utilizan a primeira columna ou unha
+            combinación das dúas, pero non necesariamente para
+            consultas que utilizan só <code>nombre</code>.
+        </p>
+
+        <h3>25.12. O custo dos índices</h3>
+
+        <p>
+            Aínda que os índices poden mellorar o rendemento das
+            consultas, tamén teñen inconvenientes:
+        </p>
 
         <ul>
-            <li>Seleccionar só as columnas necesarias.</li>
-            <li>Aplicar filtros adecuados mediante <code>WHERE</code>.</li>
-            <li>Utilizar índices nas columnas que se consultan frecuentemente cando estea xustificado.</li>
-            <li>Evitar crear índices innecesarios.</li>
-            <li>Revisar as condicións de unión entre táboas.</li>
-            <li>Evitar operacións e funcións innecesarias sobre as columnas utilizadas nos filtros.</li>
-            <li>Analizar o plan de execución antes de modificar unha consulta.</li>
+            <li>Ocupan espazo de almacenamento.</li>
+            <li>Teñen que actualizarse cando se modifican os datos.</li>
+            <li>Poden ralentizar operacións de inserción, actualización e eliminación.</li>
+            <li>Un exceso de índices pode empeorar o rendemento global.</li>
         </ul>
 
-        <h3>25.11. Exercicios de consolidación</h3>
+        <p>
+            Por iso, os índices deben crearse en función das necesidades
+            reais das consultas e non de maneira indiscriminada.
+        </p>
+
+        <h3>25.13. Exercicios de consolidación</h3>
 
         <ol>
-            <li>Consulta todos os alumnos utilizando <code>SELECT *</code> e despois modifica a consulta para recuperar só o nome e a idade.</li>
+            <li>Compara unha consulta que utiliza <code>SELECT *</code> con outra que selecciona unicamente dúas columnas.</li>
             <li>Crea un índice sobre a columna <code>edad</code> da táboa <code>alumnos</code>.</li>
-            <li>Consulta os índices existentes na táboa.</li>
-            <li>Compara dúas consultas que filtren pola idade antes e despois de crear o índice.</li>
-            <li>Crea un índice composto sobre <code>curso_id</code> e <code>edad</code>.</li>
-            <li>Elimina o índice que creaches e comproba que desapareceu.</li>
+            <li>Consulta os índices existentes na táboa <code>alumnos</code>.</li>
+            <li>Crea un índice sobre <code>curso_id</code> e analiza a súa utilidade nunha consulta con <code>JOIN</code>.</li>
+            <li>Crea un índice composto sobre dúas columnas e realiza consultas que utilicen esas columnas.</li>
+            <li>Elimina os índices creados durante a práctica.</li>
         </ol>
     </section>
 
@@ -723,55 +813,50 @@ ON alumnos;</code></pre>
     <section>
         <h2>26. Análise do plan de execución con EXPLAIN</h2>
 
-        <h3>26.1. Que é EXPLAIN?</h3>
+        <h3>26.1. Que é o plan de execución?</h3>
 
         <p>
-            A instrución <code>EXPLAIN</code> permite analizar como
-            o sistema xestor de bases de datos pretende executar unha
-            consulta SQL.
+            Cando executamos unha consulta SQL, o sistema xestor
+            debe decidir como acceder aos datos e en que orde
+            realizar as operacións necesarias.
         </p>
 
         <p>
-            O plan de execución ofrece información sobre:
+            O plan de execución describe a estratexia que o optimizador
+            de MariaDB escolle para executar unha consulta.
         </p>
 
-        <ul>
-            <li>As táboas que participan na consulta.</li>
-            <li>A orde na que se procesan.</li>
-            <li>Os índices que se poderían utilizar.</li>
-            <li>O tipo de acceso aos rexistros.</li>
-            <li>O número estimado de filas que se deben examinar.</li>
-        </ul>
-
         <p>
-            Esta información permite identificar posibles problemas
-            de rendemento e decidir se é necesario modificar unha
-            consulta ou crear índices.
+            A análise do plan permite identificar posibles problemas
+            de rendemento, como lecturas completas de táboas,
+            ausencia de índices adecuados ou operacións que procesan
+            demasiados rexistros.
         </p>
 
-        <h3>26.2. Sintaxe</h3>
+        <h3>26.2. Instrución EXPLAIN</h3>
 
         <p>
-            Para analizar unha consulta engadimos <code>EXPLAIN</code>
-            antes da instrución SQL.
+            A instrución <code>EXPLAIN</code> permite consultar o plan
+            de execución dunha consulta sen ter que executar a
+            instrución de selección para devolver os seus resultados.
         </p>
 
         <pre><code>EXPLAIN
 SELECT *
 FROM alumnos
-WHERE edad >= 18;</code></pre>
+WHERE edad = 20;</code></pre>
 
         <p>
-            MariaDB non executa a consulta para devolver os seus
-            resultados: mostra información sobre o plan de execución
-            previsto.
+            MariaDB mostra información sobre como pretende executar
+            a consulta, incluíndo a táboa consultada, os índices
+            dispoñibles e o método de acceso aos rexistros.
         </p>
 
-        <h3>26.3. Información do resultado</h3>
+        <h3>26.3. Información principal de EXPLAIN</h3>
 
         <p>
             Entre as columnas máis importantes do resultado de
-            <code>EXPLAIN</code> destacan as seguintes:
+            <code>EXPLAIN</code> destacan:
         </p>
 
         <table>
@@ -784,19 +869,19 @@ WHERE edad >= 18;</code></pre>
             <tbody>
                 <tr>
                     <td><code>id</code></td>
-                    <td>Identificador da consulta ou subconsulta.</td>
+                    <td>Identificador da operación ou bloque de consulta.</td>
                 </tr>
                 <tr>
                     <td><code>select_type</code></td>
-                    <td>Tipo de consulta: simple, subconsulta, unión, etc.</td>
+                    <td>Tipo de consulta ou subconsulta.</td>
                 </tr>
                 <tr>
                     <td><code>table</code></td>
-                    <td>Tabela que se consulta.</td>
+                    <td>Táboa á que corresponde a operación.</td>
                 </tr>
                 <tr>
                     <td><code>type</code></td>
-                    <td>Tipo de acceso utilizado para recuperar os rexistros.</td>
+                    <td>Tipo de acceso utilizado para localizar os rexistros.</td>
                 </tr>
                 <tr>
                     <td><code>possible_keys</code></td>
@@ -804,7 +889,15 @@ WHERE edad >= 18;</code></pre>
                 </tr>
                 <tr>
                     <td><code>key</code></td>
-                    <td>Índice seleccionado polo optimizador.</td>
+                    <td>Índice que finalmente se utiliza, se existe.</td>
+                </tr>
+                <tr>
+                    <td><code>key_len</code></td>
+                    <td>Lonxitude da parte do índice utilizada.</td>
+                </tr>
+                <tr>
+                    <td><code>ref</code></td>
+                    <td>Columnas ou valores comparados co índice.</td>
                 </tr>
                 <tr>
                     <td><code>rows</code></td>
@@ -812,7 +905,7 @@ WHERE edad >= 18;</code></pre>
                 </tr>
                 <tr>
                     <td><code>Extra</code></td>
-                    <td>Información adicional sobre o procesamento.</td>
+                    <td>Información adicional sobre a operación.</td>
                 </tr>
             </tbody>
         </table>
@@ -821,68 +914,32 @@ WHERE edad >= 18;</code></pre>
 
         <p>
             A columna <code>type</code> indica como se accede aos
-            rexistros da táboa. Algúns valores habituais son:
+            rexistros da táboa. Algúns dos valores habituais son:
         </p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Tipo</th>
-                    <th>Descrición xeral</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>system</code></td>
-                    <td>Táboa con moi poucos rexistros, equivalente a unha táboa constante.</td>
-                </tr>
-                <tr>
-                    <td><code>const</code></td>
-                    <td>Acceso a un único rexistro mediante unha clave única ou primaria.</td>
-                </tr>
-                <tr>
-                    <td><code>eq_ref</code></td>
-                    <td>Acceso mediante unha clave única para cada combinación de táboas.</td>
-                </tr>
-                <tr>
-                    <td><code>ref</code></td>
-                    <td>Acceso mediante un índice que pode devolver varios rexistros.</td>
-                </tr>
-                <tr>
-                    <td><code>range</code></td>
-                    <td>Acceso a un intervalo de valores dun índice.</td>
-                </tr>
-                <tr>
-                    <td><code>index</code></td>
-                    <td>Lectura do índice completo.</td>
-                </tr>
-                <tr>
-                    <td><code>ALL</code></td>
-                    <td>Lectura completa da táboa.</td>
-                </tr>
-            </tbody>
-        </table>
+        <ul>
+            <li><code>system</code>: a táboa contén unha única fila.</li>
+            <li><code>const</code>: acceso mediante unha condición que identifica unha única fila.</li>
+            <li><code>eq_ref</code>: busca dunha única fila mediante un índice único, normalmente nunha unión.</li>
+            <li><code>ref</code>: acceso mediante un índice non único.</li>
+            <li><code>range</code>: acceso a un intervalo de valores dun índice.</li>
+            <li><code>index</code>: lectura do índice completo.</li>
+            <li><code>ALL</code>: lectura completa da táboa.</li>
+        </ul>
 
-        <p>
-            En xeral, os accesos por clave ou índice permiten localizar
-            rexistros sen examinar toda a táboa. Un acceso
-            <code>ALL</code> pode ser custoso cando a táboa contén
-            moitos rexistros.
-        </p>
-
-        <div class="advertencia">
-            <strong>Importante:</strong>
-            un tipo de acceso <code>ALL</code> non significa
-            necesariamente que a consulta estea mal optimizada.
-            Nunha táboa pequena ou cando se necesita recuperar unha
-            parte moi grande dos seus rexistros, ler a táboa completa
-            pode ser a opción máis eficiente.
+        <div class="callout">
+            <strong>Idea clave:</strong>
+            en xeral, unha lectura completa de táboa (<code>ALL</code>)
+            pode ser custosa cando existen moitos rexistros. Non obstante,
+            non sempre indica un problema: pode ser a mellor opción
+            cando hai poucas filas ou cando a consulta necesita unha
+            parte moi grande da táboa.
         </div>
 
-        <h3>26.5. Analizar unha consulta sen índice</h3>
+        <h3>26.5. Exemplo sen índice</h3>
 
         <p>
-            Supoñamos que queremos buscar os alumnos dunha idade
+            Supoñamos que queremos consultar os alumnos cunha idade
             determinada:
         </p>
 
@@ -892,13 +949,18 @@ FROM alumnos
 WHERE edad = 20;</code></pre>
 
         <p>
-            Se non existe un índice adecuado sobre <code>edad</code>,
-            o plan pode mostrar un acceso de tipo <code>ALL</code>.
-            Isto significa que o motor debe examinar todos os rexistros
-            da táboa para comprobar a condición.
+            Se non existe un índice adecuado e o optimizador decide
+            examinar todos os rexistros, podemos atopar un resultado
+            no que a columna <code>type</code> teña o valor
+            <code>ALL</code>.
         </p>
 
-        <h3>26.6. Analizar a mesma consulta con índice</h3>
+        <p>
+            Isto significa que MariaDB realiza unha lectura completa
+            da táboa para comprobar que rexistros cumpren a condición.
+        </p>
+
+        <h3>26.6. Crear un índice e repetir a análise</h3>
 
         <p>
             Podemos crear un índice sobre a columna utilizada no filtro:
@@ -908,7 +970,7 @@ WHERE edad = 20;</code></pre>
 ON alumnos(edad);</code></pre>
 
         <p>
-            Despois volvemos executar:
+            Agora volvemos executar <code>EXPLAIN</code>:
         </p>
 
         <pre><code>EXPLAIN
@@ -917,10 +979,16 @@ FROM alumnos
 WHERE edad = 20;</code></pre>
 
         <p>
-            O optimizador pode utilizar o índice para localizar os
-            rexistros que cumpren a condición. O plan pode mostrar
-            un tipo de acceso como <code>ref</code> ou outro adecuado,
-            dependendo dos datos e das estatísticas.
+            O optimizador pode utilizar o índice para localizar
+            os rexistros correspondentes. Dependendo da distribución
+            dos datos e do custo estimado, pode aparecer un tipo
+            de acceso diferente, como <code>ref</code>.
+        </p>
+
+        <p>
+            Non debemos asumir que a creación dun índice obriga
+            MariaDB a utilizalo: o optimizador escolle o plan que
+            considera máis eficiente.
         </p>
 
         <h3>26.7. Analizar consultas con JOIN</h3>
@@ -939,212 +1007,195 @@ INNER JOIN cursos c
 WHERE c.nombre = 'DAW1';</code></pre>
 
         <p>
-            O plan permite observar que táboas se consultan, en que
-            orde e que índices se utilizan para realizar a composición.
+            O resultado permite analizar:
         </p>
 
-        <h3>26.8. Información adicional: Extra</h3>
+        <ul>
+            <li>Que táboas participan na consulta.</li>
+            <li>En que orde se procesan.</li>
+            <li>Que índices se utilizan.</li>
+            <li>Cantas filas estima o optimizador que debe examinar.</li>
+        </ul>
+
+        <h3>26.8. Analizar consultas con ORDER BY e GROUP BY</h3>
 
         <p>
-            A columna <code>Extra</code> pode mostrar información
-            adicional sobre a execución. Algúns valores habituais son:
+            O plan de execución tamén pode mostrar operacións adicionais
+            relacionadas coa ordenación e o agrupamento.
+        </p>
+
+        <pre><code>EXPLAIN
+SELECT curso_id,
+       COUNT(*) AS total
+FROM alumnos
+GROUP BY curso_id
+ORDER BY total DESC;</code></pre>
+
+        <p>
+            Na columna <code>Extra</code> poden aparecer indicacións
+            como:
         </p>
 
         <ul>
             <li><code>Using where</code>: aplícase unha condición de filtrado.</li>
-            <li><code>Using index</code>: a consulta pode obter a información necesaria directamente desde o índice.</li>
-            <li><code>Using temporary</code>: utilízase unha táboa temporal para procesar parte da consulta.</li>
-            <li><code>Using filesort</code>: é necesario realizar unha operación adicional de ordenación.</li>
+            <li><code>Using index</code>: a información necesaria pode obterse mediante un índice.</li>
+            <li><code>Using temporary</code>: utilízase unha táboa temporal para algunha operación.</li>
+            <li><code>Using filesort</code>: realízase unha operación de ordenación adicional.</li>
         </ul>
 
         <p>
-            A presenza de <code>Using temporary</code> ou
-            <code>Using filesort</code> non implica necesariamente
-            un problema, pero pode ser interesante investigar o seu
-            impacto en consultas con moitos rexistros.
+            Estes indicadores deben interpretarse no contexto da consulta.
+            Por exemplo, <code>Using temporary</code> ou
+            <code>Using filesort</code> non implican automaticamente
+            que exista un problema de rendemento.
         </p>
 
-        <h3>26.9. EXPLAIN ANALYZE</h3>
+        <h3>26.9. EXPLAIN FORMAT=JSON</h3>
 
         <p>
-            Ademais de <code>EXPLAIN</code>, MariaDB permite utilizar
-            <code>ANALYZE</code> para executar unha consulta e obter
-            información real sobre o seu procesamento.
+            MariaDB permite obter información máis detallada do plan
+            de execución mediante o formato JSON.
+        </p>
+
+        <pre><code>EXPLAIN FORMAT=JSON
+SELECT nombre, edad
+FROM alumnos
+WHERE edad = 20;</code></pre>
+
+        <p>
+            Este formato proporciona información estruturada sobre
+            as operacións, os custos estimados e os métodos de acceso.
+            Resulta especialmente útil para analizar consultas complexas.
+        </p>
+
+        <h3>26.10. EXPLAIN ANALYZE</h3>
+
+        <p>
+            Ademais de <code>EXPLAIN</code>, MariaDB dispón de
+            <code>ANALYZE</code> para executar a consulta e obter
+            información real sobre a súa execución.
         </p>
 
         <pre><code>ANALYZE
 SELECT nombre, edad
 FROM alumnos
-WHERE edad >= 18;</code></pre>
+WHERE edad = 20;</code></pre>
 
         <p>
-            A saída inclúe información sobre o número real de filas
-            examinadas e procesadas, ademais de estimacións do
-            optimizador.
+            A saída permite comparar as estimacións do optimizador
+            cos valores observados durante a execución, como o número
+            real de filas examinadas e os tempos de operación.
         </p>
 
         <div class="advertencia">
-            <strong>Atención:</strong>
+            <strong>Precaución:</strong>
             a diferenza de <code>EXPLAIN</code>, <code>ANALYZE</code>
-            executa a consulta. Polo tanto, debe utilizarse con
-            precaución en instrucións que modifiquen datos.
+            executa a consulta. Debe utilizarse con coidado en consultas
+            custosas ou en instrucións que poidan modificar datos.
+            Para consultas de modificación existen formas específicas
+            de analizar a execución, polo que non se deben probar
+            instrucións DML sen comprobar antes o seu comportamento.
         </div>
 
-        <h3>26.10. Como identificar consultas pouco eficientes?</h3>
+        <h3>26.11. Identificar consultas pouco eficientes</h3>
 
         <p>
-            Ao analizar un plan de execución podemos prestar atención
-            aos seguintes aspectos:
+            Ao analizar unha consulta, debemos prestar atención a
+            diferentes sinais que poden indicar un problema:
         </p>
 
         <ul>
-            <li>Accesos <code>ALL</code> sobre táboas con moitos rexistros.</li>
-            <li>Ausencia de índices nas columnas utilizadas frecuentemente nos filtros.</li>
-            <li>Un número estimado de filas moi elevado.</li>
+            <li>Lectura completa de táboas moi grandes cando se espera seleccionar poucas filas.</li>
+            <li>Ausencia de índices nas columnas utilizadas frecuentemente en filtros ou unións.</li>
+            <li>Estimación dun número moi elevado de filas examinadas.</li>
+            <li>Uso innecesario de <code>SELECT *</code>.</li>
             <li>Operacións de ordenación ou agrupamento custosas.</li>
-            <li>Composicións entre táboas que non utilizan adecuadamente as claves.</li>
+            <li>Subconsultas ou composicións que procesan máis información da necesaria.</li>
         </ul>
 
-        <p>
-            A partir desta información podemos probar cambios na
-            consulta, crear índices cando estea xustificado e volver
-            analizar o plan para comprobar se mellorou.
-        </p>
-
-        <h3>26.11. Exercicios de consolidación</h3>
+        <h3>26.12. Proceso básico de optimización</h3>
 
         <ol>
-            <li>Executa <code>EXPLAIN</code> sobre unha consulta que filtre alumnos pola idade.</li>
-            <li>Crea un índice sobre a columna <code>edad</code> e repite a análise.</li>
-            <li>Compara os valores das columnas <code>type</code>, <code>key</code> e <code>rows</code>.</li>
-            <li>Analiza cun <code>EXPLAIN</code> unha consulta que utilice <code>INNER JOIN</code>.</li>
-            <li>Analiza unha consulta que utilice <code>GROUP BY</code> e observa a información da columna <code>Extra</code>.</li>
-            <li>Compara o plan de execución antes e despois de crear un índice adecuado.</li>
+            <li>Identificar a consulta que presenta problemas de rendemento.</li>
+            <li>Executar <code>EXPLAIN</code> para coñecer o plan de execución.</li>
+            <li>Analizar os tipos de acceso, os índices e as filas estimadas.</li>
+            <li>Revisar as columnas seleccionadas e as condicións de filtrado.</li>
+            <li>Valorar a creación de índices adecuados.</li>
+            <li>Executar novamente <code>EXPLAIN</code> para comparar os plans.</li>
+            <li>Comprobar o rendemento real con datos representativos.</li>
+        </ol>
+
+        <h3>26.13. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Executa <code>EXPLAIN</code> sobre unha consulta que seleccione todos os alumnos.</li>
+            <li>Executa <code>EXPLAIN</code> sobre unha consulta que filtre os alumnos por idade.</li>
+            <li>Crea un índice sobre a columna <code>edad</code> e compara os resultados.</li>
+            <li>Analiza o plan dunha consulta que combine <code>alumnos</code> e <code>cursos</code> mediante <code>INNER JOIN</code>.</li>
+            <li>Analiza unha consulta que utilice <code>GROUP BY</code> e <code>ORDER BY</code>.</li>
+            <li>Compara os resultados de <code>EXPLAIN</code> e <code>ANALYZE</code> para unha consulta de selección.</li>
+            <li>Identifica que operacións poden representar un custo importante no plan de execución.</li>
         </ol>
     </section>
 
-    <!-- SESIÓN 27 -->
+    <!-- RESUMO FINAL -->
 
     <section>
-        <h2>27. Práctica global: consultas SQL</h2>
+        <h2>Resumo das operacións e optimización</h2>
 
-        <h3>27.1. Obxectivo da práctica</h3>
-
-        <p>
-            Nesta práctica aplicarás os coñecementos adquiridos ao
-            longo da unidade didáctica para resolver diferentes
-            necesidades de consulta sobre unha base de datos relacional.
-        </p>
-
-        <p>
-            Deberás utilizar consultas simples, filtros, agrupamentos,
-            composicións entre táboas, subconsultas e operacións de
-            combinación de resultados.
-        </p>
-
-        <h3>27.2. Base de datos de traballo</h3>
-
-        <p>
-            Utilizarase a base de datos de formación creada nas
-            sesións anteriores, que contén as seguintes táboas:
-        </p>
-
-        <ul>
-            <li><code>cursos</code>: información dos cursos.</li>
-            <li><code>alumnos</code>: información dos alumnos e o curso ao que pertencen.</li>
-            <li><code>profesores</code>: información dos profesores.</li>
-            <li><code>Alumno</code>: datos dos alumnos no modelo de matrículas.</li>
-            <li><code>Modulo</code>: información dos módulos formativos.</li>
-            <li><code>Matricula</code>: relación entre alumnos e módulos, coas súas cualificacións.</li>
-        </ul>
-
-        <p>
-            Empregarase o esquema que corresponda a cada exercicio.
-            Antes de comezar, comproba que as táboas conteñen datos
-            suficientes para obter resultados significativos.
-        </p>
-
-        <h3>27.3. Bloque 1. Consultas simples e filtrado</h3>
-
-        <ol>
-            <li>Obtén o nome e a idade de todos os alumnos, ordenados alfabeticamente.</li>
-            <li>Mostra os alumnos maiores de idade.</li>
-            <li>Obtén os alumnos que pertencen a cursos cun número de horas comprendido entre 150 e 200.</li>
-            <li>Mostra os cursos que teñen máis de 150 horas, ordenados de maior a menor duración.</li>
-            <li>Obtén os cinco primeiros alumnos ordenados pola idade.</li>
-        </ol>
-
-        <h3>27.4. Bloque 2. Funcións de resumo e agrupamentos</h3>
-
-        <ol>
-            <li>Calcula o número total de alumnos.</li>
-            <li>Calcula a idade media dos alumnos.</li>
-            <li>Obtén o número de alumnos de cada curso.</li>
-            <li>Mostra unicamente os cursos que teñen máis de dous alumnos.</li>
-            <li>Calcula a idade mínima e máxima dos alumnos de cada curso.</li>
-            <li>Obtén os cursos nos que a idade media dos alumnos é superior á media global.</li>
-        </ol>
-
-        <h3>27.5. Bloque 3. Composicións entre táboas</h3>
-
-        <ol>
-            <li>Mostra o nome de cada alumno xunto co nome do curso ao que pertence.</li>
-            <li>Obtén os alumnos que pertencen a un curso determinado.</li>
-            <li>Mostra todos os cursos e os alumnos asociados, incluíndo os cursos sen alumnos.</li>
-            <li>Obtén os cursos que non teñen alumnos.</li>
-            <li>Mostra o nome dos alumnos, os módulos nos que están matriculados e as súas notas.</li>
-            <li>Obtén os alumnos que teñen unha nota igual ou superior a 5 nun módulo determinado.</li>
-        </ol>
-
-        <h3>27.6. Bloque 4. Subconsultas</h3>
-
-        <ol>
-            <li>Obtén os alumnos que teñen unha idade superior á media.</li>
-            <li>Mostra os cursos que teñen máis horas que a media de todos os cursos.</li>
-            <li>Obtén os cursos que non teñen ningún alumno mediante <code>NOT EXISTS</code>.</li>
-            <li>Mostra os alumnos que teñen polo menos unha matrícula aprobada.</li>
-            <li>Obtén os alumnos que teñen unha nota superior á súa propia media.</li>
-            <li>Mostra os cursos que teñen máis de dous alumnos mediante unha subconsulta con agrupamento.</li>
-        </ol>
-
-        <h3>27.7. Bloque 5. Combinación de resultados</h3>
-
-        <ol>
-            <li>Combina os nomes dos alumnos e dos profesores mediante <code>UNION</code>.</li>
-            <li>Repite a consulta utilizando <code>UNION ALL</code>.</li>
-            <li>Ordena alfabeticamente o resultado combinado.</li>
-            <li>Obtén os nomes que aparecen tanto na táboa de alumnos como na de antigos alumnos mediante <code>INTERSECT</code>, se esa táboa está dispoñible.</li>
-        </ol>
-
-        <h3>27.8. Bloque 6. Optimización</h3>
-
-        <ol>
-            <li>Selecciona unha consulta dos bloques anteriores que utilice unha condición de filtrado.</li>
-            <li>Analiza o seu plan de execución mediante <code>EXPLAIN</code>.</li>
-            <li>Identifica as táboas consultadas, o tipo de acceso e os índices utilizados.</li>
-            <li>Crea un índice sobre unha columna que se utilice frecuentemente nun filtro ou nunha composición.</li>
-            <li>Repite a análise e compara os resultados obtidos.</li>
-            <li>Explica se a modificación mellorou o plan de execución e xustifica a resposta.</li>
-        </ol>
-
-        <h3>27.9. Entrega da práctica</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th>Finalidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>UNION</code></td>
+                    <td>Combinar resultados eliminando filas duplicadas.</td>
+                </tr>
+                <tr>
+                    <td><code>UNION ALL</code></td>
+                    <td>Combinar resultados conservando todas as filas.</td>
+                </tr>
+                <tr>
+                    <td><code>JOIN</code></td>
+                    <td>Combinar columnas de táboas relacionadas.</td>
+                </tr>
+                <tr>
+                    <td><code>CREATE INDEX</code></td>
+                    <td>Crear unha estrutura para facilitar o acceso aos datos.</td>
+                </tr>
+                <tr>
+                    <td><code>SHOW INDEX</code></td>
+                    <td>Consultar os índices dunha táboa.</td>
+                </tr>
+                <tr>
+                    <td><code>DROP INDEX</code></td>
+                    <td>Eliminar un índice.</td>
+                </tr>
+                <tr>
+                    <td><code>EXPLAIN</code></td>
+                    <td>Consultar o plan de execución estimado.</td>
+                </tr>
+                <tr>
+                    <td><code>EXPLAIN FORMAT=JSON</code></td>
+                    <td>Obter información detallada do plan en formato JSON.</td>
+                </tr>
+                <tr>
+                    <td><code>ANALYZE</code></td>
+                    <td>Executar unha consulta e obter información real sobre a súa execución.</td>
+                </tr>
+            </tbody>
+        </table>
 
         <p>
-            A práctica deberá incluír:
-        </p>
-
-        <ul>
-            <li>As instrucións SQL necesarias para resolver todos os exercicios.</li>
-            <li>Os resultados obtidos nas consultas.</li>
-            <li>As capturas ou saídas dos plans de execución solicitados.</li>
-            <li>Unha breve explicación das consultas que utilizan agrupamentos, composicións e subconsultas.</li>
-            <li>Unha comparación do plan de execución antes e despois da creación do índice.</li>
-        </ul>
-
-        <p>
-            As consultas deberán estar correctamente identificadas e
-            organizadas por bloques. Comproba que todas se executan
-            correctamente e que os resultados corresponden co solicitado.
+            A combinación de consultas permite construír resultados
+            máis completos, mentres que a optimización axuda a reducir
+            os recursos necesarios para obtelos. A utilización de
+            índices e a análise dos plans de execución son ferramentas
+            fundamentais para mellorar o rendemento dunha base de datos.
         </p>
     </section>
 
