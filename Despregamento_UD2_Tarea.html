@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica - Despliegue y seguridad de aplicaciones web</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<div class="container">
+<main class="content">
+
+    <h1>Práctica: Despliegue y seguridad de aplicaciones web</h1>
+    <p class="subtitle">
+        Configuración de Apache, autenticación, HTTPS, Docker Compose y monitorización
+    </p>
+
+    <section>
+        <h2>1. Objetivo de la práctica</h2>
+
+        <p>
+            Una pequeña empresa necesita desplegar sus aplicaciones web en un servidor Debian.
+            El sistema deberá disponer de dos sitios web independientes, una zona privada
+            protegida mediante autenticación, acceso HTTPS y mecanismos básicos de seguridad
+            y monitorización.
+        </p>
+
+        <p>
+            Además, se deberá realizar un segundo despliegue utilizando Docker Compose.
+        </p>
+
+        <p>
+            El objetivo es poner en práctica los conocimientos adquiridos sobre administración
+            de servidores web, configuración de Apache, seguridad y virtualización.
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Requisitos previos</h2>
+
+        <p>Para realizar la práctica necesitarás:</p>
+
+        <ul>
+            <li>Una máquina virtual Debian con permisos de administración.</li>
+            <li>Apache HTTP Server.</li>
+            <li>Docker y Docker Compose.</li>
+            <li>OpenSSL.</li>
+            <li>Un navegador web y herramientas de terminal.</li>
+        </ul>
+
+        <p>
+            Comprueba que el sistema dispone de las herramientas necesarias antes de comenzar.
+            Si falta alguna, realiza su instalación.
+        </p>
+    </section>
+
+    <section>
+        <h2>3. Preparación y configuración de Apache</h2>
+
+        <h3>Actividad 1. Comprobación inicial</h3>
+
+        <p>
+            Comprueba el estado del servidor Apache y verifica que se encuentra correctamente
+            instalado y funcionando.
+        </p>
+
+        <p>
+            Revisa también los módulos disponibles y los sitios virtuales que están
+            configurados inicialmente.
+        </p>
+
+        <h3>Actividad 2. Activación y configuración de módulos</h3>
+
+        <p>
+            Habilita los módulos de Apache necesarios para realizar las operaciones de
+            reescritura de URL, configuración de cabeceras HTTP y conexiones seguras.
+        </p>
+
+        <p>
+            Configura una cabecera HTTP de seguridad y comprueba que el servidor la devuelve
+            correctamente en sus respuestas.
+        </p>
+
+        <h3>Actividad 3. Creación de sitios virtuales</h3>
+
+        <p>
+            La empresa necesita disponer de dos sitios web independientes:
+        </p>
+
+        <ul>
+            <li><strong>empresa.test:</strong> página corporativa.</li>
+            <li><strong>tienda.test:</strong> página de la tienda.</li>
+        </ul>
+
+        <p>Para ello deberás:</p>
+
+        <ol>
+            <li>Crear los directorios correspondientes para alojar ambas páginas web.</li>
+            <li>Crear una página HTML diferente para cada sitio.</li>
+            <li>Configurar un sitio virtual de Apache para cada dominio.</li>
+            <li>Establecer correctamente los directorios raíz y las restricciones de acceso.</li>
+            <li>Activar las configuraciones y comprobar que Apache no presenta errores.</li>
+            <li>Configurar la resolución de los nombres de dominio en el equipo desde el que accedas.</li>
+            <li>Comprobar que cada dominio muestra su propia página web.</li>
+        </ol>
+
+        <p>
+            <strong>Documentación:</strong> incluye las configuraciones de ambos sitios y
+            capturas que demuestren que funcionan de manera independiente.
+        </p>
+    </section>
+
+    <section>
+        <h2>4. Autenticación y control de acceso</h2>
+
+        <h3>Actividad 4. Creación de una zona privada</h3>
+
+        <p>
+            La empresa necesita disponer de un espacio web al que solamente pueda acceder
+            su personal autorizado.
+        </p>
+
+        <p>Realiza las siguientes tareas:</p>
+
+        <ol>
+            <li>Crear un directorio privado dentro de la web corporativa.</li>
+            <li>Añadir una página HTML que identifique claramente la zona privada.</li>
+            <li>Crear un archivo de usuarios y contraseñas.</li>
+            <li>Configurar la autenticación de Apache para proteger el directorio.</li>
+            <li>Crear al menos dos usuarios diferentes.</li>
+            <li>Comprobar el comportamiento del servidor con credenciales incorrectas y correctas.</li>
+        </ol>
+
+        <p>
+            Verifica que los usuarios no autenticados no pueden acceder al contenido
+            protegido.
+        </p>
+
+        <p>
+            <strong>Documentación:</strong> explica cómo has configurado la autenticación
+            y muestra las pruebas realizadas. No incluyas contraseñas reales en el informe.
+        </p>
+    </section>
+
+    <section>
+        <h2>5. Configuración de HTTPS</h2>
+
+        <h3>Actividad 5. Certificado digital y acceso seguro</h3>
+
+        <p>
+            La web corporativa debe permitir conexiones HTTPS.
+        </p>
+
+        <p>Para conseguirlo deberás:</p>
+
+        <ol>
+            <li>Generar un certificado digital autofirmado para el dominio corporativo.</li>
+            <li>Almacenar el certificado y la clave privada en una ubicación adecuada.</li>
+            <li>Configurar un sitio virtual de Apache para atender las conexiones HTTPS.</li>
+            <li>Configurar el acceso seguro a la zona privada.</li>
+            <li>Comprobar que la web corporativa funciona mediante HTTPS.</li>
+            <li>Verificar que la autenticación sigue funcionando al utilizar HTTPS.</li>
+        </ol>
+
+        <p>
+            <strong>Documentación:</strong> incluye la configuración del sitio seguro,
+            explica el proceso de generación del certificado y aporta capturas de las
+            pruebas realizadas.
+        </p>
+    </section>
+
+    <section>
+        <h2>6. Seguridad y mantenimiento</h2>
+
+        <h3>Actividad 6. Aplicación de medidas de seguridad</h3>
+
+        <p>
+            Revisa la configuración del servidor y aplica las medidas necesarias para
+            reducir los riesgos de seguridad.
+        </p>
+
+        <p>Como mínimo, deberás comprobar:</p>
+
+        <ul>
+            <li>La protección frente al listado de directorios.</li>
+            <li>Las restricciones de acceso a los recursos privados.</li>
+            <li>Los permisos de los archivos y directorios de la aplicación.</li>
+            <li>La protección de la clave privada del certificado.</li>
+            <li>Las cabeceras HTTP de seguridad.</li>
+            <li>La validez de la configuración general de Apache.</li>
+        </ul>
+
+        <p>
+            Realiza una copia de seguridad de los archivos de configuración de Apache.
+        </p>
+
+        <p>
+            <strong>Documentación:</strong> describe las medidas aplicadas y explica
+            qué problema de seguridad ayuda a evitar cada una.
+        </p>
+    </section>
+
+    <section>
+        <h2>7. Despliegue mediante Docker Compose</h2>
+
+        <h3>Actividad 7. Despliegue de una aplicación en un contenedor</h3>
+
+        <p>
+            La empresa solicita disponer de una segunda versión de su aplicación web
+            desplegada mediante Docker.
+        </p>
+
+        <p>Realiza las siguientes tareas:</p>
+
+        <ol>
+            <li>Crear un directorio de trabajo para el nuevo despliegue.</li>
+            <li>Crear una página HTML que identifique la aplicación desplegada.</li>
+            <li>Preparar un archivo <code>compose.yaml</code> para ejecutar un servidor Apache.</li>
+            <li>Configurar la publicación de un puerto para acceder desde el exterior del contenedor.</li>
+            <li>Montar el directorio de la aplicación como volumen.</li>
+            <li>Configurar una política de reinicio adecuada.</li>
+            <li>Iniciar el servicio y comprobar que funciona correctamente.</li>
+        </ol>
+
+        <h3>Actividad 8. Comprobación y análisis del despliegue</h3>
+
+        <p>Realiza las siguientes pruebas:</p>
+
+        <ul>
+            <li>Acceder a la aplicación desde el navegador.</li>
+            <li>Modificar el contenido de la página y comprobar que los cambios se reflejan.</li>
+            <li>Detener y volver a iniciar el servicio.</li>
+            <li>Consultar el estado y los registros del contenedor.</li>
+            <li>Comprobar qué sucede cuando el puerto elegido ya está ocupado.</li>
+        </ul>
+
+        <p>
+            Explica las diferencias entre el despliegue realizado directamente sobre Apache
+            y el realizado mediante Docker Compose.
+        </p>
+
+        <p>
+            <strong>Documentación:</strong> incluye el archivo <code>compose.yaml</code>,
+            las comprobaciones realizadas y una breve explicación de las características
+            principales del despliegue.
+        </p>
+    </section>
+
+    <section>
+        <h2>8. Registros y monitorización</h2>
+
+        <h3>Actividad 9. Análisis de los registros de Apache</h3>
+
+        <p>
+            Comprueba cómo Apache registra las peticiones recibidas y los errores producidos
+            durante el funcionamiento del servidor.
+        </p>
+
+        <p>Realiza las siguientes tareas:</p>
+
+        <ol>
+            <li>Localizar los registros de acceso y de errores de los sitios virtuales.</li>
+            <li>Consultar los últimos accesos registrados.</li>
+            <li>Visualizar los registros mientras se realizan nuevas peticiones.</li>
+            <li>Provocar diferentes situaciones de acceso para generar registros.</li>
+            <li>Identificar las peticiones correctas, los accesos denegados y los recursos inexistentes.</li>
+        </ol>
+
+        <p>
+            Explica qué información contienen los registros y por qué es importante
+            disponer de ellos para administrar un servidor web.
+        </p>
+    </section>
+
+    <section>
+        <h2>9. Pruebas finales</h2>
+
+        <h3>Actividad 10. Validación del sistema</h3>
+
+        <p>
+            Una vez terminadas todas las configuraciones, realiza una comprobación general
+            del sistema.
+        </p>
+
+        <p>Debes verificar que:</p>
+
+        <ul>
+            <li>Los dos sitios virtuales funcionan de forma independiente.</li>
+            <li>La zona privada solicita autenticación.</li>
+            <li>Los usuarios autorizados pueden acceder y los no autorizados no.</li>
+            <li>La web corporativa funciona mediante HTTPS.</li>
+            <li>La configuración de Apache no presenta errores.</li>
+            <li>Las medidas básicas de seguridad están aplicadas.</li>
+            <li>La aplicación desplegada con Docker Compose funciona correctamente.</li>
+            <li>Los registros reflejan las peticiones realizadas durante las pruebas.</li>
+        </ul>
+
+        <p>
+            Si alguna comprobación falla, identifica el problema, explica su causa y
+            documenta cómo lo has solucionado.
+        </p>
+    </section>
+
+    <section>
+        <h2>10. Informe que debe entregarse</h2>
+
+        <p>
+            El trabajo se entregará mediante un único informe en PDF que documente
+            el proceso de configuración y las pruebas realizadas.
+        </p>
+
+        <p>El informe deberá incluir los siguientes apartados:</p>
+
+        <ol>
+            <li><strong>Portada:</strong> título de la práctica, nombre del alumno o alumna, módulo y fecha.</li>
+            <li><strong>Objetivos:</strong> descripción de los objetivos alcanzados.</li>
+            <li><strong>Entorno:</strong> versiones de Debian, Apache, Docker y herramientas utilizadas.</li>
+            <li><strong>Configuración de Apache:</strong> módulos, sitios virtuales y directorios web.</li>
+            <li><strong>Autenticación:</strong> configuración de la zona privada y usuarios creados.</li>
+            <li><strong>HTTPS:</strong> certificado digital y configuración del acceso seguro.</li>
+            <li><strong>Seguridad:</strong> medidas aplicadas y copia de seguridad.</li>
+            <li><strong>Docker Compose:</strong> configuración, ejecución y pruebas del contenedor.</li>
+            <li><strong>Registros:</strong> ejemplos de accesos y errores generados.</li>
+            <li><strong>Incidencias:</strong> problemas encontrados y soluciones aplicadas.</li>
+            <li><strong>Conclusiones:</strong> valoración del trabajo realizado.</li>
+        </ol>
+
+        <h3>Condiciones de entrega</h3>
+
+        <ul>
+            <li>Entrega un único archivo PDF.</li>
+            <li>Incluye capturas reales que demuestren el funcionamiento de los servicios.</li>
+            <li>Añade los fragmentos relevantes de los archivos de configuración.</li>
+            <li>Explica con tus propias palabras las decisiones tomadas.</li>
+            <li>No incluyas únicamente capturas: el informe debe contener explicaciones.</li>
+            <li>No incluyas contraseñas, claves privadas ni otros datos sensibles.</li>
+            <li>No expongas el servidor de prácticas directamente a Internet.</li>
+        </ul>
+
+        <div class="knowledge">
+            <span class="block-label">Importante</span>
+            <p>
+                No se valorará únicamente que los servicios funcionen. También se tendrá
+                en cuenta que las configuraciones estén correctamente realizadas, que
+                las pruebas demuestren su funcionamiento y que el informe explique el
+                trabajo desarrollado.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <p>Práctica de despliegue de aplicaciones web</p>
+    </footer>
+
+</main>
+</div>
+
+</body>
+</html>
