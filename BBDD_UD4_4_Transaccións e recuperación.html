@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD4 - Transaccións e integridade dos datos</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main class="contenido">
+
+    <h1>UD4. Transaccións e integridade dos datos</h1>
+
+    <p>
+        Nas sesións anteriores utilizamos sentenzas SQL para inserir, actualizar
+        e eliminar información, así como guións e procedementos almacenados para
+        automatizar operacións. Porén, cando unha tarefa implica varias modificacións
+        relacionadas, é importante garantir que todas se realizan correctamente.
+    </p>
+
+    <p>
+        Imaxinemos unha transferencia bancaria entre dúas contas. Para realizar
+        esta operación é necesario restar unha cantidade da conta de orixe e
+        sumala na conta de destino. Se a primeira modificación se realiza
+        correctamente pero a segunda falla, o sistema quedaría nun estado
+        incorrecto: desaparecería diñeiro dunha conta sen aparecer na outra.
+    </p>
+
+    <p>
+        As transaccións permiten agrupar varias operacións nunha unidade de traballo.
+        Desta maneira, podemos confirmar todos os cambios cando a operación remata
+        correctamente ou cancelalos se se produce algún problema.
+    </p>
+
+    <h2>1. Introdución ás transaccións</h2>
+
+    <h3>1.1. Concepto de transacción</h3>
+
+    <p>
+        Unha transacción é un conxunto de operacións SQL que se executan como
+        unha única unidade lóxica de traballo. O seu obxectivo é garantir que
+        todas as operacións se completen correctamente ou que ningunha delas
+        quede aplicada de maneira parcial.
+    </p>
+
+    <p>
+        Durante unha transacción podemos executar diferentes sentenzas SQL,
+        especialmente operacións de manipulación de datos:
+    </p>
+
+    <ul>
+        <li><code>INSERT</code>: inserir rexistros.</li>
+        <li><code>UPDATE</code>: modificar rexistros existentes.</li>
+        <li><code>DELETE</code>: eliminar rexistros.</li>
+        <li><code>SELECT</code>: consultar información para comprobar o estado dos datos.</li>
+    </ul>
+
+    <p>
+        Os cambios realizados durante a transacción poden permanecer pendentes
+        ata que se confirmen mediante <code>COMMIT</code> ou se cancelen mediante
+        <code>ROLLBACK</code>.
+    </p>
+
+    <h3>1.2. Finalidade das transaccións</h3>
+
+    <p>
+        As transaccións utilízanse cando varias operacións deben manter unha
+        relación lóxica entre si. Os seus principais obxectivos son:
+    </p>
+
+    <ul>
+        <li>Evitar que unha operación quede executada parcialmente.</li>
+        <li>Manter a coherencia e integridade da información.</li>
+        <li>Permitir cancelar cambios cando se produce un erro.</li>
+        <li>Coordinar operacións realizadas por varios usuarios simultaneamente.</li>
+        <li>Garantir que os cambios confirmados permanezan almacenados.</li>
+    </ul>
+
+    <h3>1.3. Exemplo dunha operación sen transacción</h3>
+
+    <p>
+        Supoñamos que temos unha táboa de contas bancarias:
+    </p>
+
+    <pre><code>CREATE TABLE contas (
+    id INT PRIMARY KEY,
+    titular VARCHAR(100) NOT NULL,
+    saldo DECIMAL(10,2) NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO contas (id, titular, saldo)
+VALUES
+    (1, 'Ana García', 1000.00),
+    (2, 'Luis López', 500.00);</code></pre>
+
+    <p>
+        Ana quere transferir 100 euros á conta de Luis. A operación require
+        dúas actualizacións:
+    </p>
+
+    <pre><code>UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1;
+
+UPDATE contas
+SET saldo = saldo + 100
+WHERE id = 2;</code></pre>
+
+    <p>
+        Se a primeira sentenza se executa correctamente pero a segunda produce
+        un erro, a conta de Ana terá 100 euros menos, mentres que a conta de Luis
+        conservará o saldo anterior.
+    </p>
+
+    <p>
+        A información quedaría nun estado incorrecto. Para evitar esta situación
+        debemos executar as dúas actualizacións dentro dunha transacción.
+    </p>
+
+    <h2>2. Propiedades ACID</h2>
+
+    <h3>2.1. Que significa ACID?</h3>
+
+    <p>
+        As transaccións deben cumprir catro propiedades fundamentais coñecidas
+        co acrónimo ACID. Estas propiedades describen as garantías que debe
+        ofrecer un sistema de xestión de bases de datos para manter a información
+        consistente e fiable.
+    </p>
+
+    <ul>
+        <li><strong>A</strong>: Atomicidade (Atomicity).</li>
+        <li><strong>C</strong>: Consistencia (Consistency).</li>
+        <li><strong>I</strong>: Illamento (Isolation).</li>
+        <li><strong>D</strong>: Durabilidade (Durability).</li>
+    </ul>
+
+    <h3>2.2. Atomicidade</h3>
+
+    <p>
+        A atomicidade significa que unha transacción se considera unha unidade
+        indivisible: ou se realizan todas as operacións correctamente ou non
+        se aplica ningunha delas.
+    </p>
+
+    <p>
+        No exemplo da transferencia bancaria, a retirada dos cartos da conta
+        de orixe e o ingreso na conta de destino forman parte dunha mesma
+        operación lóxica.
+    </p>
+
+    <p>
+        Se falla algunha das dúas modificacións, a transacción debe cancelarse
+        para evitar que quede aplicada só unha parte.
+    </p>
+
+    <div class="callout">
+        <strong>Exemplo:</strong> nunha transferencia de 100 euros, non pode
+        quedar aplicada a retirada dos 100 euros sen que se realice tamén
+        o ingreso na conta de destino.
+    </div>
+
+    <h3>2.3. Consistencia</h3>
+
+    <p>
+        A consistencia garante que unha transacción leva a base de datos
+        dun estado válido a outro estado válido, respectando as regras
+        e restricións definidas.
+    </p>
+
+    <p>
+        Entre estas regras podemos atopar:
+    </p>
+
+    <ul>
+        <li>Claves primarias que non admiten valores duplicados.</li>
+        <li>Claves foráneas que garanten as relacións entre táboas.</li>
+        <li>Restricións <code>NOT NULL</code>.</li>
+        <li>Restricións <code>UNIQUE</code>.</li>
+        <li>Restricións <code>CHECK</code>.</li>
+        <li>Regras de negocio implementadas mediante operacións SQL.</li>
+    </ul>
+
+    <p>
+        Por exemplo, podemos definir unha restrición para impedir que o saldo
+        dunha conta sexa negativo:
+    </p>
+
+    <pre><code>CREATE TABLE contas_validas (
+    id INT PRIMARY KEY,
+    titular VARCHAR(100) NOT NULL,
+    saldo DECIMAL(10,2) NOT NULL,
+    CHECK (saldo >= 0)
+) ENGINE=InnoDB;</code></pre>
+
+    <p>
+        Se unha actualización tenta establecer un saldo negativo, a restrición
+        impedirá a operación.
+    </p>
+
+    <div class="advertencia">
+        <strong>Importante:</strong> a consistencia non significa que MariaDB
+        coñeza automaticamente todas as regras do negocio. As restricións
+        e condicións necesarias deben definirse correctamente mediante o
+        deseño da base de datos e a lóxica das aplicacións ou procedementos.
+    </div>
+
+    <h3>2.4. Illamento</h3>
+
+    <p>
+        O illamento garante que as transaccións que se executan simultaneamente
+        non interfiran de maneira incorrecta unhas nas outras.
+    </p>
+
+    <p>
+        Nunha base de datos poden existir varios usuarios traballando ao mesmo
+        tempo. Por exemplo:
+    </p>
+
+    <ul>
+        <li>Un usuario está actualizando o saldo dunha conta.</li>
+        <li>Outro usuario está consultando o saldo desa mesma conta.</li>
+        <li>Un terceiro usuario está realizando outra operación sobre a mesma información.</li>
+    </ul>
+
+    <p>
+        O sistema debe controlar estas operacións para evitar resultados
+        incorrectos derivados da execución simultánea.
+    </p>
+
+    <p>
+        O illamento non implica necesariamente que todas as transaccións
+        se executen unha despois doutra. O SXBD pode permitir a súa execución
+        concorrente, aplicando mecanismos de control para manter a coherencia.
+    </p>
+
+    <h3>2.5. Durabilidade</h3>
+
+    <p>
+        A durabilidade significa que os cambios confirmados mediante
+        <code>COMMIT</code> deben permanecer almacenados, mesmo se posteriormente
+        se produce unha caída do sistema ou un reinicio do servidor.
+    </p>
+
+    <p>
+        MariaDB utiliza mecanismos de rexistro e recuperación para intentar
+        garantir que as transaccións confirmadas non se perdan ante fallos.
+        En InnoDB, estes mecanismos inclúen o rexistro de transaccións
+        (*redo log*).
+    </p>
+
+    <h3>2.6. Resumo das propiedades ACID</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Propiedade</th>
+                <th>Significado</th>
+                <th>Problema que evita</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Atomicidade</td>
+                <td>Todas as operacións se realizan ou ningunha queda aplicada.</td>
+                <td>Operacións incompletas.</td>
+            </tr>
+            <tr>
+                <td>Consistencia</td>
+                <td>Respéctanse as regras e restricións da base de datos.</td>
+                <td>Estados incorrectos dos datos.</td>
+            </tr>
+            <tr>
+                <td>Illamento</td>
+                <td>As transaccións concorrentes non interfiren incorrectamente.</td>
+                <td>Problemas derivados do acceso simultáneo.</td>
+            </tr>
+            <tr>
+                <td>Durabilidade</td>
+                <td>Os cambios confirmados permanecen almacenados.</td>
+                <td>Perda de cambios confirmados.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>3. Motores de almacenamento e transaccións en MariaDB</h2>
+
+    <h3>3.1. Que é un motor de almacenamento?</h3>
+
+    <p>
+        MariaDB permite utilizar diferentes motores de almacenamento para
+        xestionar a información das táboas. Cada motor implementa os seus
+        propios mecanismos de almacenamento, acceso, bloqueo e recuperación.
+    </p>
+
+    <p>
+        Non todos os motores ofrecen as mesmas funcionalidades. Unha das
+        diferenzas máis importantes é o soporte para transaccións.
+    </p>
+
+    <h3>3.2. InnoDB</h3>
+
+    <p>
+        InnoDB é o motor de almacenamento recomendado para a maioría das
+        aplicacións que necesitan garantir a integridade e coherencia
+        dos datos.
+    </p>
+
+    <p>Entre as súas características destacan:</p>
+
+    <ul>
+        <li>Soporte para transaccións.</li>
+        <li>Compatibilidade coas propiedades ACID.</li>
+        <li>Soporte para claves foráneas.</li>
+        <li>Bloqueo a nivel de fila en operacións habituais.</li>
+        <li>Mecanismos de recuperación ante fallos.</li>
+        <li>Control da concorrencia mediante mecanismos de bloqueo e versións dos datos.</li>
+    </ul>
+
+    <p>
+        Para crear unha táboa utilizando InnoDB:
+    </p>
+
+    <pre><code>CREATE TABLE produtos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    prezo DECIMAL(10,2) NOT NULL
+) ENGINE=InnoDB;</code></pre>
+
+    <h3>3.3. MyISAM</h3>
+
+    <p>
+        MyISAM é outro motor de almacenamento de MariaDB, máis antigo,
+        que non ofrece soporte para transaccións.
+    </p>
+
+    <p>Entre as súas características destacan:</p>
+
+    <ul>
+        <li>Non permite utilizar <code>COMMIT</code> e <code>ROLLBACK</code> para desfacer cambios nas súas táboas.</li>
+        <li>Non ofrece soporte para claves foráneas.</li>
+        <li>Utiliza bloqueo a nivel de táboa.</li>
+        <li>Non proporciona as garantías transaccionais ACID de InnoDB.</li>
+    </ul>
+
+    <p>
+        Podemos crear unha táboa utilizando MyISAM do seguinte xeito:
+    </p>
+
+    <pre><code>CREATE TABLE rexistros_historicos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    descricion VARCHAR(200),
+    data_rexistro DATE
+) ENGINE=MyISAM;</code></pre>
+
+    <h3>3.4. Comparación entre InnoDB e MyISAM</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>InnoDB</th>
+                <th>MyISAM</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Transaccións</td>
+                <td>Si</td>
+                <td>Non</td>
+            </tr>
+            <tr>
+                <td>ACID</td>
+                <td>Si</td>
+                <td>Non</td>
+            </tr>
+            <tr>
+                <td>Claves foráneas</td>
+                <td>Si</td>
+                <td>Non</td>
+            </tr>
+            <tr>
+                <td>Bloqueo habitual</td>
+                <td>A nivel de fila</td>
+                <td>A nivel de táboa</td>
+            </tr>
+            <tr>
+                <td>Recuperación transaccional</td>
+                <td>Si</td>
+                <td>Non</td>
+            </tr>
+            <tr>
+                <td>Uso recomendado</td>
+                <td>Aplicacións con integridade e transaccións.</td>
+                <td>Táboas que non precisan funcionalidades transaccionais.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Conclusión:</strong> para traballar con transaccións debemos
+        utilizar táboas que empreguen un motor transaccional, como InnoDB.
+        Non abonda con executar <code>START TRANSACTION</code>: se as táboas
+        utilizan un motor non transaccional, os seus cambios non se poderán
+        desfacer mediante <code>ROLLBACK</code>.
+    </div>
+
+    <h3>3.5. Consultar o motor dunha táboa</h3>
+
+    <p>
+        Podemos comprobar que motor utiliza unha táboa mediante:
+    </p>
+
+    <pre><code>SHOW TABLE STATUS
+FROM academia
+WHERE Name = 'alumnos';</code></pre>
+
+    <p>
+        Outra opción é consultar a definición da táboa:
+    </p>
+
+    <pre><code>SHOW CREATE TABLE alumnos;</code></pre>
+
+    <p>
+        Se necesitamos cambiar o motor dunha táboa existente, podemos utilizar:
+    </p>
+
+    <pre><code>ALTER TABLE alumnos ENGINE=InnoDB;</code></pre>
+
+    <h2>4. Inicio e finalización de transaccións</h2>
+
+    <h3>4.1. Inicio dunha transacción</h3>
+
+    <p>
+        Para iniciar unha transacción de maneira explícita en MariaDB
+        utilizamos a sentenza <code>START TRANSACTION</code>.
+    </p>
+
+    <pre><code>START TRANSACTION;</code></pre>
+
+    <p>
+        A partir dese momento, as operacións transaccionais realizadas
+        na conexión quedan pendentes de confirmación ou cancelación.
+    </p>
+
+    <h3>4.2. Confirmación mediante COMMIT</h3>
+
+    <p>
+        A sentenza <code>COMMIT</code> confirma todos os cambios realizados
+        na transacción. Unha vez confirmados, os cambios pasan a ser permanentes
+        e xa non poden desfacerse mediante un <code>ROLLBACK</code> ordinario.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1;
+
+UPDATE contas
+SET saldo = saldo + 100
+WHERE id = 2;
+
+COMMIT;</code></pre>
+
+    <p>
+        Neste exemplo, as dúas actualizacións forman parte dunha mesma
+        transacción. Se ambas se executan correctamente, <code>COMMIT</code>
+        confirma os cambios.
+    </p>
+
+    <h3>4.3. Cancelación mediante ROLLBACK</h3>
+
+    <p>
+        A sentenza <code>ROLLBACK</code> cancela os cambios realizados
+        desde o inicio da transacción ou desde o último punto de restauración
+        ao que se volva.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1;
+
+UPDATE contas
+SET saldo = saldo + 100
+WHERE id = 2;
+
+ROLLBACK;</code></pre>
+
+    <p>
+        Neste caso, as actualizacións quedan desfeitas e os saldos recuperan
+        os valores que tiñan antes de iniciar a transacción.
+    </p>
+
+    <h3>4.4. Sintaxe básica dunha transacción</h3>
+
+    <p>
+        A estrutura habitual dunha transacción é:
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+-- Operacións SQL
+INSERT ...;
+UPDATE ...;
+DELETE ...;
+
+-- Se todo é correcto
+COMMIT;
+
+-- Se se produce algún problema
+-- ROLLBACK;</code></pre>
+
+    <p>
+        Na práctica, <code>COMMIT</code> e <code>ROLLBACK</code> son alternativas:
+        debemos executar unha delas para finalizar a transacción.
+    </p>
+
+    <div class="advertencia">
+        <strong>Atención:</strong> non se debe executar <code>COMMIT</code>
+        e despois <code>ROLLBACK</code> esperando recuperar os datos anteriores.
+        Unha vez confirmado o cambio, o <code>ROLLBACK</code> xa non pode
+        desfacer esa transacción.
+    </div>
+
+    <h2>5. Confirmación e cancelación de cambios</h2>
+
+    <h3>5.1. Cambios pendentes e cambios permanentes</h3>
+
+    <p>
+        Durante unha transacción, as modificacións realizadas aínda non
+        foron confirmadas. O seu resultado pode ser revisado pola propia
+        conexión antes de decidir se se confirman ou se cancelan.
+    </p>
+
+    <p>
+        A diferenza entre os cambios pendentes e os confirmados é fundamental:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Estado</th>
+                <th>Significado</th>
+                <th>Posibilidade de cancelación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cambios pendentes</td>
+                <td>Operacións realizadas dentro dunha transacción aínda non confirmada.</td>
+                <td>Si, mediante <code>ROLLBACK</code>.</td>
+            </tr>
+            <tr>
+                <td>Cambios confirmados</td>
+                <td>Operacións finalizadas mediante <code>COMMIT</code>.</td>
+                <td>Non mediante un ROLLBACK ordinario.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>5.2. Comprobar os cambios antes de confirmalos</h3>
+
+    <p>
+        Unha boa práctica consiste en consultar os datos afectados antes
+        de executar <code>COMMIT</code>. Isto permite comprobar que as
+        modificacións son correctas.
+    </p>
+
+    <p>Exemplo:</p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1;
+
+-- Comprobar o saldo da conta
+SELECT *
+FROM contas
+WHERE id = 1;
+
+-- Se o resultado é correcto:
+COMMIT;
+
+-- Se o resultado non é correcto:
+-- ROLLBACK;</code></pre>
+
+    <p>
+        As consultas realizadas dentro da mesma conexión permiten revisar
+        os cambios pendentes antes de confirmalos.
+    </p>
+
+    <h3>5.3. Autocommit</h3>
+
+    <p>
+        MariaDB dispón dunha opción chamada <code>autocommit</code> que
+        controla se cada sentenza se confirma automaticamente ao finalizar.
+    </p>
+
+    <p>
+        Por defecto, normalmente está activada. Isto significa que cada
+        operación individual sobre unha táboa transaccional se confirma
+        automaticamente se non se iniciou unha transacción explícita.
+    </p>
+
+    <p>Podemos consultar o seu estado mediante:</p>
+
+    <pre><code>SELECT @@autocommit;</code></pre>
+
+    <p>
+        Para desactivar temporalmente o modo de confirmación automática
+        na conexión actual:
+    </p>
+
+    <pre><code>SET autocommit = 0;</code></pre>
+
+    <p>
+        Para volver activalo:
+    </p>
+
+    <pre><code>SET autocommit = 1;</code></pre>
+
+    <p>
+        Tamén podemos consultar e modificar esta opción mediante a configuración
+        da sesión.
+    </p>
+
+    <div class="advertencia">
+        <strong>Importante:</strong> cambiar <code>autocommit</code> non é o
+        mesmo que iniciar unha transacción explícita. Ademais, activar
+        <code>autocommit</code> mentres existe unha transacción pendente
+        pode provocar a súa confirmación. Para exercicios e operacións
+        controladas é recomendable utilizar explicitamente
+        <code>START TRANSACTION</code>, <code>COMMIT</code> e
+        <code>ROLLBACK</code>.
+    </div>
+
+    <h3>5.4. Confirmacións implícitas</h3>
+
+    <p>
+        Algunhas sentenzas SQL provocan unha confirmación implícita
+        (*implicit commit*) das transaccións. Isto significa que poden
+        finalizar unha transacción pendente independentemente de que
+        teñamos previsto executar posteriormente un <code>ROLLBACK</code>.
+    </p>
+
+    <p>Entre as operacións que poden provocar esta situación están:</p>
+
+    <ul>
+        <li><code>CREATE TABLE</code>.</li>
+        <li><code>ALTER TABLE</code>.</li>
+        <li><code>DROP TABLE</code>.</li>
+        <li><code>TRUNCATE TABLE</code>.</li>
+        <li><code>CREATE DATABASE</code>.</li>
+        <li><code>DROP DATABASE</code>.</li>
+    </ul>
+
+    <p>
+        Por este motivo, debemos evitar mesturar operacións DDL e operacións
+        DML dentro dunha mesma transacción cando esperamos poder desfacer
+        todos os cambios mediante <code>ROLLBACK</code>.
+    </p>
+
+    <h2>6. Puntos de restauración con SAVEPOINT</h2>
+
+    <h3>6.1. Concepto de SAVEPOINT</h3>
+
+    <p>
+        Un punto de restauración permite marcar unha posición dentro dunha
+        transacción para poder regresar a ela posteriormente sen cancelar
+        necesariamente todas as operacións realizadas.
+    </p>
+
+    <p>
+        Para crear un punto de restauración utilizamos:
+    </p>
+
+    <pre><code>SAVEPOINT nome_punto;</code></pre>
+
+    <p>
+        A partir dese momento, podemos desfacer parcialmente os cambios
+        realizados despois dese punto mediante <code>ROLLBACK TO SAVEPOINT</code>.
+    </p>
+
+    <h3>6.2. Crear puntos de restauración</h3>
+
+    <p>
+        Imos utilizar unha transacción que modifica varias contas bancarias.
+        Crearemos puntos de restauración para poder desfacer unha parte
+        das operacións.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1;
+
+SAVEPOINT punto1;
+
+UPDATE contas
+SET saldo = saldo + 100
+WHERE id = 2;
+
+SAVEPOINT punto2;
+
+UPDATE contas
+SET saldo = saldo - 50
+WHERE id = 1;</code></pre>
+
+    <p>
+        Neste momento realizáronse tres actualizacións e existen dous
+        puntos de restauración.
+    </p>
+
+    <h3>6.3. Recuperación parcial con ROLLBACK TO SAVEPOINT</h3>
+
+    <p>
+        Se queremos desfacer unicamente as operacións realizadas despois
+        de <code>punto2</code>, podemos executar:
+    </p>
+
+    <pre><code>ROLLBACK TO SAVEPOINT punto2;</code></pre>
+
+    <p>
+        A actualización que restaba 50 euros da conta 1 queda desfeita.
+        As operacións anteriores a <code>punto2</code> permanecen pendentes.
+    </p>
+
+    <p>
+        Podemos continuar realizando modificacións ou confirmar a transacción:
+    </p>
+
+    <pre><code>COMMIT;</code></pre>
+
+    <h3>6.4. Eliminar puntos de restauración</h3>
+
+    <p>
+        Se xa non necesitamos un punto de restauración, podemos eliminalo
+        mediante <code>RELEASE SAVEPOINT</code>.
+    </p>
+
+    <pre><code>RELEASE SAVEPOINT punto1;</code></pre>
+
+    <p>
+        A eliminación do punto de restauración non desfai as operacións
+        realizadas. Simplemente elimina a posibilidade de regresar a ese punto.
+    </p>
+
+    <h3>6.5. Diferenza entre ROLLBACK e ROLLBACK TO SAVEPOINT</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sentenza</th>
+                <th>Resultado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>ROLLBACK</code></td>
+                <td>Desfai todos os cambios pendentes da transacción.</td>
+            </tr>
+            <tr>
+                <td><code>ROLLBACK TO SAVEPOINT nome</code></td>
+                <td>Desfai os cambios realizados despois do punto indicado.</td>
+            </tr>
+            <tr>
+                <td><code>RELEASE SAVEPOINT nome</code></td>
+                <td>Elimina o punto de restauración sen desfacer cambios.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Importante:</strong> ao executar <code>ROLLBACK TO SAVEPOINT</code>,
+        a transacción continúa aberta. Non se confirma nin se cancela por completo.
+        Ademais, os puntos de restauración posteriores ao punto ao que se regresa
+        deixan de estar dispoñibles.
+    </div>
+
+    <h2>7. Transaccións con varias operacións DML</h2>
+
+    <h3>7.1. Operacións sobre varias táboas relacionadas</h3>
+
+    <p>
+        As transaccións son especialmente útiles cando unha operación de negocio
+        require modificar varias táboas relacionadas.
+    </p>
+
+    <p>
+        Por exemplo, ao realizar unha compra podemos necesitar:
+    </p>
+
+    <ol>
+        <li>Inserir un novo pedido.</li>
+        <li>Inserir os produtos asociados ao pedido.</li>
+        <li>Actualizar o stock dos produtos.</li>
+        <li>Actualizar información adicional do cliente ou do pedido.</li>
+    </ol>
+
+    <p>
+        Todas estas operacións deberían realizarse correctamente para que
+        a compra quede rexistrada. Se falla algunha delas, pode ser necesario
+        cancelar o proceso completo.
+    </p>
+
+    <h3>7.2. Exemplo: rexistrar unha matrícula</h3>
+
+    <p>
+        Supoñamos que temos as táboas <code>alumnos</code>,
+        <code>asignaturas</code> e <code>matriculas</code>. Queremos
+        matricular un alumno nunha asignatura e establecer unha nota inicial.
+    </p>
+
+    <p>
+        A táboa <code>matriculas</code> utiliza unha clave primaria composta
+        polos identificadores do alumno e da asignatura.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+INSERT INTO matriculas (
+    alumno_id,
+    asignatura_id,
+    nota
+)
+VALUES (1, 2, NULL);
+
+UPDATE alumnos
+SET edad = edad
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <p>
+        O exemplo mostra como agrupar varias operacións nunha mesma transacción.
+        A actualización de idade non modifica o seu valor, polo que se utiliza
+        unicamente como exemplo dunha segunda operación sobre outra táboa.
+        Nunha aplicación real, esa operación debería substituírse por unha
+        modificación necesaria para o proceso.
+    </p>
+
+    <h3>7.3. Exemplo: operación de compra</h3>
+
+    <p>
+        Imos considerar unha base de datos simplificada para xestionar produtos
+        e pedidos:
+    </p>
+
+    <pre><code>CREATE TABLE produtos (
+    id INT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    stock INT NOT NULL,
+    CHECK (stock >= 0)
+) ENGINE=InnoDB;
+
+CREATE TABLE pedidos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    data_pedido DATE NOT NULL,
+    importe DECIMAL(10,2) NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE detalle_pedidos (
+    pedido_id INT,
+    produto_id INT,
+    cantidade INT NOT NULL,
+    prezo DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (pedido_id, produto_id),
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+    FOREIGN KEY (produto_id) REFERENCES produtos(id)
+) ENGINE=InnoDB;</code></pre>
+
+    <p>
+        Para rexistrar unha compra debemos inserir o pedido, engadir o detalle
+        e actualizar o stock. Estas operacións deben formar parte dunha mesma
+        transacción.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+-- 1. Crear o pedido
+INSERT INTO pedidos (data_pedido, importe)
+VALUES (CURRENT_DATE(), 100.00);
+
+-- 2. Gardar o identificador do pedido
+SET @pedido_id = LAST_INSERT_ID();
+
+-- 3. Inserir o detalle
+INSERT INTO detalle_pedidos (
+    pedido_id,
+    produto_id,
+    cantidade,
+    prezo
+)
+VALUES (
+    @pedido_id,
+    1,
+    2,
+    50.00
+);
+
+-- 4. Actualizar o stock
+UPDATE produtos
+SET stock = stock - 2
+WHERE id = 1
+  AND stock >= 2;
+
+-- 5. Confirmar a operación
+COMMIT;</code></pre>
+
+    <p>
+        O exemplo ilustra a secuencia de operacións, pero unha implementación
+        real debe comprobar que a actualización do stock afectou exactamente
+        ao número de produtos esperado. Se non hai stock suficiente, non se
+        debe confirmar o pedido.
+    </p>
+
+    <h3>7.4. Comprobación do resultado dunha operación</h3>
+
+    <p>
+        Para garantir que o proceso se completou correctamente, podemos
+        consultar o número de filas afectadas mediante <code>ROW_COUNT()</code>.
+        Esta función devolve o número de filas afectadas pola última sentenza
+        que modifica datos.
+    </p>
+
+    <p>
+        Nunha aplicación ou procedemento almacenado podemos utilizar ese
+        resultado para decidir se debemos confirmar ou cancelar a transacción.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE produtos
+SET stock = stock - 2
+WHERE id = 1
+  AND stock >= 2;
+
+SELECT ROW_COUNT() AS filas_modificadas;</code></pre>
+
+    <p>
+        Se a actualización afecta unha fila, significa que se realizou
+        a modificación. Se afecta cero filas, pode significar que o produto
+        non existe ou que non hai stock suficiente.
+    </p>
+
+    <p>
+        Nun guión executado de maneira manual, debemos comprobar o resultado
+        antes de decidir se executamos <code>COMMIT</code> ou
+        <code>ROLLBACK</code>.
+    </p>
+
+    <h2>8. Exemplo completo: transferencia bancaria segura</h2>
+
+    <h3>8.1. Preparación das táboas</h3>
+
+    <p>
+        Imos desenvolver un exemplo completo que permita realizar transferencias
+        bancarias utilizando transaccións.
+    </p>
+
+    <p>En primeiro lugar, creamos a táboa:</p>
+
+    <pre><code>CREATE TABLE contas_bancarias (
+    id INT PRIMARY KEY,
+    titular VARCHAR(100) NOT NULL,
+    saldo DECIMAL(10,2) NOT NULL,
+    CHECK (saldo >= 0)
+) ENGINE=InnoDB;</code></pre>
+
+    <p>Inserimos dúas contas de exemplo:</p>
+
+    <pre><code>INSERT INTO contas_bancarias (id, titular, saldo)
+VALUES
+    (1, 'Ana García', 1000.00),
+    (2, 'Luis López', 500.00);</code></pre>
+
+    <p>Comprobamos os saldos:</p>
+
+    <pre><code>SELECT * FROM contas_bancarias;</code></pre>
+
+    <h3>8.2. Executar unha transferencia</h3>
+
+    <p>
+        Agora queremos transferir 200 euros da conta de Ana á conta de Luis.
+        A operación debe comprobar que existe saldo suficiente antes de
+        realizar a transferencia.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+-- Consultar o saldo da conta de orixe
+SELECT saldo
+FROM contas_bancarias
+WHERE id = 1;
+
+-- Retirar 200 euros da conta de orixe
+UPDATE contas_bancarias
+SET saldo = saldo - 200
+WHERE id = 1
+  AND saldo >= 200;
+
+-- Consultar o resultado da actualización
+SELECT ROW_COUNT() AS filas_modificadas;
+
+-- Engadir 200 euros á conta de destino
+UPDATE contas_bancarias
+SET saldo = saldo + 200
+WHERE id = 2;
+
+-- Comprobar os saldos
+SELECT * FROM contas_bancarias;
+
+-- Se todo é correcto:
+COMMIT;
+
+-- Se se detecta algún problema:
+-- ROLLBACK;</code></pre>
+
+    <p>
+        A transferencia só debe confirmarse se a retirada e o ingreso se
+        realizaron correctamente. Se a conta de orixe non ten saldo suficiente,
+        a operación de retirada non modificará ningún rexistro.
+    </p>
+
+    <div class="advertencia">
+        <strong>Precaución:</strong> o exemplo permite visualizar as operacións
+        e comprobar manualmente o resultado. Nunha aplicación real tamén se
+        debe comprobar que existen ambas as contas e que cada actualización
+        afecta exactamente a unha fila. Ademais, para evitar condicións de
+        concorrencia é recomendable bloquear as filas implicadas durante
+        a operación.
+    </div>
+
+    <h3>8.3. Probar a cancelación da transferencia</h3>
+
+    <p>
+        Podemos repetir a operación, pero esta vez cancelala antes de confirmar
+        os cambios:
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas_bancarias
+SET saldo = saldo - 100
+WHERE id = 1;
+
+UPDATE contas_bancarias
+SET saldo = saldo + 100
+WHERE id = 2;
+
+-- Cancelar todas as modificacións
+ROLLBACK;
+
+-- Comprobar que os saldos non cambiaron
+SELECT * FROM contas_bancarias;</code></pre>
+
+    <p>
+        Despois de executar <code>ROLLBACK</code>, os saldos deben conservar
+        os valores que tiñan antes de iniciar a transacción.
+    </p>
+
+    <h2>9. Boas prácticas no uso de transaccións</h2>
+
+    <p>
+        Para traballar correctamente con transaccións é recomendable seguir
+        estas pautas:
+    </p>
+
+    <ul>
+        <li>
+            <strong>Utilizar InnoDB:</strong> comprobar que todas as táboas
+            implicadas utilizan un motor transaccional.
+        </li>
+        <li>
+            <strong>Iniciar a transacción cando sexa necesario:</strong>
+            agrupar as operacións que forman parte dunha mesma tarefa.
+        </li>
+        <li>
+            <strong>Comprobar os resultados:</strong> verificar que as sentenzas
+            afectaron aos rexistros esperados.
+        </li>
+        <li>
+            <strong>Confirmar só cando todo sexa correcto:</strong> executar
+            <code>COMMIT</code> unha vez completadas e comprobadas as operacións.
+        </li>
+        <li>
+            <strong>Cancelar ante un erro:</strong> utilizar
+            <code>ROLLBACK</code> se algunha operación non pode completarse.
+        </li>
+        <li>
+            <strong>Utilizar SAVEPOINT:</strong> crear puntos de restauración
+            cando se necesite desfacer parcialmente unha transacción.
+        </li>
+        <li>
+            <strong>Evitar transaccións demasiado longas:</strong> mantelas
+            abertas unicamente durante o tempo necesario.
+        </li>
+        <li>
+            <strong>Ter en conta a concorrencia:</strong> considerar que outros
+            usuarios poden estar modificando os mesmos datos.
+        </li>
+        <li>
+            <strong>Evitar operacións DDL:</strong> non mesturar creacións
+            ou modificacións de estruturas con operacións que se espera
+            poder desfacer mediante <code>ROLLBACK</code>.
+        </li>
+    </ul>
+
+    <h2>10. Resumo das principais sentenzas</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Sentenza</th>
+                <th>Finalidade</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>START TRANSACTION</code></td>
+                <td>Iniciar unha nova transacción.</td>
+            </tr>
+            <tr>
+                <td><code>COMMIT</code></td>
+                <td>Confirmar os cambios realizados.</td>
+            </tr>
+            <tr>
+                <td><code>ROLLBACK</code></td>
+                <td>Cancelar os cambios pendentes.</td>
+            </tr>
+            <tr>
+                <td><code>SAVEPOINT nome</code></td>
+                <td>Crear un punto de restauración.</td>
+            </tr>
+            <tr>
+                <td><code>ROLLBACK TO SAVEPOINT nome</code></td>
+                <td>Desfacer os cambios posteriores a un punto.</td>
+            </tr>
+            <tr>
+                <td><code>RELEASE SAVEPOINT nome</code></td>
+                <td>Eliminar un punto de restauración.</td>
+            </tr>
+            <tr>
+                <td><code>SET autocommit = 0</code></td>
+                <td>Desactivar a confirmación automática na sesión.</td>
+            </tr>
+            <tr>
+                <td><code>SET autocommit = 1</code></td>
+                <td>Activar a confirmación automática na sesión.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>11. Guión de comprobación</h2>
+
+    <p>
+        Antes de finalizar unha operación que utiliza transaccións,
+        convén revisar os seguintes aspectos:
+    </p>
+
+    <ol>
+        <li>Comprobar que as táboas implicadas utilizan InnoDB.</li>
+        <li>Identificar todas as operacións que forman parte da tarefa.</li>
+        <li>Iniciar a transacción mediante <code>START TRANSACTION</code>.</li>
+        <li>Executar as sentenzas DML necesarias.</li>
+        <li>Comprobar que cada operación afecta aos rexistros esperados.</li>
+        <li>Verificar que se manteñen as restricións de integridade.</li>
+        <li>Se todo é correcto, confirmar mediante <code>COMMIT</code>.</li>
+        <li>Se se produce algún erro, cancelar mediante <code>ROLLBACK</code>.</li>
+        <li>Se só é necesario desfacer unha parte, utilizar <code>SAVEPOINT</code>.</li>
+        <li>Consultar os datos finais para comprobar o resultado.</li>
+    </ol>
+
+    <div class="callout">
+        <strong>Conclusión:</strong> as transaccións permiten executar varias
+        operacións como unha única unidade de traballo, mantendo a integridade
+        e coherencia da base de datos. As propiedades ACID definen as garantías
+        fundamentais deste mecanismo, mentres que <code>COMMIT</code>,
+        <code>ROLLBACK</code> e <code>SAVEPOINT</code> permiten controlar
+        a confirmación e recuperación dos cambios.
+    </div>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD3 - Práctica global de consultas SQL</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<main>
+
+    <h1>UD3 – Práctica global de consultas SQL</h1>
+    <p><strong>Unidade didáctica:</strong> Consultas SQL</p>
+
+    <h2>1. Obxectivo da práctica</h2>
+
+    <p>
+        Nesta práctica realizaranse diferentes consultas SQL sobre unha base
+        de datos relacional, aplicando os conceptos traballados na unidade:
+        selección e filtrado de rexistros, ordenación, funcións de agregación,
+        agrupamentos, combinación de táboas, subconsultas, combinación de
+        resultados e optimización de consultas.
+    </p>
+
+    <p>
+        O obxectivo é demostrar que se sabe formular consultas SQL adaptadas
+        a diferentes necesidades de información e interpretar os resultados
+        obtidos.
+    </p>
+
+    <h2>2. Preparación da base de datos</h2>
+
+    <p>
+        Utiliza a base de datos relacional empregada durante a unidade
+        didáctica. Antes de comezar, comproba que existen as táboas necesarias,
+        que as relacións entre elas están correctamente definidas e que
+        conteñen datos suficientes para realizar todas as consultas.
+    </p>
+
+    <p>
+        Se é necesario, introduce novos rexistros para poder comprobar
+        correctamente o funcionamento das consultas.
+    </p>
+
+    <h2>3. Desenvolvemento da práctica</h2>
+
+    <h3>Bloque 1. Consultas simples e filtrado</h3>
+
+    <ol>
+        <li>Realiza consultas para mostrar diferentes columnas das táboas.</li>
+        <li>Obtén resultados sen rexistros duplicados.</li>
+        <li>Aplica condicións de filtrado utilizando operadores de comparación e lóxicos.</li>
+        <li>Utiliza os operadores <code>BETWEEN</code>, <code>IN</code> e <code>LIKE</code>.</li>
+        <li>Realiza consultas que permitan localizar valores nulos.</li>
+        <li>Ordena os resultados e limita o número de rexistros devoltos.</li>
+    </ol>
+
+    <h3>Bloque 2. Funcións de agregación e agrupamentos</h3>
+
+    <ol>
+        <li>Realiza consultas que utilicen as funcións <code>COUNT</code>, <code>SUM</code>, <code>AVG</code>, <code>MIN</code> e <code>MAX</code>.</li>
+        <li>Agrupa os resultados utilizando <code>GROUP BY</code>.</li>
+        <li>Aplica condicións sobre os grupos mediante <code>HAVING</code>.</li>
+        <li>Combina agrupamentos con ordenación de resultados.</li>
+    </ol>
+
+    <h3>Bloque 3. Combinación de táboas</h3>
+
+    <ol>
+        <li>Realiza consultas que combinen información de dúas táboas relacionadas mediante <code>INNER JOIN</code>.</li>
+        <li>Combina información de tres ou máis táboas.</li>
+        <li>Utiliza <code>LEFT JOIN</code> para mostrar tamén os rexistros que non teñen correspondencia na outra táboa.</li>
+        <li>Utiliza <code>RIGHT JOIN</code> e compara os resultados cos obtidos mediante <code>LEFT JOIN</code>.</li>
+        <li>Realiza consultas que permitan localizar rexistros sen relacións ou correspondencias noutras táboas.</li>
+    </ol>
+
+    <h3>Bloque 4. Subconsultas</h3>
+
+    <ol>
+        <li>Realiza unha consulta que utilice unha subconsulta escalar.</li>
+        <li>Utiliza unha subconsulta con <code>IN</code> ou <code>NOT IN</code>.</li>
+        <li>Realiza unha consulta mediante <code>EXISTS</code> ou <code>NOT EXISTS</code>.</li>
+        <li>Utiliza unha subconsulta que inclúa unha función de agregación.</li>
+        <li>Realiza unha subconsulta correlacionada.</li>
+    </ol>
+
+    <h3>Bloque 5. Combinación de resultados</h3>
+
+    <ol>
+        <li>Realiza dúas consultas compatibles e combina os seus resultados mediante <code>UNION</code>.</li>
+        <li>Repite a operación utilizando <code>UNION ALL</code>.</li>
+        <li>Compara os resultados e explica a diferenza entre ambos os operadores.</li>
+        <li>Realiza unha consulta utilizando <code>INTERSECT</code> ou <code>EXCEPT</code>, se están dispoñibles na versión do SXBD utilizada.</li>
+    </ol>
+
+    <h3>Bloque 6. Optimización e análise de consultas</h3>
+
+    <ol>
+        <li>Selecciona unha consulta que combine varias táboas ou utilice filtros.</li>
+        <li>Analiza o seu plan de execución mediante <code>EXPLAIN</code>.</li>
+        <li>Identifica a información máis relevante do plan: táboas consultadas, tipo de acceso, índices posibles, índice utilizado e número estimado de filas.</li>
+        <li>Comproba se algún índice existente pode mellorar a consulta ou se sería conveniente crear un novo.</li>
+        <li>Volver executar <code>EXPLAIN</code> e compara os resultados antes e despois dos cambios.</li>
+    </ol>
+
+    <h2>4. Entrega e documentación</h2>
+
+    <p>
+        A entrega consistirá nun <strong>único documento PDF</strong> que recolla
+        o desenvolvemento completo da práctica. Non se entregarán ficheiros SQL
+        independentes nin capturas soltas.
+    </p>
+
+    <p>O documento deberá incluír:</p>
+
+    <ul>
+        <li><strong>Portada:</strong> nome e apelidos, curso e título da práctica.</li>
+        <li><strong>Desenvolvemento:</strong> todos os bloques e exercicios realizados, identificados e ordenados.</li>
+        <li><strong>Consultas SQL:</strong> o código completo de cada consulta.</li>
+        <li><strong>Capturas de pantalla:</strong> imaxes nas que se poida comprobar a execución das consultas e os resultados obtidos.</li>
+        <li><strong>Explicacións:</strong> unha breve descrición do obxectivo de cada consulta, dos operadores utilizados e da información que devolve.</li>
+        <li><strong>Análise:</strong> comparación dos resultados cando se solicite e interpretación dos plans de execución no bloque de optimización.</li>
+    </ul>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        As capturas deben permitir identificar claramente a consulta executada
+        e o resultado obtido. Non é suficiente con incluír unicamente o código
+        SQL ou unha imaxe dos resultados sen explicación.
+    </div>
+
+    <h2>5. Consideracións finais</h2>
+
+    <ul>
+        <li>Todas as consultas deben estar correctamente executadas e adaptadas á estrutura real da base de datos.</li>
+        <li>Os resultados deben ser coherentes cos datos almacenados.</li>
+        <li>As explicacións deben estar redactadas coas propias palabras, demostrando que se comprende o funcionamento das consultas.</li>
+        <li>O documento debe ter unha presentación ordenada, coidada e lexible.</li>
+        <li>O PDF debe entregarse nun único ficheiro co nome <code>UD3_Apelidos_Nome.pdf</code>.</li>
+    </ul>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,1519 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD3 - Consultas SQL (II)</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Unidade didáctica 3. Consultas SQL (II)</h1>
+
+    <p>
+        Nesta parte da unidade continuaremos traballando coas consultas SQL.
+        Aprenderemos a limitar os resultados, utilizar alias e expresións,
+        realizar operacións de resumo e agrupar rexistros.
+    </p>
+
+    <p>
+        Tamén estudaremos como recuperar información almacenada en varias
+        táboas mediante composicións internas (<code>INNER JOIN</code>),
+        utilizando as relacións establecidas entre as claves primarias
+        e foráneas.
+    </p>
+
+    <!-- ================================================== -->
+    <h2>7. Limitación de resultados, alias e expresións</h2>
+    <!-- ================================================== -->
+
+    <h3>7.1. Limitación de resultados con LIMIT</h3>
+
+    <p>
+        Cando realizamos unha consulta, normalmente obtense todos os
+        rexistros que cumpren as condicións establecidas. Non obstante,
+        en determinadas situacións pode interesarnos recuperar unicamente
+        unha parte dos resultados.
+    </p>
+
+    <p>
+        A cláusula <code>LIMIT</code> permite establecer o número máximo
+        de rexistros que devolverá unha consulta.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+LIMIT numero;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Mostrar os tres primeiros alumnos</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+LIMIT 3;</code></pre>
+
+        <p>
+            A consulta devolverá como máximo tres rexistros da táboa
+            <code>alumnos</code>.
+        </p>
+    </div>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        Sen utilizar <code>ORDER BY</code>, non debemos asumir que
+        os rexistros devoltos serán sempre os mesmos nin que seguirán
+        unha orde determinada.
+    </div>
+
+    <h3>7.2. LIMIT combinado con ORDER BY</h3>
+
+    <p>
+        É habitual combinar <code>LIMIT</code> con <code>ORDER BY</code>
+        para recuperar os primeiros rexistros segundo un criterio
+        de ordenación.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Os tres alumnos de maior idade</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+ORDER BY idade DESC
+LIMIT 3;</code></pre>
+
+        <p>
+            Primeiro ordénanse os alumnos de maior a menor idade e
+            posteriormente recupéranse os tres primeiros.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Os dous cursos con maior número de horas</h4>
+
+        <pre><code>SELECT *
+FROM cursos
+ORDER BY horas DESC
+LIMIT 2;</code></pre>
+    </div>
+
+    <h3>7.3. LIMIT con desprazamento (OFFSET)</h3>
+
+    <p>
+        Podemos indicar non só cantos rexistros queremos recuperar,
+        senón tamén cantos rexistros queremos saltar antes de comezar
+        a mostrar os resultados.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+LIMIT numero OFFSET desprazamento;</code></pre>
+
+    <p>
+        O valor de <code>OFFSET</code> indica cantos rexistros se deben
+        saltar antes de comezar a devolver os resultados.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 4. Mostrar tres alumnos saltando os dous primeiros</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+ORDER BY id
+LIMIT 3 OFFSET 2;</code></pre>
+
+        <p>
+            A consulta ordena os alumnos polo identificador, salta os dous
+            primeiros e devolve os tres seguintes.
+        </p>
+    </div>
+
+    <p>
+        Tamén podemos utilizar a sintaxe abreviada:
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos
+ORDER BY id
+LIMIT 2, 3;</code></pre>
+
+    <p>
+        Nesta sintaxe, o primeiro número representa o desprazamento
+        e o segundo o número máximo de rexistros que se devolverán.
+    </p>
+
+    <div class="callout">
+        <strong>Para lembrar:</strong>
+        <ul>
+            <li><code>LIMIT 5</code>: devolve como máximo cinco rexistros.</li>
+            <li><code>LIMIT 5 OFFSET 10</code>: salta dez rexistros e devolve cinco.</li>
+            <li><code>LIMIT 10, 5</code>: equivalente ao caso anterior.</li>
+        </ul>
+    </div>
+
+    <h3>7.4. Alias de columnas</h3>
+
+    <p>
+        Un alias é un nome alternativo que podemos asignar a unha columna
+        no resultado dunha consulta.
+    </p>
+
+    <p>
+        Utilízase para facer que os resultados sexan máis claros e
+        comprensibles, especialmente cando traballamos con expresións
+        ou funcións de resumo.
+    </p>
+
+    <pre><code>SELECT columna AS nome_alias
+FROM nome_taboa;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Cambiar o nome dunha columna</h4>
+
+        <pre><code>SELECT nome AS NomeAlumno
+FROM alumnos;</code></pre>
+
+        <p>
+            A columna aparecerá no resultado co nome
+            <code>NomeAlumno</code>, pero o nome real do campo na táboa
+            continuará sendo <code>nome</code>.
+        </p>
+    </div>
+
+    <p>
+        A palabra reservada <code>AS</code> é opcional.
+    </p>
+
+    <pre><code>SELECT nome NomeAlumno
+FROM alumnos;</code></pre>
+
+    <p>
+        Se o alias contén espazos, debemos utilizar comiñas invertidas
+        (acento grave).
+    </p>
+
+    <pre><code>SELECT nome AS `Nome do alumno`
+FROM alumnos;</code></pre>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        Os alias modifican o nome co que se presenta unha columna
+        no resultado da consulta. Non modifican a estrutura da táboa
+        nin cambian o nome real do campo.
+    </div>
+
+    <h3>7.5. Alias de táboas</h3>
+
+    <p>
+        Tamén podemos asignar nomes alternativos ás táboas durante
+        a execución dunha consulta.
+    </p>
+
+    <pre><code>SELECT a.nome
+FROM alumnos AS a;</code></pre>
+
+    <p>
+        Neste exemplo, <code>a</code> é un alias da táboa
+        <code>alumnos</code>. Podemos utilizalo para referirnos ás
+        súas columnas.
+    </p>
+
+    <p>
+        Os alias de táboas son especialmente útiles cando traballamos
+        con varias táboas ou cando existen columnas co mesmo nome
+        en diferentes táboas.
+    </p>
+
+    <h3>7.6. Expresións nas consultas</h3>
+
+    <p>
+        SQL permite realizar operacións matemáticas directamente
+        nas consultas. Non é necesario que o resultado dunha expresión
+        estea almacenado previamente nunha columna.
+    </p>
+
+    <p>
+        Podemos utilizar os operadores aritméticos habituais:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Operador</th>
+                <th>Operación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>+</code></td>
+                <td>Suma.</td>
+            </tr>
+            <tr>
+                <td><code>-</code></td>
+                <td>Resta.</td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td>Multiplicación.</td>
+            </tr>
+            <tr>
+                <td><code>/</code></td>
+                <td>División.</td>
+            </tr>
+            <tr>
+                <td><code>%</code></td>
+                <td>Resto dunha división.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Calcular o dobre das horas dun curso</h4>
+
+        <pre><code>SELECT nome, horas, horas * 2 AS DobreHoras
+FROM cursos;</code></pre>
+
+        <p>
+            A consulta mostra o nome do curso, as horas almacenadas
+            e unha nova columna calculada co dobre desas horas.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Calcular un incremento do 10 %</h4>
+
+        <pre><code>SELECT nome,
+       horas,
+       horas * 1.10 AS HorasIncrementadas
+FROM cursos;</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Realizar unha operación con varias columnas</h4>
+
+        <pre><code>SELECT nome,
+       horas,
+       horas / 10 AS ModulosEquivalentes
+FROM cursos;</code></pre>
+    </div>
+
+    <p>
+        Os resultados das expresións poden recibir un alias para
+        identificar facilmente o seu significado.
+    </p>
+
+    <h3>7.7. Combinación de LIMIT, alias e expresións</h3>
+
+    <p>
+        Todos estes elementos poden utilizarse nunha mesma consulta.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 4. Mostrar os tres cursos con máis horas e calcular o seu dobre</h4>
+
+        <pre><code>SELECT nome AS Curso,
+       horas AS Horas,
+       horas * 2 AS DobreHoras
+FROM cursos
+ORDER BY horas DESC
+LIMIT 3;</code></pre>
+    </div>
+
+    <!-- ================================================== -->
+    <h2>8. Funcións de resumo ou agregación</h2>
+    <!-- ================================================== -->
+
+    <h3>8.1. Que son as funcións de resumo?</h3>
+
+    <p>
+        As funcións de resumo, tamén chamadas funcións de agregación,
+        permiten realizar cálculos sobre un conxunto de rexistros
+        e devolver un único resultado.
+    </p>
+
+    <p>
+        A diferenza das consultas anteriores, que devolvían unha fila
+        por cada rexistro seleccionado, estas funcións permiten obter
+        información global dunha táboa.
+    </p>
+
+    <p>
+        As principais funcións de agregación son:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Función</th>
+                <th>Significado</th>
+                <th>Resultado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>COUNT()</code></td>
+                <td>Conta os rexistros ou valores.</td>
+                <td>Número de elementos.</td>
+            </tr>
+            <tr>
+                <td><code>SUM()</code></td>
+                <td>Calcula a suma dos valores.</td>
+                <td>Suma total.</td>
+            </tr>
+            <tr>
+                <td><code>AVG()</code></td>
+                <td>Calcula a media aritmética.</td>
+                <td>Valor medio.</td>
+            </tr>
+            <tr>
+                <td><code>MIN()</code></td>
+                <td>Obtén o valor mínimo.</td>
+                <td>Valor máis pequeno.</td>
+            </tr>
+            <tr>
+                <td><code>MAX()</code></td>
+                <td>Obtén o valor máximo.</td>
+                <td>Valor máis grande.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>8.2. COUNT(): contar rexistros</h3>
+
+    <p>
+        A función <code>COUNT()</code> permite contar o número de
+        rexistros ou valores dunha consulta.
+    </p>
+
+    <p>
+        Podemos utilizar dúas formas habituais:
+    </p>
+
+    <pre><code>SELECT COUNT(*)
+FROM nome_taboa;</code></pre>
+
+    <p>
+        Conta todas as filas devoltas pola consulta, independentemente
+        de que algunha das súas columnas conteña valores NULL.
+    </p>
+
+    <pre><code>SELECT COUNT(columna)
+FROM nome_taboa;</code></pre>
+
+    <p>
+        Conta unicamente os valores non nulos da columna indicada.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Contar o número total de alumnos</h4>
+
+        <pre><code>SELECT COUNT(*) AS TotalAlumnos
+FROM alumnos;</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Contar os alumnos que teñen un curso asignado</h4>
+
+        <pre><code>SELECT COUNT(curso_id) AS AlumnosConCurso
+FROM alumnos;</code></pre>
+
+        <p>
+            Os rexistros nos que <code>curso_id</code> ten valor NULL
+            non se contabilizan.
+        </p>
+    </div>
+
+    <h3>8.3. SUM(): sumar valores</h3>
+
+    <p>
+        A función <code>SUM()</code> calcula a suma dos valores dunha
+        columna numérica.
+    </p>
+
+    <pre><code>SELECT SUM(columna)
+FROM nome_taboa;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Calcular o total de horas de todos os cursos</h4>
+
+        <pre><code>SELECT SUM(horas) AS TotalHoras
+FROM cursos;</code></pre>
+    </div>
+
+    <h3>8.4. AVG(): calcular a media</h3>
+
+    <p>
+        A función <code>AVG()</code> calcula a media aritmética dos
+        valores dunha columna numérica.
+    </p>
+
+    <pre><code>SELECT AVG(columna)
+FROM nome_taboa;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Calcular a idade media do alumnado</h4>
+
+        <pre><code>SELECT AVG(idade) AS IdadeMedia
+FROM alumnos;</code></pre>
+    </div>
+
+    <p>
+        Os valores NULL non se teñen en conta no cálculo da media.
+    </p>
+
+    <h3>8.5. MIN(): obter o valor mínimo</h3>
+
+    <p>
+        A función <code>MIN()</code> devolve o valor máis pequeno
+        dunha columna.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Consultar a menor idade do alumnado</h4>
+
+        <pre><code>SELECT MIN(idade) AS IdadeMinima
+FROM alumnos;</code></pre>
+    </div>
+
+    <h3>8.6. MAX(): obter o valor máximo</h3>
+
+    <p>
+        A función <code>MAX()</code> devolve o valor máis grande
+        dunha columna.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Consultar o maior número de horas dun curso</h4>
+
+        <pre><code>SELECT MAX(horas) AS MaximoHoras
+FROM cursos;</code></pre>
+    </div>
+
+    <h3>8.7. Características das funcións de agregación</h3>
+
+    <p>
+        É importante ter en conta algunhas características do seu
+        funcionamento:
+    </p>
+
+    <ul>
+        <li>
+            As funcións de agregación traballan sobre un conxunto
+            de rexistros.
+        </li>
+        <li>
+            Devolven normalmente un único resultado cando non existe
+            agrupamento.
+        </li>
+        <li>
+            Os valores NULL non se teñen en conta nos cálculos de
+            <code>SUM()</code>, <code>AVG()</code>, <code>MIN()</code>
+            e <code>MAX()</code>.
+        </li>
+        <li>
+            <code>COUNT(*)</code> conta todas as filas, incluídas
+            aquelas que conteñen valores NULL.
+        </li>
+        <li>
+            <code>COUNT(columna)</code> só conta os valores non nulos.
+        </li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Atención:</strong>
+        As funcións <code>SUM()</code> e <code>AVG()</code> deben
+        utilizarse con columnas numéricas. Non teñen sentido para
+        calcular operacións aritméticas sobre nomes ou descricións.
+    </div>
+
+    <!-- ================================================== -->
+    <h2>9. Agrupamento de rexistros con GROUP BY</h2>
+    <!-- ================================================== -->
+
+    <h3>9.1. Que é o agrupamento?</h3>
+
+    <p>
+        As funcións de agregación permiten obter resultados globais
+        dunha táboa. Non obstante, en moitas situacións necesitamos
+        realizar eses cálculos por grupos.
+    </p>
+
+    <p>
+        A cláusula <code>GROUP BY</code> permite agrupar os rexistros
+        que teñen o mesmo valor nunha ou varias columnas.
+    </p>
+
+    <p>
+        Unha vez creados os grupos, podemos aplicar funcións de
+        agregación a cada un deles.
+    </p>
+
+    <pre><code>SELECT columna, funcion_agregacion()
+FROM nome_taboa
+GROUP BY columna;</code></pre>
+
+    <h3>9.2. Agrupar por unha columna</h3>
+
+    <p>
+        Supoñamos que queremos saber cantos alumnos pertencen a cada
+        curso. Para iso debemos agrupar os rexistros polo identificador
+        do curso e contar os alumnos de cada grupo.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Número de alumnos por curso</h4>
+
+        <pre><code>SELECT curso_id, COUNT(*) AS TotalAlumnos
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+
+        <p>
+            A consulta realiza as seguintes operacións:
+        </p>
+
+        <ol>
+            <li>Agrupa os alumnos segundo o valor de <code>curso_id</code>.</li>
+            <li>Conta os rexistros que pertencen a cada grupo.</li>
+            <li>Devolve unha fila por cada grupo.</li>
+        </ol>
+    </div>
+
+    <h3>9.3. Agrupar utilizando outras funcións de agregación</h3>
+
+    <p>
+        Podemos combinar <code>GROUP BY</code> con calquera das funcións
+        de resumo estudadas anteriormente.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Idade media dos alumnos por curso</h4>
+
+        <pre><code>SELECT curso_id,
+       AVG(idade) AS IdadeMedia
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Idade mínima e máxima por curso</h4>
+
+        <pre><code>SELECT curso_id,
+       MIN(idade) AS IdadeMinima,
+       MAX(idade) AS IdadeMaxima
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 4. Número de alumnos e idade media por curso</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos,
+       AVG(idade) AS IdadeMedia
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+    </div>
+
+    <h3>9.4. Agrupamento por varias columnas</h3>
+
+    <p>
+        Podemos agrupar os rexistros utilizando máis dunha columna.
+        Neste caso, os grupos fórmanse tendo en conta a combinación
+        dos valores de todas as columnas indicadas.
+    </p>
+
+    <pre><code>SELECT columna1, columna2, COUNT(*)
+FROM nome_taboa
+GROUP BY columna1, columna2;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo. Agrupar os alumnos por curso e idade</h4>
+
+        <pre><code>SELECT curso_id,
+       idade,
+       COUNT(*) AS TotalAlumnos
+FROM alumnos
+GROUP BY curso_id, idade;</code></pre>
+
+        <p>
+            A consulta crea un grupo para cada combinación diferente
+            de curso e idade.
+        </p>
+    </div>
+
+    <h3>9.5. Agrupamento e valores NULL</h3>
+
+    <p>
+        Cando agrupamos por unha columna que contén valores NULL,
+        todos os rexistros que teñen NULL nesa columna forman parte
+        dun mesmo grupo.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Contar alumnos por curso, incluídos os que non teñen curso asignado</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+
+        <p>
+            Se existen alumnos sen curso asignado, aparecerá un grupo
+            no que <code>curso_id</code> será NULL.
+        </p>
+    </div>
+
+    <h3>9.6. Regras de uso de GROUP BY</h3>
+
+    <p>
+        Cando utilizamos <code>GROUP BY</code>, debemos ter coidado
+        coas columnas que aparecen no <code>SELECT</code>.
+    </p>
+
+    <p>
+        Como regra xeral, as columnas seleccionadas deben:
+    </p>
+
+    <ul>
+        <li>Estar incluídas na cláusula <code>GROUP BY</code>.</li>
+        <li>Ou formar parte dunha función de agregación.</li>
+    </ul>
+
+    <div class="exemplo">
+        <h4>Consulta correcta</h4>
+
+        <pre><code>SELECT curso_id, COUNT(*) AS TotalAlumnos
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+    </div>
+
+    <div class="advertencia">
+        <strong>Consulta incorrecta ou non recomendable:</strong>
+
+        <pre><code>SELECT curso_id, nome, COUNT(*)
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+
+        <p>
+            O nome pode ter varios valores dentro dun mesmo grupo.
+            Polo tanto, non existe un único valor de <code>nome</code>
+            que represente ese grupo.
+        </p>
+
+        <p>
+            MariaDB/MySQL pode permitir este tipo de consultas dependendo
+            da configuración de <code>sql_mode</code>, pero o resultado
+            pode ser indeterminado. Debemos evitar esta práctica.
+        </p>
+    </div>
+
+    <!-- ================================================== -->
+    <h2>10. Filtrado de grupos con HAVING</h2>
+    <!-- ================================================== -->
+
+    <h3>10.1. Que é HAVING?</h3>
+
+    <p>
+        A cláusula <code>HAVING</code> permite establecer condicións
+        sobre os grupos creados mediante <code>GROUP BY</code>.
+    </p>
+
+    <p>
+        A diferenza de <code>WHERE</code>, que filtra rexistros
+        individuais antes de realizar o agrupamento, <code>HAVING</code>
+        filtra os grupos despois de realizar os cálculos de agregación.
+    </p>
+
+    <pre><code>SELECT columna, funcion_agregacion()
+FROM nome_taboa
+GROUP BY columna
+HAVING condicion;</code></pre>
+
+    <h3>10.2. Exemplo de uso de HAVING</h3>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Cursos con máis de dous alumnos</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos
+FROM alumnos
+GROUP BY curso_id
+HAVING COUNT(*) > 2;</code></pre>
+
+        <p>
+            Primeiro agrúpanse os alumnos por curso e cóntanse os
+            rexistros de cada grupo. Despois só se mostran os grupos
+            que teñen máis de dous alumnos.
+        </p>
+    </div>
+
+    <h3>10.3. WHERE fronte a HAVING</h3>
+
+    <p>
+        A principal diferenza entre estas dúas cláusulas é o momento
+        no que se aplican e o tipo de información que permiten filtrar.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>WHERE</th>
+                <th>HAVING</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Filtra rexistros individuais.</td>
+                <td>Filtra grupos de rexistros.</td>
+            </tr>
+            <tr>
+                <td>Execútase antes do agrupamento.</td>
+                <td>Execútase despois do agrupamento.</td>
+            </tr>
+            <tr>
+                <td>Non se utiliza para filtrar directamente resultados de funcións de agregación.</td>
+                <td>Permite filtrar utilizando funcións de agregación.</td>
+            </tr>
+            <tr>
+                <td>Utilízase normalmente xunto con columnas individuais.</td>
+                <td>Utilízase habitualmente xunto con GROUP BY.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>10.4. Exemplo comparativo de WHERE e HAVING</h3>
+
+    <p>
+        Supoñamos que queremos contar os alumnos maiores de idade
+        que hai en cada curso.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Filtrar os alumnos antes de agrupar</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos
+FROM alumnos
+WHERE idade >= 18
+GROUP BY curso_id;</code></pre>
+
+        <p>
+            Primeiro elimínanse os alumnos menores de idade.
+            Despois agrúpanse os restantes por curso e cóntanse.
+        </p>
+    </div>
+
+    <p>
+        Agora queremos mostrar unicamente os cursos que teñen máis
+        de dous alumnos maiores de idade.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Filtrar os grupos despois de agrupar</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos
+FROM alumnos
+WHERE idade >= 18
+GROUP BY curso_id
+HAVING COUNT(*) > 2;</code></pre>
+
+        <p>
+            Nesta consulta:
+        </p>
+
+        <ol>
+            <li><code>WHERE</code> elimina os alumnos menores de idade.</li>
+            <li><code>GROUP BY</code> agrupa os restantes por curso.</li>
+            <li><code>COUNT()</code> conta os alumnos de cada curso.</li>
+            <li><code>HAVING</code> conserva os grupos con máis de dous alumnos.</li>
+        </ol>
+    </div>
+
+    <h3>10.5. Utilización de varias condicións en HAVING</h3>
+
+    <p>
+        Podemos combinar varias condicións utilizando operadores
+        lóxicos.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Cursos con máis de dous alumnos e idade media superior a 18</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos,
+       AVG(idade) AS IdadeMedia
+FROM alumnos
+GROUP BY curso_id
+HAVING COUNT(*) > 2
+AND AVG(idade) > 18;</code></pre>
+    </div>
+
+    <h3>10.6. Estrutura completa dunha consulta con agrupamento</h3>
+
+    <p>
+        Cando combinamos as diferentes cláusulas nunha consulta,
+        debemos respectar a seguinte orde:
+    </p>
+
+    <pre><code>SELECT columnas, funciones_agregacion
+FROM nome_taboa
+WHERE condicion_registros
+GROUP BY columnas
+HAVING condicion_grupos
+ORDER BY columnas
+LIMIT numero;</code></pre>
+
+    <div class="callout">
+        <strong>Para lembrar:</strong>
+        <ul>
+            <li><code>WHERE</code>: filtra os rexistros antes de agrupar.</li>
+            <li><code>GROUP BY</code>: crea os grupos.</li>
+            <li><code>HAVING</code>: filtra os grupos creados.</li>
+            <li><code>ORDER BY</code>: ordena os resultados.</li>
+            <li><code>LIMIT</code>: limita o número de resultados.</li>
+        </ul>
+    </div>
+
+    <!-- ================================================== -->
+    <h2>11. Consultas de resumo combinadas</h2>
+    <!-- ================================================== -->
+
+    <h3>11.1. Utilización de varias funcións de agregación</h3>
+
+    <p>
+        Nunha mesma consulta podemos utilizar varias funcións de
+        agregación para obter diferentes indicadores sobre os datos.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Estatísticas xerais do alumnado</h4>
+
+        <pre><code>SELECT COUNT(*) AS TotalAlumnos,
+       AVG(idade) AS IdadeMedia,
+       MIN(idade) AS IdadeMinima,
+       MAX(idade) AS IdadeMaxima
+FROM alumnos;</code></pre>
+
+        <p>
+            A consulta devolve unha única fila con catro valores:
+        </p>
+
+        <ul>
+            <li>Número total de alumnos.</li>
+            <li>Idade media.</li>
+            <li>Idade mínima.</li>
+            <li>Idade máxima.</li>
+        </ul>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Estatísticas de horas dos cursos</h4>
+
+        <pre><code>SELECT COUNT(*) AS TotalCursos,
+       SUM(horas) AS TotalHoras,
+       AVG(horas) AS MediaHoras,
+       MIN(horas) AS MinimoHoras,
+       MAX(horas) AS MaximoHoras
+FROM cursos;</code></pre>
+    </div>
+
+    <h3>11.2. Varias funcións de agregación con GROUP BY</h3>
+
+    <p>
+        Tamén podemos combinar varias funcións de agregación con
+        <code>GROUP BY</code> para obter información detallada
+        de cada grupo.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Estatísticas do alumnado por curso</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos,
+       AVG(idade) AS IdadeMedia,
+       MIN(idade) AS IdadeMinima,
+       MAX(idade) AS IdadeMaxima
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+    </div>
+
+    <h3>11.3. Consultas de resumo con WHERE, GROUP BY e HAVING</h3>
+
+    <p>
+        Podemos combinar as cláusulas estudadas para resolver consultas
+        que requiren varios pasos de filtrado e agrupamento.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 4. Estatísticas dos alumnos maiores de idade por curso</h4>
+
+        <pre><code>SELECT curso_id,
+       COUNT(*) AS TotalAlumnos,
+       AVG(idade) AS IdadeMedia
+FROM alumnos
+WHERE idade >= 18
+GROUP BY curso_id
+HAVING COUNT(*) >= 2
+ORDER BY TotalAlumnos DESC;</code></pre>
+
+        <p>
+            A consulta:
+        </p>
+
+        <ol>
+            <li>Selecciona os alumnos maiores de idade.</li>
+            <li>Agrúpaos polo identificador do curso.</li>
+            <li>Conta os alumnos e calcula a idade media.</li>
+            <li>Conserva os cursos con polo menos dous alumnos.</li>
+            <li>Ordena os resultados polo número de alumnos.</li>
+        </ol>
+    </div>
+
+    <h3>11.4. Consultas de resumo con expresións</h3>
+
+    <p>
+        As expresións tamén poden utilizarse para presentar resultados
+        derivados das funcións de agregación.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 5. Calcular a diferenza entre a idade máxima e mínima de cada curso</h4>
+
+        <pre><code>SELECT curso_id,
+       MAX(idade) AS IdadeMaxima,
+       MIN(idade) AS IdadeMinima,
+       MAX(idade) - MIN(idade) AS DiferenzaIdades
+FROM alumnos
+GROUP BY curso_id;</code></pre>
+    </div>
+
+    <h3>11.5. Consideracións importantes</h3>
+
+    <ul>
+        <li>
+            As funcións de agregación permiten resumir grandes cantidades
+            de información.
+        </li>
+        <li>
+            <code>GROUP BY</code> permite realizar cálculos independentes
+            para cada grupo.
+        </li>
+        <li>
+            <code>WHERE</code> filtra os rexistros antes de agrupar.
+        </li>
+        <li>
+            <code>HAVING</code> filtra os grupos despois de realizar
+            as operacións de agregación.
+        </li>
+        <li>
+            Os alias facilitan a interpretación dos resultados.
+        </li>
+    </ul>
+
+    <h3>11.6. Exercicios de consolidación: funcións de resumo</h3>
+
+    <ol>
+        <li>Obter o número total de alumnos.</li>
+        <li>Calcular a idade media do alumnado.</li>
+        <li>Obter a idade mínima e máxima dos alumnos.</li>
+        <li>Calcular o total de horas de todos os cursos.</li>
+        <li>Calcular a media de horas dos cursos.</li>
+        <li>Contar cantos alumnos teñen un curso asignado.</li>
+        <li>Contar o número de alumnos que hai en cada curso.</li>
+        <li>Calcular a idade media dos alumnos de cada curso.</li>
+        <li>Obter a idade mínima e máxima de cada curso.</li>
+        <li>Mostrar os cursos que teñen máis de dous alumnos.</li>
+        <li>Mostrar os cursos nos que a idade media é superior a 18 anos.</li>
+        <li>Contar os alumnos maiores de idade de cada curso.</li>
+        <li>Mostrar os cursos que teñen polo menos tres alumnos maiores de idade.</li>
+        <li>Ordenar os cursos polo número de alumnos de maior a menor.</li>
+    </ol>
+
+    <!-- ================================================== -->
+    <h2>12. Relacións entre táboas e composicións internas</h2>
+    <!-- ================================================== -->
+
+    <h3>12.1. Por que necesitamos consultar varias táboas?</h3>
+
+    <p>
+        Nunha base de datos relacional, a información adoita estar
+        distribuída en varias táboas relacionadas entre si.
+    </p>
+
+    <p>
+        Esta organización permite evitar a repetición innecesaria
+        de información e manter a coherencia dos datos.
+    </p>
+
+    <p>
+        Por exemplo, nunha base de datos dun centro educativo podemos
+        ter unha táboa para almacenar os alumnos e outra para almacenar
+        os cursos. Cada alumno pertence a un curso, polo que ambas
+        as táboas están relacionadas.
+    </p>
+
+    <h3>12.2. Claves primarias</h3>
+
+    <p>
+        Unha clave primaria é unha columna ou un conxunto de columnas
+        que permite identificar de maneira única cada rexistro
+        dunha táboa.
+    </p>
+
+    <p>
+        As principais características dunha clave primaria son:
+    </p>
+
+    <ul>
+        <li>Os seus valores deben ser únicos.</li>
+        <li>Non pode conter valores NULL.</li>
+        <li>Cada táboa ten unha única clave primaria, que pode estar formada por unha ou varias columnas.</li>
+        <li>Permite identificar cada rexistro de maneira inequívoca.</li>
+    </ul>
+
+    <div class="exemplo">
+        <h4>Exemplo. Táboa cursos</h4>
+
+        <pre><code>CREATE TABLE cursos (
+    id INT AUTO_INCREMENT,
+    nome VARCHAR(50) NOT NULL,
+    horas INT,
+    PRIMARY KEY (id)
+);</code></pre>
+
+        <p>
+            A columna <code>id</code> é a clave primaria da táboa.
+            Cada curso terá un identificador diferente.
+        </p>
+    </div>
+
+    <h3>12.3. Claves foráneas</h3>
+
+    <p>
+        Unha clave foránea é unha columna ou un conxunto de columnas
+        que establece unha relación entre dúas táboas.
+    </p>
+
+    <p>
+        A clave foránea referencia unha clave primaria ou unha clave
+        única doutra táboa. Deste xeito podemos relacionar os rexistros
+        dunha táboa cos rexistros doutra.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Táboa alumnos</h4>
+
+        <pre><code>CREATE TABLE alumnos (
+    id INT AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    idade INT,
+    curso_id INT,
+    PRIMARY KEY (id),
+    FOREIGN KEY (curso_id)
+        REFERENCES cursos(id)
+);</code></pre>
+
+        <p>
+            A columna <code>curso_id</code> é unha clave foránea
+            que referencia a columna <code>id</code> da táboa
+            <code>cursos</code>.
+        </p>
+    </div>
+
+    <h3>12.4. Representación da relación</h3>
+
+    <p>
+        A relación entre as táboas <code>cursos</code> e
+        <code>alumnos</code> é de tipo un a moitos (1:N):
+    </p>
+
+    <ul>
+        <li>Un curso pode ter varios alumnos.</li>
+        <li>Cada alumno pertence como máximo a un curso.</li>
+        <li>A columna <code>cursos.id</code> é a clave primaria.</li>
+        <li>A columna <code>alumnos.curso_id</code> é a clave foránea.</li>
+    </ul>
+
+    <h3>12.5. Inserción de datos relacionados</h3>
+
+    <p>
+        Para comprender como se relacionan as táboas, podemos
+        introducir algúns rexistros de exemplo.
+    </p>
+
+    <pre><code>INSERT INTO cursos (nome, horas)
+VALUES
+('DAW1', 100),
+('DAW2', 100),
+('DAM1', 200),
+('DAM2', 200);</code></pre>
+
+    <p>
+        A continuación, inserimos alumnos indicando o identificador
+        do curso ao que pertencen.
+    </p>
+
+    <pre><code>INSERT INTO alumnos (nome, idade, curso_id)
+VALUES
+('Ana García', 20, 1),
+('Luis López', 19, 1),
+('Marta Fernández', 21, 2),
+('Pedro Rodríguez', 18, 2),
+('Laura Martínez', 22, 3);</code></pre>
+
+    <p>
+        O valor de <code>curso_id</code> debe corresponder cun
+        identificador existente na táboa <code>cursos</code>.
+        Deste xeito mantense a integridade referencial.
+    </p>
+
+    <h3>12.6. Consultas sobre varias táboas</h3>
+
+    <p>
+        Se realizamos unha consulta sobre a táboa <code>alumnos</code>,
+        podemos recuperar o identificador do curso ao que pertence
+        cada alumno.
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos;</code></pre>
+
+    <p>
+        Non obstante, o identificador non nos permite coñecer directamente
+        o nome do curso. Para obter esa información necesitamos consultar
+        tamén a táboa <code>cursos</code>.
+    </p>
+
+    <p>
+        As composicións permiten combinar información de varias táboas
+        nunha mesma consulta.
+    </p>
+
+    <h3>12.7. Composición interna: INNER JOIN</h3>
+
+    <p>
+        A composición interna, ou <code>INNER JOIN</code>, permite
+        combinar rexistros de dúas ou máis táboas cando existe unha
+        correspondencia entre os valores das columnas indicadas
+        na condición de unión.
+    </p>
+
+    <p>
+        Só se devolven os rexistros que teñen correspondencia
+        nas táboas relacionadas.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM taboa1
+INNER JOIN taboa2
+ON taboa1.columna = taboa2.columna;</code></pre>
+
+    <p>
+        A cláusula <code>ON</code> establece a condición que permite
+        relacionar os rexistros das dúas táboas.
+    </p>
+
+    <h3>12.8. Primeiro exemplo de INNER JOIN</h3>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Mostrar os alumnos co nome do curso ao que pertencen</h4>
+
+        <pre><code>SELECT alumnos.nome,
+       cursos.nome
+FROM alumnos
+INNER JOIN cursos
+ON alumnos.curso_id = cursos.id;</code></pre>
+
+        <p>
+            A consulta combina a información das dúas táboas:
+        </p>
+
+        <ul>
+            <li>Recupera o nome do alumno desde <code>alumnos</code>.</li>
+            <li>Recupera o nome do curso desde <code>cursos</code>.</li>
+            <li>Relaciona ambas as táboas mediante as columnas <code>curso_id</code> e <code>id</code>.</li>
+        </ul>
+    </div>
+
+    <h3>12.9. Uso de alias nas composicións</h3>
+
+    <p>
+        Cando traballamos con varias táboas é recomendable utilizar
+        alias para simplificar as consultas.
+    </p>
+
+    <pre><code>SELECT a.nome,
+       c.nome
+FROM alumnos AS a
+INNER JOIN cursos AS c
+ON a.curso_id = c.id;</code></pre>
+
+    <p>
+        Neste exemplo:
+    </p>
+
+    <ul>
+        <li><code>a</code> representa a táboa <code>alumnos</code>.</li>
+        <li><code>c</code> representa a táboa <code>cursos</code>.</li>
+        <li><code>a.curso_id</code> identifica a clave foránea.</li>
+        <li><code>c.id</code> identifica a clave primaria.</li>
+    </ul>
+
+    <p>
+        Os alias tamén permiten diferenciar columnas que teñen
+        o mesmo nome en diferentes táboas.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Consultar os datos do alumno e do curso con alias de columnas</h4>
+
+        <pre><code>SELECT a.nome AS Alumno,
+       a.idade AS Idade,
+       c.nome AS Curso,
+       c.horas AS Horas
+FROM alumnos AS a
+INNER JOIN cursos AS c
+ON a.curso_id = c.id;</code></pre>
+    </div>
+
+    <h3>12.10. INNER JOIN con condicións de filtrado</h3>
+
+    <p>
+        Podemos combinar as composicións internas coa cláusula
+        <code>WHERE</code> para filtrar os resultados.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Mostrar os alumnos do curso DAW1</h4>
+
+        <pre><code>SELECT a.nome AS Alumno,
+       c.nome AS Curso
+FROM alumnos AS a
+INNER JOIN cursos AS c
+ON a.curso_id = c.id
+WHERE c.nome = 'DAW1';</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 4. Mostrar os alumnos maiores de 18 anos e o seu curso</h4>
+
+        <pre><code>SELECT a.nome AS Alumno,
+       a.idade AS Idade,
+       c.nome AS Curso
+FROM alumnos AS a
+INNER JOIN cursos AS c
+ON a.curso_id = c.id
+WHERE a.idade > 18;</code></pre>
+    </div>
+
+    <h3>12.11. INNER JOIN con ordenación</h3>
+
+    <p>
+        Tamén podemos utilizar <code>ORDER BY</code> para ordenar
+        os resultados dunha composición interna.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 5. Mostrar os alumnos ordenados polo nome do curso</h4>
+
+        <pre><code>SELECT a.nome AS Alumno,
+       c.nome AS Curso
+FROM alumnos AS a
+INNER JOIN cursos AS c
+ON a.curso_id = c.id
+ORDER BY c.nome, a.nome;</code></pre>
+    </div>
+
+    <h3>12.12. INNER JOIN con funcións de resumo</h3>
+
+    <p>
+        Podemos combinar as composicións internas coas funcións
+        de agregación para obter información resumida de varias táboas.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 6. Contar o número de alumnos de cada curso</h4>
+
+        <pre><code>SELECT c.nome AS Curso,
+       COUNT(a.id) AS TotalAlumnos
+FROM cursos AS c
+INNER JOIN alumnos AS a
+ON c.id = a.curso_id
+GROUP BY c.id, c.nome;</code></pre>
+
+        <p>
+            A consulta relaciona os alumnos cos seus cursos e agrupa
+            os resultados polo identificador e nome do curso.
+        </p>
+    </div>
+
+    <h3>12.13. Características de INNER JOIN</h3>
+
+    <ul>
+        <li>Permite recuperar información almacenada en varias táboas.</li>
+        <li>Necesita unha condición de unión mediante <code>ON</code>.</li>
+        <li>Normalmente utiliza relacións entre claves primarias e foráneas.</li>
+        <li>Só devolve os rexistros que teñen correspondencia nas táboas unidas.</li>
+        <li>Permite combinarse con <code>WHERE</code>, <code>GROUP BY</code>, <code>HAVING</code> e <code>ORDER BY</code>.</li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        Se existen alumnos sen curso asignado, ou cun identificador
+        que non ten correspondencia na táboa de cursos, eses alumnos
+        non aparecerán no resultado dun <code>INNER JOIN</code>.
+        Isto débese a que a composición interna só devolve coincidencias.
+    </div>
+
+    <h3>12.14. Exercicios de consolidación: INNER JOIN</h3>
+
+    <ol>
+        <li>Mostrar o nome de cada alumno xunto co identificador do curso ao que pertence.</li>
+        <li>Mostrar o nome de cada alumno e o nome do seu curso.</li>
+        <li>Mostrar o nome do alumno, a súa idade e o nome do curso.</li>
+        <li>Mostrar os alumnos que pertencen ao curso DAW1.</li>
+        <li>Mostrar os alumnos maiores de 18 anos xunto co nome do seu curso.</li>
+        <li>Mostrar todos os alumnos ordenados polo nome do curso.</li>
+        <li>Mostrar os alumnos do curso DAM1 ordenados alfabeticamente.</li>
+        <li>Contar cantos alumnos ten cada curso.</li>
+        <li>Calcular a idade media dos alumnos de cada curso.</li>
+        <li>Mostrar os cursos que teñen máis de dous alumnos utilizando GROUP BY e HAVING.</li>
+        <li>Mostrar o nome do curso, o número de alumnos e a idade media de cada curso.</li>
+    </ol>
+
+    <!-- ================================================== -->
+    <h2>13. Resumo das consultas estudadas</h2>
+    <!-- ================================================== -->
+
+    <table>
+        <thead>
+            <tr>
+                <th>Elemento</th>
+                <th>Función</th>
+                <th>Exemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>LIMIT</code></td>
+                <td>Limitar o número de resultados.</td>
+                <td><code>LIMIT 5</code></td>
+            </tr>
+            <tr>
+                <td><code>OFFSET</code></td>
+                <td>Saltar un número de rexistros.</td>
+                <td><code>LIMIT 5 OFFSET 10</code></td>
+            </tr>
+            <tr>
+                <td><code>AS</code></td>
+                <td>Asignar un alias.</td>
+                <td><code>nome AS Alumno</code></td>
+            </tr>
+            <tr>
+                <td><code>COUNT()</code></td>
+                <td>Contar rexistros ou valores.</td>
+                <td><code>COUNT(*)</code></td>
+            </tr>
+            <tr>
+                <td><code>SUM()</code></td>
+                <td>Sumar valores.</td>
+                <td><code>SUM(horas)</code></td>
+            </tr>
+            <tr>
+                <td><code>AVG()</code></td>
+                <td>Calcular unha media.</td>
+                <td><code>AVG(idade)</code></td>
+            </tr>
+            <tr>
+                <td><code>MIN()</code></td>
+                <td>Obter o mínimo.</td>
+                <td><code>MIN(idade)</code></td>
+            </tr>
+            <tr>
+                <td><code>MAX()</code></td>
+                <td>Obter o máximo.</td>
+                <td><code>MAX(idade)</code></td>
+            </tr>
+            <tr>
+                <td><code>GROUP BY</code></td>
+                <td>Agrupar rexistros.</td>
+                <td><code>GROUP BY curso_id</code></td>
+            </tr>
+            <tr>
+                <td><code>HAVING</code></td>
+                <td>Filtrar grupos.</td>
+                <td><code>HAVING COUNT(*) > 2</code></td>
+            </tr>
+            <tr>
+                <td><code>INNER JOIN</code></td>
+                <td>Combinar rexistros relacionados.</td>
+                <td><code>INNER JOIN cursos</code></td>
+            </tr>
+            <tr>
+                <td><code>ON</code></td>
+                <td>Establecer a condición de unión.</td>
+                <td><code>ON a.curso_id = c.id</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>13.1. Estrutura completa dunha consulta</h3>
+
+    <p>
+        As consultas SQL poden combinar todas as cláusulas estudadas
+        ata o momento. A estrutura xeral é:
+    </p>
+
+    <pre><code>SELECT columnas, funciones_agregacion
+FROM taboa1
+INNER JOIN taboa2
+    ON condicion_union
+WHERE condicion_registros
+GROUP BY columnas
+HAVING condicion_grupos
+ORDER BY columnas
+LIMIT numero;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo final. Resumo do alumnado por curso</h4>
+
+        <p>
+            Queremos obter o nome de cada curso, o número de alumnos
+            maiores de idade, a súa idade media e mostrar unicamente
+            os cursos que teñan polo menos dous alumnos. Os resultados
+            deben ordenarse polo número de alumnos de maior a menor.
+        </p>
+
+        <pre><code>SELECT c.nome AS Curso,
+       COUNT(a.id) AS TotalAlumnos,
+       AVG(a.idade) AS IdadeMedia
+FROM cursos AS c
+INNER JOIN alumnos AS a
+    ON c.id = a.curso_id
+WHERE a.idade >= 18
+GROUP BY c.id, c.nome
+HAVING COUNT(a.id) >= 2
+ORDER BY TotalAlumnos DESC;</code></pre>
+
+        <p>
+            Esta consulta combina:
+        </p>
+
+        <ul>
+            <li>Selección de columnas e alias.</li>
+            <li>Composición interna de dúas táboas.</li>
+            <li>Filtrado de rexistros mediante WHERE.</li>
+            <li>Funcións de agregación.</li>
+            <li>Agrupamento con GROUP BY.</li>
+            <li>Filtrado de grupos con HAVING.</li>
+            <li>Ordenación con ORDER BY.</li>
+        </ul>
+    </div>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD4. Concorrencia e bloqueo de datos</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main class="contenido">
+
+    <h1>UD4. Concorrencia e bloqueo de datos</h1>
+
+    <p>
+        Nesta parte da unidade estudarase como xestiona MariaDB o acceso simultáneo
+        de varios usuarios á mesma base de datos. Analizaranse os problemas que
+        poden producirse cando varias transaccións consultan ou modifican os mesmos
+        rexistros e os mecanismos que ofrece InnoDB para manter a integridade
+        e a consistencia dos datos.
+    </p>
+
+    <h2>1. Introdución á concorrencia</h2>
+
+    <h3>1.1. Que é a concorrencia?</h3>
+
+    <p>
+        Nun sistema de bases de datos é habitual que varios usuarios ou aplicacións
+        accedan simultaneamente á mesma información. Por exemplo, nunha aplicación
+        bancaria, dúas persoas poden consultar unha conta mentres outra aplicación
+        está realizando unha transferencia.
+    </p>
+
+    <p>
+        Denomínase <strong>concorrencia</strong> á execución simultánea ou
+        intercalada de operacións realizadas por diferentes conexións á base de
+        datos.
+    </p>
+
+    <p>
+        MariaDB permite que varias conexións traballen ao mesmo tempo. Non obstante,
+        cando varias transaccións acceden aos mesmos rexistros, poden aparecer
+        conflitos se non se controla correctamente a orde das operacións.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Exemplo: modificación simultánea dunha conta</h4>
+        <p>
+            Unha conta bancaria ten un saldo de 1.000 euros. Dúas operacións
+            independentes intentan retirar 100 e 200 euros, respectivamente.
+        </p>
+        <ul>
+            <li>O usuario A consulta o saldo: 1.000 euros.</li>
+            <li>O usuario B consulta o saldo: 1.000 euros.</li>
+            <li>O usuario A calcula o novo saldo: 900 euros.</li>
+            <li>O usuario B calcula o novo saldo: 800 euros.</li>
+            <li>O usuario A actualiza o saldo a 900 euros.</li>
+            <li>O usuario B actualiza o saldo a 800 euros.</li>
+        </ul>
+        <p>
+            O resultado final é 800 euros, pero deberían quedar 700 euros.
+            Unha das actualizacións perdeu o efecto da outra.
+        </p>
+    </div>
+
+    <h3>1.2. Problemas habituais da concorrencia</h3>
+
+    <p>
+        Se non se utilizan mecanismos adecuados de illamento e bloqueo, poden
+        producirse diferentes anomalías.
+    </p>
+
+    <h4>Actualización perdida (Lost Update)</h4>
+
+    <p>
+        Prodúcese cando dúas transaccións len o mesmo valor, calculan modificacións
+        independentes e unha delas sobrescribe o resultado da outra.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Orde</th>
+                <th>Transacción A</th>
+                <th>Transacción B</th>
+                <th>Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Le o saldo</td>
+                <td></td>
+                <td>1.000 €</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td></td>
+                <td>Le o saldo</td>
+                <td>1.000 €</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Calcula 900 €</td>
+                <td></td>
+                <td>1.000 €</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td></td>
+                <td>Calcula 800 €</td>
+                <td>1.000 €</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>Actualiza a 900 €</td>
+                <td></td>
+                <td>900 €</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td></td>
+                <td>Actualiza a 800 €</td>
+                <td>800 €</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        A actualización da transacción A queda perdida porque a transacción B
+        escribe un valor calculado a partir dunha lectura anterior.
+    </p>
+
+    <h4>Lectura non confirmada (Dirty Read)</h4>
+
+    <p>
+        Prodúcese cando unha transacción consulta cambios realizados por outra
+        transacción que aínda non executou <code>COMMIT</code>.
+    </p>
+
+    <div class="ejemplo">
+        <p><strong>Situación:</strong></p>
+        <ol>
+            <li>A transacción A modifica o saldo dunha conta de 1.000 a 500 euros.</li>
+            <li>A transacción B consulta o saldo e obtén 500 euros.</li>
+            <li>A transacción A executa <code>ROLLBACK</code>.</li>
+            <li>O saldo real volve ser 1.000 euros.</li>
+        </ol>
+        <p>
+            A transacción B utilizou un valor que nunca chegou a confirmarse.
+            Esta situación denomínase lectura non confirmada.
+        </p>
+    </div>
+
+    <h4>Lectura non repetible (Non-repeatable Read)</h4>
+
+    <p>
+        Prodúcese cando unha transacción consulta un rexistro, outra transacción
+        modifica e confirma ese rexistro e, ao repetirse a consulta inicial,
+        obtense un valor diferente.
+    </p>
+
+    <div class="ejemplo">
+        <ol>
+            <li>A transacción A consulta o saldo: 1.000 euros.</li>
+            <li>A transacción B cambia o saldo a 800 euros e executa <code>COMMIT</code>.</li>
+            <li>A transacción A volve consultar o saldo e obtén 800 euros.</li>
+        </ol>
+        <p>
+            A mesma consulta devolveu valores diferentes dentro da mesma
+            transacción.
+        </p>
+    </div>
+
+    <h4>Lectura fantasma (Phantom Read)</h4>
+
+    <p>
+        Prodúcese cando unha transacción executa unha consulta que devolve un
+        conxunto de rexistros e, posteriormente, outra transacción insire ou
+        elimina rexistros que cumpren esa mesma condición.
+    </p>
+
+    <div class="ejemplo">
+        <p>
+            A transacción A consulta todos os alumnos matriculados no curso
+            DAW1 e obtén 20 resultados.
+        </p>
+        <p>
+            A transacción B insire un novo alumno matriculado en DAW1 e confirma
+            a operación.
+        </p>
+        <p>
+            Se A repite a consulta e obtén 21 resultados, aparece un rexistro
+            novo que antes non estaba no resultado.
+        </p>
+    </div>
+
+    <div class="callout">
+        <strong>Importante:</strong> a lectura non repetible afecta ao valor
+        dun rexistro que xa existía. A lectura fantasma afecta ao conxunto de
+        rexistros que devolve unha consulta.
+    </div>
+
+    <h2>2. Concepto de bloqueo</h2>
+
+    <h3>2.1. Que é un bloqueo?</h3>
+
+    <p>
+        Un <strong>bloqueo (lock)</strong> é un mecanismo que utiliza o sistema
+        xestor de bases de datos para controlar o acceso simultáneo aos datos.
+        Permite impedir que unha transacción interfira de maneira incorrecta
+        nas operacións doutra.
+    </p>
+
+    <p>
+        Cando unha transacción bloquea un rexistro, outras transaccións poden
+        ter que esperar para acceder a el, dependendo do tipo de bloqueo
+        solicitado e da operación que pretendan realizar.
+    </p>
+
+    <h3>2.2. Bloqueos compartidos e exclusivos</h3>
+
+    <p>
+        Os dous tipos fundamentais de bloqueo son os compartidos e os exclusivos.
+    </p>
+
+    <h4>Bloqueo compartido (Shared Lock)</h4>
+
+    <p>
+        Permite que unha transacción lea un rexistro impedindo que outra
+        transacción o modifique mentres o bloqueo estea activo.
+    </p>
+
+    <ul>
+        <li>Varias transaccións poden manter bloqueos compartidos sobre o mesmo rexistro.</li>
+        <li>Permite realizar lecturas simultáneas.</li>
+        <li>Non é compatible cun bloqueo exclusivo sobre ese mesmo rexistro.</li>
+    </ul>
+
+    <h4>Bloqueo exclusivo (Exclusive Lock)</h4>
+
+    <p>
+        Permite que unha transacción modifique un rexistro e impide que outras
+        transaccións obteñan bloqueos incompatibles sobre el.
+    </p>
+
+    <ul>
+        <li>Utilízase habitualmente nas operacións de modificación e eliminación.</li>
+        <li>Unha segunda transacción que necesite modificar o mesmo rexistro terá que esperar.</li>
+        <li>Un bloqueo exclusivo tamén impide obter un bloqueo compartido incompatible.</li>
+    </ul>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Bloqueo solicitado</th>
+                <th>Compartido existente</th>
+                <th>Exclusivo existente</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Compartido</td>
+                <td>Compatible</td>
+                <td>Debe esperar</td>
+            </tr>
+            <tr>
+                <td>Exclusivo</td>
+                <td>Debe esperar</td>
+                <td>Debe esperar</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.3. Bloqueo de táboas e bloqueo de rexistros</h3>
+
+    <p>
+        Os bloqueos poden afectar a diferentes unidades de información.
+    </p>
+
+    <h4>Bloqueo de táboa</h4>
+
+    <p>
+        Afecta a unha táboa completa. Mentres está activo, pode limitar ou
+        impedir operacións doutras conexións sobre esa táboa.
+    </p>
+
+    <p>
+        MariaDB permite solicitar bloqueos explícitos mediante
+        <code>LOCK TABLES</code>.
+    </p>
+
+    <pre><code>LOCK TABLES alumnos READ;
+
+-- Consultas sobre a táboa
+SELECT * FROM alumnos;
+
+UNLOCK TABLES;</code></pre>
+
+    <p>
+        Tamén se pode solicitar un bloqueo de escritura:
+    </p>
+
+    <pre><code>LOCK TABLES alumnos WRITE;
+
+UPDATE alumnos
+SET edad = edad + 1
+WHERE id = 1;
+
+UNLOCK TABLES;</code></pre>
+
+    <h4>Bloqueo de rexistro</h4>
+
+    <p>
+        Afecta a rexistros concretos dunha táboa. É o mecanismo habitual
+        empregado por InnoDB para permitir que diferentes transaccións
+        traballen simultaneamente sobre rexistros distintos.
+    </p>
+
+    <div class="ejemplo">
+        <p>
+            Se unha transacción bloquea o alumno co identificador 1, outra
+            transacción pode traballar co alumno co identificador 2 sen
+            necesidade de esperar, sempre que non existan outros conflitos.
+        </p>
+    </div>
+
+    <p>
+        InnoDB tamén pode bloquear intervalos de índices ou rexistros próximos
+        (bloqueos de rango e de intervalo) para garantir a consistencia
+        das consultas, especialmente nalgúns niveis de illamento.
+    </p>
+
+    <div class="callout">
+        <strong>Nota:</strong> os bloqueos de táboa explícitos con
+        <code>LOCK TABLES</code> teñen regras propias e poden provocar unha
+        confirmación implícita da transacción activa. Non deben confundirse
+        cos bloqueos internos que InnoDB utiliza para xestionar as transaccións.
+    </div>
+
+    <h2>3. Niveis de illamento das transaccións</h2>
+
+    <h3>3.1. Concepto de illamento</h3>
+
+    <p>
+        O nivel de illamento determina ata que punto unha transacción pode
+        observar os cambios realizados por outras transaccións que se están
+        executando simultaneamente.
+    </p>
+
+    <p>
+        Un nivel de illamento máis estrito ofrece maiores garantías de
+        consistencia, pero pode reducir a concorrencia e incrementar as
+        esperas entre transaccións.
+    </p>
+
+    <p>
+        MariaDB, mediante InnoDB, admite catro niveis de illamento:
+    </p>
+
+    <h3>3.2. READ UNCOMMITTED</h3>
+
+    <p>
+        É o nivel de illamento menos estrito. Permite que unha transacción
+        consulte cambios doutras transaccións que aínda non foron confirmados.
+    </p>
+
+    <ul>
+        <li>Pode producir lecturas non confirmadas.</li>
+        <li>Pode observar valores que posteriormente serán desfeitos mediante <code>ROLLBACK</code>.</li>
+        <li>Ofrece pouca protección fronte ás anomalías de concorrencia.</li>
+    </ul>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+READ UNCOMMITTED;
+
+START TRANSACTION;
+
+SELECT * FROM contas
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <h3>3.3. READ COMMITTED</h3>
+
+    <p>
+        Cada consulta só pode observar os cambios confirmados antes do
+        inicio desa consulta. Non permite lecturas de datos pendentes doutras
+        transaccións.
+    </p>
+
+    <ul>
+        <li>Evita as lecturas non confirmadas.</li>
+        <li>Pode producir lecturas non repetibles.</li>
+        <li>Pode producir lecturas fantasma.</li>
+        <li>Unha mesma transacción pode obter resultados diferentes ao repetir unha consulta.</li>
+    </ul>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+READ COMMITTED;
+
+START TRANSACTION;
+
+SELECT * FROM contas
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <h3>3.4. REPEATABLE READ</h3>
+
+    <p>
+        Garante que as lecturas consistentes realizadas dentro dunha
+        transacción manteñan a mesma visión dos datos confirmados ao comezo
+        da transacción.
+    </p>
+
+    <ul>
+        <li>Evita as lecturas non confirmadas.</li>
+        <li>Evita as lecturas non repetibles nas lecturas consistentes habituais de InnoDB.</li>
+        <li>InnoDB utiliza mecanismos de control de versións e bloqueos de rango para manter a consistencia.</li>
+        <li>É o nivel de illamento predeterminado habitual de InnoDB en MariaDB.</li>
+    </ul>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+REPEATABLE READ;
+
+START TRANSACTION;
+
+SELECT * FROM contas
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <p>
+        Cómpre distinguir as lecturas consistentes normais das lecturas
+        bloqueantes, como <code>SELECT ... FOR UPDATE</code>. Estas últimas
+        utilizan regras de bloqueo e non se comportan exactamente igual que
+        unha consulta <code>SELECT</code> normal.
+    </p>
+
+    <h3>3.5. SERIALIZABLE</h3>
+
+    <p>
+        É o nivel de illamento máis estrito. Busca que o resultado das
+        transaccións concorrentes sexa equivalente a unha execución
+        secuencial, unha tras outra.
+    </p>
+
+    <ul>
+        <li>Ofrece un maior control sobre as anomalías de concorrencia.</li>
+        <li>Incrementa a utilización de bloqueos.</li>
+        <li>Pode provocar máis esperas e conflitos entre transaccións.</li>
+        <li>Pode reducir o rendemento cando existen moitos accesos simultáneos.</li>
+    </ul>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+SERIALIZABLE;
+
+START TRANSACTION;
+
+SELECT * FROM contas
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <h3>3.6. Comparación dos niveis de illamento</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nivel</th>
+                <th>Lectura non confirmada</th>
+                <th>Lectura non repetible</th>
+                <th>Lectura fantasma</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>READ UNCOMMITTED</td>
+                <td>Si</td>
+                <td>Si</td>
+                <td>Si</td>
+            </tr>
+            <tr>
+                <td>READ COMMITTED</td>
+                <td>Non</td>
+                <td>Si</td>
+                <td>Si</td>
+            </tr>
+            <tr>
+                <td>REPEATABLE READ</td>
+                <td>Non</td>
+                <td>Non</td>
+                <td>Non nas lecturas consistentes habituais de InnoDB</td>
+            </tr>
+            <tr>
+                <td>SERIALIZABLE</td>
+                <td>Non</td>
+                <td>Non</td>
+                <td>Non</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        Esta táboa resume o comportamento habitual das lecturas en InnoDB.
+        A implementación concreta depende do tipo de consulta, dos índices
+        dispoñibles e dos bloqueos utilizados.
+    </p>
+
+    <h3>3.7. Consultar e modificar o nivel de illamento</h3>
+
+    <p>
+        Pódese consultar o nivel de illamento da conexión actual:
+    </p>
+
+    <pre><code>SELECT @@SESSION.tx_isolation;</code></pre>
+
+    <p>
+        Tamén se pode consultar o nivel global:
+    </p>
+
+    <pre><code>SELECT @@GLOBAL.tx_isolation;</code></pre>
+
+    <p>
+        Para cambiar o nivel da conexión actual:
+    </p>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+READ COMMITTED;</code></pre>
+
+    <p>
+        Para cambiar o nivel global, que se aplicará ás novas conexións:
+    </p>
+
+    <pre><code>SET GLOBAL TRANSACTION ISOLATION LEVEL
+READ COMMITTED;</code></pre>
+
+    <div class="advertencia">
+        O cambio de nivel de illamento dunha sesión debe realizarse antes
+        de iniciar a transacción que se quere executar con ese nivel.
+        O cambio global require os permisos correspondentes e non modifica
+        automaticamente o nivel das conexións xa abertas.
+    </div>
+
+    <h2>4. Lectura e modificación de rexistros con bloqueo</h2>
+
+    <h3>4.1. Por que bloquear os rexistros antes de modificalos?</h3>
+
+    <p>
+        En determinadas operacións non é suficiente con consultar un valor
+        e, posteriormente, modificalo. Entre ambas as operacións outra
+        transacción podería modificar o mesmo rexistro.
+    </p>
+
+    <p>
+        Para evitar este problema, InnoDB permite realizar consultas que
+        bloquean os rexistros seleccionados. Deste xeito, a transacción
+        pode consultar os datos e realizar as modificacións mantendo
+        o control sobre eles.
+    </p>
+
+    <h3>4.2. SELECT ... FOR UPDATE</h3>
+
+    <p>
+        A cláusula <code>FOR UPDATE</code> realiza unha lectura bloqueante.
+        Os rexistros seleccionados quedan bloqueados mediante bloqueos
+        exclusivos para que outras transaccións non poidan modificalos
+        ata que a transacción actual remate.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+SELECT *
+FROM contas
+WHERE id = 1
+FOR UPDATE;
+
+UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <p>
+        O bloqueo mantense ata que se executa <code>COMMIT</code> ou
+        <code>ROLLBACK</code>.
+    </p>
+
+    <p>
+        Se outra conexión intenta modificar o mesmo rexistro, normalmente
+        terá que esperar a que remate a transacción que mantén o bloqueo.
+    </p>
+
+    <div class="callout">
+        <strong>Importante:</strong> en InnoDB, <code>FOR UPDATE</code>
+        debe utilizarse dentro dunha transacción activa. Se se executa
+        cunha transacción independente por cada sentenza (por exemplo,
+        co modo <code>autocommit</code> activado e sen iniciar unha
+        transacción explícita), o bloqueo non se mantén para unha
+        operación posterior.
+    </div>
+
+    <h3>4.3. LOCK IN SHARE MODE</h3>
+
+    <p>
+        A cláusula <code>LOCK IN SHARE MODE</code> permite realizar unha
+        lectura mantendo un bloqueo compartido sobre os rexistros
+        seleccionados.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+SELECT *
+FROM contas
+WHERE id = 1
+LOCK IN SHARE MODE;
+
+COMMIT;</code></pre>
+
+    <p>
+        Mentres a transacción mantén o bloqueo compartido:
+    </p>
+
+    <ul>
+        <li>Outras transaccións poden realizar lecturas compatibles.</li>
+        <li>Outras transaccións non poden modificar os rexistros bloqueados mediante un bloqueo incompatible.</li>
+        <li>Unha operación que necesite un bloqueo exclusivo terá que esperar.</li>
+    </ul>
+
+    <h3>4.4. Comparación das dúas cláusulas</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>FOR UPDATE</th>
+                <th>LOCK IN SHARE MODE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Tipo de bloqueo</td>
+                <td>Exclusivo</td>
+                <td>Compartido</td>
+            </tr>
+            <tr>
+                <td>Permite outras lecturas compatibles</td>
+                <td>Non con bloqueo incompatible</td>
+                <td>Si</td>
+            </tr>
+            <tr>
+                <td>Impide modificacións concorrentes</td>
+                <td>Si</td>
+                <td>Si, mentres se manteña o bloqueo</td>
+            </tr>
+            <tr>
+                <td>Uso habitual</td>
+                <td>Ler e modificar datos</td>
+                <td>Ler datos que non deben cambiar durante a operación</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>4.5. Exemplo: transferencia bancaria segura</h3>
+
+    <p>
+        Supoñamos que se necesita transferir 100 euros da conta 1 á conta 2.
+        É necesario comprobar os saldos e evitar que outra transacción
+        modifique as contas durante a operación.
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+-- Bloqueamos as dúas contas.
+SELECT id, saldo
+FROM contas
+WHERE id IN (1, 2)
+ORDER BY id
+FOR UPDATE;
+
+-- Comprobamos que a conta de orixe ten saldo suficiente.
+-- Os identificadores 1 e 2 deben existir previamente.
+
+UPDATE contas
+SET saldo = saldo - 100
+WHERE id = 1
+  AND saldo >= 100;
+
+-- Comprobamos que se modificou exactamente unha fila.
+SELECT ROW_COUNT();
+
+UPDATE contas
+SET saldo = saldo + 100
+WHERE id = 2;
+
+-- Comprobamos tamén esta segunda modificación.
+SELECT ROW_COUNT();
+
+COMMIT;</code></pre>
+
+    <div class="advertencia">
+        Este código mostra a secuencia de operacións, pero non debe
+        considerarse un procedemento completo de produción: antes de
+        executar <code>COMMIT</code> hai que verificar que existen as
+        dúas contas, que a primeira actualización afectou exactamente
+        unha fila e que a segunda tamén afectou exactamente unha fila.
+        Se algunha comprobación falla, débese executar
+        <code>ROLLBACK</code>.
+    </div>
+
+    <p>
+        Unha implementación real tamén debe contemplar que as dúas contas
+        poden ser iguais, que os saldos deben cumprir as regras de negocio
+        e que os erros durante a operación deben provocar a súa cancelación.
+    </p>
+
+    <h2>5. Deadlocks e problemas de bloqueo</h2>
+
+    <h3>5.1. Que é un deadlock?</h3>
+
+    <p>
+        Un <strong>deadlock</strong> ou bloqueo mutuo prodúcese cando dúas
+        ou máis transaccións quedan esperando por recursos que están
+        bloqueados entre si.
+    </p>
+
+    <p>
+        Ningunha das transaccións pode continuar porque cada unha necesita
+        que a outra libere un bloqueo.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Exemplo de bloqueo mutuo</h4>
+
+        <p>Temos dúas transaccións que modifican dúas contas:</p>
+
+        <ol>
+            <li>A transacción A bloquea a conta 1.</li>
+            <li>A transacción B bloquea a conta 2.</li>
+            <li>A transacción A intenta bloquear a conta 2 e queda esperando.</li>
+            <li>A transacción B intenta bloquear a conta 1 e queda esperando.</li>
+        </ol>
+
+        <p>
+            A transacción A espera que B libere a conta 2, mentres que B
+            espera que A libere a conta 1.
+        </p>
+    </div>
+
+    <h3>5.2. Simulación dun deadlock</h3>
+
+    <p>
+        Para reproducir a situación anterior necesitamos dúas conexións
+        independentes a MariaDB. En MySQL Workbench pódense abrir dúas
+        pestanas de conexión á mesma base de datos.
+    </p>
+
+    <p><strong>Preparación:</strong></p>
+
+    <pre><code>CREATE DATABASE IF NOT EXISTS concorrencia;
+
+USE concorrencia;
+
+CREATE TABLE contas (
+    id INT PRIMARY KEY,
+    saldo DECIMAL(10,2) NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO contas (id, saldo)
+VALUES
+(1, 1000.00),
+(2, 2000.00);</code></pre>
+
+    <p>
+        Executa primeiro as seguintes instrucións na conexión A:
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas
+SET saldo = saldo + 100
+WHERE id = 1;</code></pre>
+
+    <p>
+        A continuación, executa na conexión B:
+    </p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE contas
+SET saldo = saldo + 200
+WHERE id = 2;</code></pre>
+
+    <p>
+        Agora a conexión A ten bloqueada a conta 1 e a conexión B
+        ten bloqueada a conta 2.
+    </p>
+
+    <p>Na conexión A executa:</p>
+
+    <pre><code>UPDATE contas
+SET saldo = saldo + 50
+WHERE id = 2;</code></pre>
+
+    <p>
+        A operación queda esperando porque a conta 2 está bloqueada
+        pola conexión B.
+    </p>
+
+    <p>Sen cancelar a operación anterior, na conexión B executa:</p>
+
+    <pre><code>UPDATE contas
+SET saldo = saldo + 75
+WHERE id = 1;</code></pre>
+
+    <p>
+        Agora B necesita a conta 1, que está bloqueada por A. MariaDB
+        detectará o deadlock e normalmente cancelará unha das
+        transaccións para romper o bloqueo mutuo.
+    </p>
+
+    <p>
+        A transacción seleccionada como vítima recibirá un erro
+        de bloqueo mutuo. A outra poderá continuar cando se liberen
+        os recursos necesarios.
+    </p>
+
+    <div class="callout">
+        <strong>Importante:</strong> InnoDB detecta automaticamente os
+        deadlocks e selecciona unha transacción para desfacela.
+        A aplicación debe estar preparada para repetir a operación
+        cancelada cando resulte apropiado.
+    </div>
+
+    <h3>5.3. Causas habituais dos deadlocks</h3>
+
+    <ul>
+        <li>Varias transaccións modifican os mesmos rexistros en diferente orde.</li>
+        <li>As transaccións manteñen bloqueos durante demasiado tempo.</li>
+        <li>As operacións modifican moitos rexistros simultaneamente.</li>
+        <li>As consultas non utilizan índices adecuados e bloquean máis rexistros dos necesarios.</li>
+        <li>As aplicacións realizan operacións de lectura e escritura en diferentes ordes.</li>
+    </ul>
+
+    <h3>5.4. Medidas para evitar ou reducir os deadlocks</h3>
+
+    <p>
+        Non sempre é posible evitar completamente os deadlocks, pero
+        pódese reducir a súa frecuencia aplicando boas prácticas:
+    </p>
+
+    <ol>
+        <li>
+            <strong>Manter unha orde constante de acceso aos datos.</strong>
+            Se varias transaccións modifican as contas 1 e 2, deben
+            bloquealas sempre na mesma orde.
+        </li>
+        <li>
+            <strong>Reducir a duración das transaccións.</strong>
+            Non manter transaccións abertas mentres se realizan operacións
+            externas ou se espera unha intervención do usuario.
+        </li>
+        <li>
+            <strong>Utilizar índices adecuados.</strong>
+            As consultas deben localizar os rexistros necesarios sen
+            examinar ou bloquear unha cantidade excesiva de datos.
+        </li>
+        <li>
+            <strong>Modificar só os rexistros necesarios.</strong>
+            Evitar operacións que afecten a máis filas das requiridas.
+        </li>
+        <li>
+            <strong>Controlar os erros.</strong>
+            Se InnoDB cancela unha transacción por deadlock, a aplicación
+            debe xestionar o erro e, se procede, repetir a operación.
+        </li>
+    </ol>
+
+    <h3>5.5. Consultar información sobre os bloqueos</h3>
+
+    <p>
+        MariaDB ofrece diferentes mecanismos para analizar o estado
+        das transaccións e detectar problemas.
+    </p>
+
+    <p>Consultar as conexións e operacións activas:</p>
+
+    <pre><code>SHOW PROCESSLIST;</code></pre>
+
+    <p>Consultar información do motor InnoDB:</p>
+
+    <pre><code>SHOW ENGINE INNODB STATUS;</code></pre>
+
+    <p>
+        Esta última instrución permite consultar información sobre
+        transaccións, bloqueos e o último deadlock detectado.
+    </p>
+
+    <p>
+        Tamén se pode activar o rexistro de todos os deadlocks no
+        rexistro de erros mediante a variable correspondente:
+    </p>
+
+    <pre><code>SET GLOBAL innodb_print_all_deadlocks = ON;</code></pre>
+
+    <p>
+        Esta configuración require permisos administrativos. O rexistro
+        dependerá da configuración de logs do servidor MariaDB.
+    </p>
+
+    <h2>6. Práctica de concorrencia con MySQL Workbench</h2>
+
+    <h3>6.1. Preparación do entorno</h3>
+
+    <p>
+        Para comprobar o funcionamento dos bloqueos é necesario utilizar
+        dúas conexións independentes á mesma base de datos MariaDB.
+        Cada conexión representará un usuario diferente traballando
+        simultaneamente.
+    </p>
+
+    <p>
+        Abre MySQL Workbench e establece dúas conexións ao mesmo servidor.
+        Podes utilizar dúas pestanas SQL abertas sobre conexións distintas.
+    </p>
+
+    <div class="callout">
+        <strong>Importante:</strong> dúas pestanas que utilizan a mesma
+        conexión non permiten simular correctamente dúas transaccións
+        independentes. Debes comprobar que cada pestana utiliza unha
+        conexión diferente.
+    </div>
+
+    <h3>6.2. Crear a base de datos de probas</h3>
+
+    <p>
+        Executa unha soa vez o seguinte código desde calquera das conexións:
+    </p>
+
+    <pre><code>CREATE DATABASE IF NOT EXISTS concorrencia;
+
+USE concorrencia;
+
+CREATE TABLE produtos (
+    id INT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL,
+    stock INT NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO produtos (id, nome, stock)
+VALUES
+(1, 'Teclado', 20),
+(2, 'Rato', 30),
+(3, 'Monitor', 10);
+
+SELECT * FROM produtos;</code></pre>
+
+    <p>
+        A táboa representa un pequeno inventario. As dúas conexións
+        traballarán sobre os mesmos produtos.
+    </p>
+
+    <h3>6.3. Proba 1: actualización bloqueada</h3>
+
+    <p>
+        O obxectivo é comprobar que unha transacción pode impedir que
+        outra modifique o mesmo rexistro.
+    </p>
+
+    <p><strong>Conexión A:</strong></p>
+
+    <pre><code>USE concorrencia;
+
+START TRANSACTION;
+
+UPDATE produtos
+SET stock = stock - 2
+WHERE id = 1;</code></pre>
+
+    <p>
+        A conexión A modifica o stock do teclado, pero aínda non confirma
+        os cambios. O rexistro permanece bloqueado.
+    </p>
+
+    <p><strong>Conexión B:</strong></p>
+
+    <pre><code>USE concorrencia;
+
+UPDATE produtos
+SET stock = stock - 3
+WHERE id = 1;</code></pre>
+
+    <p>
+        A operación da conexión B queda esperando porque a conexión A
+        mantén un bloqueo sobre ese rexistro.
+    </p>
+
+    <p><strong>Volvemos á conexión A:</strong></p>
+
+    <pre><code>COMMIT;</code></pre>
+
+    <p>
+        Ao confirmar a transacción, libérase o bloqueo. A conexión B
+        pode continuar coa súa actualización.
+    </p>
+
+    <p>
+        Comproba o resultado:
+    </p>
+
+    <pre><code>SELECT * FROM produtos
+WHERE id = 1;</code></pre>
+
+    <p>
+        O stock final debe ser 15 unidades: 20 iniciais, menos 2
+        da conexión A e menos 3 da conexión B.
+    </p>
+
+    <h3>6.4. Proba 2: cancelar unha transacción</h3>
+
+    <p>
+        Nesta proba comprobarase que un cambio pendente pode desfacer­se
+        e que, ao facelo, se libera o bloqueo.
+    </p>
+
+    <p><strong>Conexión A:</strong></p>
+
+    <pre><code>START TRANSACTION;
+
+UPDATE produtos
+SET stock = stock - 5
+WHERE id = 2;</code></pre>
+
+    <p><strong>Conexión B:</strong></p>
+
+    <pre><code>UPDATE produtos
+SET stock = stock - 1
+WHERE id = 2;</code></pre>
+
+    <p>
+        A conexión B quedará esperando. Agora, na conexión A, executa:
+    </p>
+
+    <pre><code>ROLLBACK;</code></pre>
+
+    <p>
+        O cambio da conexión A desfárase e libérase o bloqueo.
+        A conexión B poderá realizar a súa modificación.
+    </p>
+
+    <p>
+        Consulta o resultado:
+    </p>
+
+    <pre><code>SELECT * FROM produtos
+WHERE id = 2;</code></pre>
+
+    <p>
+        O stock final será 29 unidades, xa que a operación da conexión A
+        foi cancelada e só se aplicou a da conexión B.
+    </p>
+
+    <h3>6.5. Proba 3: bloqueo de lectura con FOR UPDATE</h3>
+
+    <p>
+        Nesta proba observarase como unha consulta tamén pode bloquear
+        rexistros para preparar unha modificación posterior.
+    </p>
+
+    <p><strong>Conexión A:</strong></p>
+
+    <pre><code>START TRANSACTION;
+
+SELECT *
+FROM produtos
+WHERE id = 3
+FOR UPDATE;</code></pre>
+
+    <p>
+        A consulta obtén un bloqueo exclusivo sobre o rexistro seleccionado.
+    </p>
+
+    <p><strong>Conexión B:</strong></p>
+
+    <pre><code>UPDATE produtos
+SET stock = stock - 1
+WHERE id = 3;</code></pre>
+
+    <p>
+        A actualización queda esperando ata que a conexión A libere
+        o bloqueo.
+    </p>
+
+    <p><strong>Conexión A:</strong></p>
+
+    <pre><code>COMMIT;</code></pre>
+
+    <p>
+        A conexión B poderá continuar coa súa operación.
+    </p>
+
+    <h3>6.6. Proba 4: comparación dos niveis de illamento</h3>
+
+    <p>
+        Nesta proba analizarase a diferenza entre
+        <code>READ COMMITTED</code> e <code>REPEATABLE READ</code>.
+    </p>
+
+    <p>
+        Primeiro, comproba que o produto 1 ten un stock coñecido:
+    </p>
+
+    <pre><code>SELECT * FROM produtos
+WHERE id = 1;</code></pre>
+
+    <p><strong>Conexión A:</strong></p>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+READ COMMITTED;
+
+START TRANSACTION;
+
+SELECT stock
+FROM produtos
+WHERE id = 1;</code></pre>
+
+    <p><strong>Conexión B:</strong></p>
+
+    <pre><code>UPDATE produtos
+SET stock = stock + 10
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <p><strong>De novo na conexión A:</strong></p>
+
+    <pre><code>SELECT stock
+FROM produtos
+WHERE id = 1;</code></pre>
+
+    <p>
+        En <code>READ COMMITTED</code>, a segunda consulta pode observar
+        o novo stock confirmado pola conexión B.
+    </p>
+
+    <p>
+        Agora repite a proba cambiando o nivel de illamento da conexión A
+        a <code>REPEATABLE READ</code>:
+    </p>
+
+    <pre><code>SET SESSION TRANSACTION ISOLATION LEVEL
+REPEATABLE READ;
+
+START TRANSACTION;
+
+SELECT stock
+FROM produtos
+WHERE id = 1;</code></pre>
+
+    <p>
+        Desde a conexión B, modifica de novo o stock e confirma:
+    </p>
+
+    <pre><code>UPDATE produtos
+SET stock = stock + 5
+WHERE id = 1;
+
+COMMIT;</code></pre>
+
+    <p>
+        Volve consultar o stock desde a conexión A:
+    </p>
+
+    <pre><code>SELECT stock
+FROM produtos
+WHERE id = 1;</code></pre>
+
+    <p>
+        A lectura consistente da conexión A manterá a visión dos datos
+        correspondente ao inicio da súa transacción, polo que non
+        observará a modificación confirmada pola conexión B.
+    </p>
+
+    <p>
+        Remata a transacción da conexión A:
+    </p>
+
+    <pre><code>COMMIT;</code></pre>
+
+    <div class="advertencia">
+        Para comparar correctamente os resultados, cada proba debe
+        realizarse en dúas conexións independentes. Non se debe executar
+        o segundo <code>SELECT</code> despois de confirmar a transacción
+        A, xa que iso iniciaría unha nova transacción e unha nova visión
+        dos datos.
+    </div>
+
+    <h3>6.7. Proba 5: reprodución dun deadlock</h3>
+
+    <p>
+        Utiliza as dúas conexións para reproducir o bloqueo mutuo
+        descrito no apartado 5.2, utilizando os rexistros 1 e 2 da
+        táboa <code>produtos</code>.
+    </p>
+
+    <p>
+        A secuencia debe ser:
+    </p>
+
+    <ol>
+        <li>Iniciar unha transacción na conexión A e actualizar o produto 1.</li>
+        <li>Iniciar unha transacción na conexión B e actualizar o produto 2.</li>
+        <li>Desde A, intentar actualizar o produto 2.</li>
+        <li>Desde B, intentar actualizar o produto 1.</li>
+        <li>Observar a resposta de MariaDB e identificar a transacción cancelada.</li>
+        <li>Comprobar o estado final dos rexistros.</li>
+    </ol>
+
+    <p>
+        Ao rematar, consulta:
+    </p>
+
+    <pre><code>SHOW ENGINE INNODB STATUS;</code></pre>
+
+    <p>
+        Localiza a información correspondente ao último deadlock detectado
+        e identifica as transaccións e os bloqueos implicados.
+    </p>
+
+    <h2>7. Resumo dos conceptos fundamentais</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Descrición</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Concorrencia</td>
+                <td>Acceso simultáneo de varias transaccións á base de datos.</td>
+            </tr>
+            <tr>
+                <td>Actualización perdida</td>
+                <td>Unha modificación sobrescribe o resultado doutra.</td>
+            </tr>
+            <tr>
+                <td>Lectura non confirmada</td>
+                <td>Unha transacción le cambios que outra aínda non confirmou.</td>
+            </tr>
+            <tr>
+                <td>Lectura non repetible</td>
+                <td>Unha consulta sobre o mesmo rexistro devolve valores diferentes.</td>
+            </tr>
+            <tr>
+                <td>Lectura fantasma</td>
+                <td>Unha consulta devolve un conxunto diferente de rexistros.</td>
+            </tr>
+            <tr>
+                <td>Bloqueo compartido</td>
+                <td>Permite lecturas compatibles e impide modificacións incompatibles.</td>
+            </tr>
+            <tr>
+                <td>Bloqueo exclusivo</td>
+                <td>Reserva os rexistros para unha operación de modificación.</td>
+            </tr>
+            <tr>
+                <td>FOR UPDATE</td>
+                <td>Realiza unha lectura con bloqueo exclusivo.</td>
+            </tr>
+            <tr>
+                <td>LOCK IN SHARE MODE</td>
+                <td>Realiza unha lectura con bloqueo compartido.</td>
+            </tr>
+            <tr>
+                <td>Deadlock</td>
+                <td>Varias transaccións esperan por recursos bloqueados entre si.</td>
+            </tr>
+            <tr>
+                <td>REPEATABLE READ</td>
+                <td>Mantén unha visión consistente dos datos nas lecturas habituais da transacción.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Boas prácticas no control da concorrencia</h3>
+
+    <ul>
+        <li>Utilizar InnoDB nas táboas que necesiten transaccións e bloqueo de rexistros.</li>
+        <li>Escoller un nivel de illamento adecuado para cada aplicación.</li>
+        <li>Utilizar <code>SELECT ... FOR UPDATE</code> cando sexa necesario ler e modificar os mesmos rexistros de forma segura.</li>
+        <li>Manter as transaccións abertas durante o menor tempo posible.</li>
+        <li>Acceder aos rexistros nunha orde constante para reducir os deadlocks.</li>
+        <li>Crear índices adecuados para mellorar a eficiencia das consultas.</li>
+        <li>Controlar os erros e executar <code>ROLLBACK</code> cando unha operación non poida completarse correctamente.</li>
+        <li>Comprobar os datos afectados antes de confirmar unha transacción.</li>
+    </ul>
+
+</main>
+
+</body>
+</html>

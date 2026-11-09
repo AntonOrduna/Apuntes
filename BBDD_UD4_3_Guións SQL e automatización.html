@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD4 - Guións SQL e automatización de operacións</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main class="contenido">
+
+    <h1>UD4. Guións SQL e automatización de operacións</h1>
+
+    <p>
+        Nas sesións anteriores utilizamos sentenzas SQL para inserir, modificar e
+        eliminar información dunha base de datos. Estas operacións executábanse
+        normalmente de maneira individual, escribindo cada sentenza e comprobando
+        o seu resultado.
+    </p>
+
+    <p>
+        Cando unha tarefa require executar varias operacións relacionadas, resulta
+        interesante agrupalas nun único ficheiro ou programa SQL. Ademais, MariaDB
+        permite incorporar variables, estruturas condicionais, bucles e procedementos
+        almacenados para construír pequenos programas que automatizan tarefas
+        de administración e manipulación de datos.
+    </p>
+
+    <h2>1. Introdución aos guións SQL</h2>
+
+    <h3>1.1. Que é un guión SQL?</h3>
+
+    <p>
+        Un guión SQL é un ficheiro de texto que contén unha ou varias sentenzas
+        SQL organizadas para executarse de maneira secuencial. Habitualmente
+        utiliza a extensión <code>.sql</code>.
+    </p>
+
+    <p>
+        Os guións permiten agrupar operacións que forman parte dunha mesma tarefa.
+        En lugar de executar manualmente cada sentenza, podemos gardalas nun
+        ficheiro e executar o conxunto cando sexa necesario.
+    </p>
+
+    <p>Un guión SQL pode incluír:</p>
+
+    <ul>
+        <li>Creación e modificación de bases de datos e táboas.</li>
+        <li>Inserción, actualización e eliminación de rexistros.</li>
+        <li>Consultas para comprobar o estado dos datos.</li>
+        <li>Creación de usuarios e asignación de permisos.</li>
+        <li>Transaccións.</li>
+        <li>Declaración de variables e estruturas de control.</li>
+        <li>Definición de procedementos almacenados.</li>
+    </ul>
+
+    <h3>1.2. Organización dun ficheiro SQL</h3>
+
+    <p>
+        Un ficheiro SQL debe organizarse de maneira que as sentenzas se executen
+        na orde correcta. Por exemplo, non podemos inserir datos nunha táboa
+        que aínda non foi creada.
+    </p>
+
+    <p>Unha estrutura habitual para un guión de inicialización sería:</p>
+
+    <pre><code>-- 1. Crear a base de datos
+CREATE DATABASE IF NOT EXISTS academia;
+
+-- 2. Seleccionar a base de datos
+USE academia;
+
+-- 3. Crear as táboas
+CREATE TABLE cursos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) NOT NULL,
+    horas INT
+) ENGINE=InnoDB;
+
+CREATE TABLE alumnos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    edad INT,
+    curso_id INT,
+    FOREIGN KEY (curso_id) REFERENCES cursos(id)
+) ENGINE=InnoDB;
+
+-- 4. Inserir datos
+INSERT INTO cursos (nombre, horas)
+VALUES
+    ('DAW1', 100),
+    ('DAW2', 100),
+    ('DAM1', 200);
+
+INSERT INTO alumnos (nombre, edad, curso_id)
+VALUES
+    ('Ana García', 20, 1),
+    ('Luis López', 21, 1),
+    ('Marta Fernández', 19, 2);
+
+-- 5. Comprobar os datos
+SELECT * FROM cursos;
+SELECT * FROM alumnos;</code></pre>
+
+    <p>
+        Neste exemplo, as sentenzas execútanse seguindo unha secuencia lóxica:
+        primeiro créase a base de datos, despois as táboas, posteriormente
+        insírense os datos e finalmente compróbase o resultado.
+    </p>
+
+    <h3>1.3. Comentarios nos guións SQL</h3>
+
+    <p>
+        Os comentarios permiten documentar o código e explicar a finalidade
+        das diferentes operacións. Non se executan como sentenzas SQL.
+    </p>
+
+    <pre><code>-- Comentario dunha soa liña
+
+# Outra forma de comentario dunha soa liña
+
+/*
+   Comentario
+   de varias liñas
+*/
+
+SELECT * FROM alumnos;</code></pre>
+
+    <p>
+        É recomendable utilizar comentarios para separar os bloques do guión,
+        indicar os obxectivos de cada operación e explicar aquelas partes que
+        poidan resultar difíciles de comprender.
+    </p>
+
+    <h3>1.4. Execución dun ficheiro SQL en MySQL Workbench</h3>
+
+    <p>
+        MySQL Workbench permite escribir, gardar e executar ficheiros SQL
+        desde o editor de consultas.
+    </p>
+
+    <ol>
+        <li>Abrir MySQL Workbench e conectarse ao servidor MariaDB.</li>
+        <li>Crear unha nova pestana de consulta SQL.</li>
+        <li>Escribir ou abrir o ficheiro <code>.sql</code>.</li>
+        <li>Revisar a orde das sentenzas e comprobar que non existen erros.</li>
+        <li>Executar o guión completo ou seleccionar as sentenzas que se queren executar.</li>
+        <li>Revisar os resultados e as mensaxes de execución.</li>
+    </ol>
+
+    <p>
+        Tamén é posible executar un ficheiro desde a terminal de Debian mediante
+        o cliente de MariaDB:
+    </p>
+
+    <pre><code>mariadb -u root -p academia &lt; guion.sql</code></pre>
+
+    <p>
+        O operador <code>&lt;</code> redirixe o contido do ficheiro á entrada do
+        cliente MariaDB. As sentenzas execútanse no servidor utilizando a base
+        de datos indicada no comando.
+    </p>
+
+    <div class="callout">
+        <strong>Importante:</strong> un ficheiro SQL pode conter operacións
+        destrutivas, como <code>DROP TABLE</code>, <code>DELETE</code> ou
+        <code>UPDATE</code>. Antes de executar un guión é necesario revisar
+        o seu contido e comprobar que se está conectado á base de datos correcta.
+    </div>
+
+    <h2>2. Variables e parámetros en guións SQL</h2>
+
+    <h3>2.1. Que é unha variable?</h3>
+
+    <p>
+        Unha variable é un espazo de memoria temporal no que se almacena un valor
+        que pode utilizarse posteriormente durante a execución dun programa.
+    </p>
+
+    <p>
+        Nas operacións SQL habituais utilizamos valores directamente nas sentenzas.
+        Por exemplo:
+    </p>
+
+    <pre><code>UPDATE alumnos
+SET edad = 21
+WHERE id = 1;</code></pre>
+
+    <p>
+        Se queremos reutilizar ese valor en varias operacións, podemos almacenalo
+        nunha variable e referencialo posteriormente.
+    </p>
+
+    <p>
+        En MariaDB debemos distinguir entre as variables de usuario e as variables
+        locais dos programas SQL:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Sintaxe</th>
+                <th>Ámbito</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Variable de usuario</td>
+                <td><code>@nome_variable</code></td>
+                <td>Na sesión actual do cliente.</td>
+            </tr>
+            <tr>
+                <td>Variable local</td>
+                <td><code>DECLARE nome_variable</code></td>
+                <td>Dentro dun bloque ou programa almacenado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.2. Variables de usuario</h3>
+
+    <p>
+        As variables de usuario permiten almacenar valores durante unha sesión
+        de conexión ao servidor. Identifícanse mediante o símbolo <code>@</code>
+        diante do nome.
+    </p>
+
+    <p>
+        Podemos asignarlles un valor utilizando <code>SET</code>:
+    </p>
+
+    <pre><code>SET @idade = 20;
+
+SELECT @idade;</code></pre>
+
+    <p>
+        O resultado da consulta será o valor almacenado na variable.
+    </p>
+
+    <p>
+        Tamén podemos utilizar estas variables nas sentenzas DML:
+    </p>
+
+    <pre><code>SET @novo_idade = 22;
+SET @alumno_id = 1;
+
+UPDATE alumnos
+SET edad = @novo_idade
+WHERE id = @alumno_id;
+
+SELECT * FROM alumnos
+WHERE id = @alumno_id;</code></pre>
+
+    <p>
+        Neste exemplo, os valores do identificador e da nova idade almacénanse
+        en variables e utilízanse posteriormente na actualización.
+    </p>
+
+    <div class="callout">
+        <strong>Características:</strong> as variables de usuario non necesitan
+        unha declaración previa mediante <code>DECLARE</code>. Poden utilizarse
+        directamente e manteñen o seu valor durante a sesión de conexión.
+    </div>
+
+    <h3>2.3. Variables locais con DECLARE</h3>
+
+    <p>
+        As variables locais utilízanse dentro de programas almacenados, como
+        procedementos e funcións, ou dentro de bloques compostos SQL.
+        Decláranse mediante a instrución <code>DECLARE</code>.
+    </p>
+
+    <p>A súa estrutura básica é:</p>
+
+    <pre><code>DECLARE nome_variable tipo_dato [DEFAULT valor];</code></pre>
+
+    <p>Algúns exemplos de declaracións:</p>
+
+    <pre><code>DECLARE contador INT DEFAULT 0;
+DECLARE nome_alumno VARCHAR(100);
+DECLARE media_notas DECIMAL(5,2);
+DECLARE activo BOOLEAN DEFAULT TRUE;</code></pre>
+
+    <p>
+        O tipo de dato debe ser compatible coa información que se vai almacenar.
+        Podemos utilizar os tipos habituais de MariaDB, como:
+    </p>
+
+    <ul>
+        <li><code>INT</code>: números enteiros.</li>
+        <li><code>DECIMAL</code>: números decimais con precisión definida.</li>
+        <li><code>VARCHAR</code>: cadeas de caracteres.</li>
+        <li><code>DATE</code>: datas.</li>
+        <li><code>BOOLEAN</code>: valores lóxicos.</li>
+    </ul>
+
+    <p>
+        As variables locais deben declararse ao comezo do bloque
+        <code>BEGIN ... END</code>, antes das instrucións executables.
+    </p>
+
+    <h3>2.4. Asignación de valores con SET</h3>
+
+    <p>
+        Unha vez declarada unha variable local, podemos asignarlle un valor
+        mediante <code>SET</code>.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_variable()
+BEGIN
+    DECLARE idade INT DEFAULT 0;
+
+    SET idade = 20;
+
+    SELECT idade;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        O procedemento declara a variable <code>idade</code>, asígnalle o valor
+        20 e devolve o seu contido mediante unha consulta.
+    </p>
+
+    <p>
+        Para executar o procedemento:
+    </p>
+
+    <pre><code>CALL exemplo_variable();</code></pre>
+
+    <h3>2.5. Asignación mediante SELECT ... INTO</h3>
+
+    <p>
+        Tamén podemos almacenar nunha variable o resultado dunha consulta
+        utilizando <code>SELECT ... INTO</code>.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE consultar_alumnos()
+BEGIN
+    DECLARE total INT DEFAULT 0;
+
+    SELECT COUNT(*)
+    INTO total
+    FROM alumnos;
+
+    SELECT total AS numero_alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        A consulta calcula o número de rexistros da táboa <code>alumnos</code>
+        e almacena o resultado na variable local <code>total</code>.
+    </p>
+
+    <div class="advertencia">
+        <strong>Atención:</strong> unha consulta <code>SELECT ... INTO</code>
+        destinada a unha variable escalar debe devolver unha única fila.
+        Se non devolve ningunha, pode producirse a condición
+        <code>NOT FOUND</code>; se devolve varias, producirase un erro.
+    </div>
+
+    <h2>3. Estruturas condicionais</h2>
+
+    <h3>3.1. Que son as estruturas condicionais?</h3>
+
+    <p>
+        As estruturas condicionais permiten executar diferentes instrucións
+        dependendo de se se cumpre ou non unha condición.
+    </p>
+
+    <p>
+        Por exemplo, nun programa podemos comprobar se un alumno aprobou unha
+        materia e realizar unha operación diferente en función da súa nota.
+    </p>
+
+    <p>
+        En MariaDB, dentro dos procedementos almacenados, podemos utilizar
+        as estruturas <code>IF</code>, <code>ELSEIF</code> e <code>ELSE</code>.
+    </p>
+
+    <h3>3.2. Estrutura IF ... THEN</h3>
+
+    <p>
+        A estrutura <code>IF</code> permite executar un bloque de instrucións
+        cando se cumpre unha condición.
+    </p>
+
+    <pre><code>IF condicion THEN
+    instrucións;
+END IF;</code></pre>
+
+    <p>
+        Por exemplo, podemos comprobar se un alumno aprobou:
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE comprobar_nota(
+    IN p_nota DECIMAL(4,2)
+)
+BEGIN
+    IF p_nota >= 5 THEN
+        SELECT 'Aprobado' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        O procedemento recibe unha nota e devolve a mensaxe «Aprobado» cando
+        o valor é igual ou superior a 5.
+    </p>
+
+    <h3>3.3. Estrutura IF ... ELSE</h3>
+
+    <p>
+        Se queremos definir que facer cando a condición non se cumpre,
+        podemos engadir un bloque <code>ELSE</code>.
+    </p>
+
+    <pre><code>IF condicion THEN
+    instrucións_se_verdadeiro;
+ELSE
+    instrucións_se_falso;
+END IF;</code></pre>
+
+    <p>Exemplo:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE avaliar_nota(
+    IN p_nota DECIMAL(4,2)
+)
+BEGIN
+    IF p_nota >= 5 THEN
+        SELECT 'Aprobado' AS resultado;
+    ELSE
+        SELECT 'Suspenso' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Agora o procedemento contempla os dous resultados posibles:
+        se a nota é igual ou superior a 5, devolve «Aprobado»; noutro caso,
+        devolve «Suspenso».
+    </p>
+
+    <h3>3.4. Estrutura IF ... ELSEIF ... ELSE</h3>
+
+    <p>
+        Cando existen máis de dúas posibilidades podemos utilizar
+        <code>ELSEIF</code> para comprobar condicións adicionais.
+    </p>
+
+    <pre><code>IF condicion1 THEN
+    instrucións1;
+ELSEIF condicion2 THEN
+    instrucións2;
+ELSEIF condicion3 THEN
+    instrucións3;
+ELSE
+    instrucións_por_defecto;
+END IF;</code></pre>
+
+    <p>Exemplo de clasificación dunha nota:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE clasificar_nota(
+    IN p_nota DECIMAL(4,2)
+)
+BEGIN
+    IF p_nota >= 9 THEN
+        SELECT 'Sobresaliente' AS cualificacion;
+    ELSEIF p_nota >= 7 THEN
+        SELECT 'Notable' AS cualificacion;
+    ELSEIF p_nota >= 5 THEN
+        SELECT 'Aprobado' AS cualificacion;
+    ELSE
+        SELECT 'Suspenso' AS cualificacion;
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        As condicións avalíanse na orde na que aparecen. Cando unha delas
+        se cumpre, execútase o bloque correspondente e non se comproban
+        as seguintes alternativas.
+    </p>
+
+    <h3>3.5. Chamada aos procedementos condicionais</h3>
+
+    <p>
+        Podemos executar os exemplos anteriores utilizando <code>CALL</code>:
+    </p>
+
+    <pre><code>CALL avaliar_nota(7.5);
+
+CALL clasificar_nota(9.2);
+
+CALL clasificar_nota(4.5);</code></pre>
+
+    <p>
+        Cada chamada executa o procedemento co valor indicado como parámetro
+        de entrada.
+    </p>
+
+    <h2>4. Estruturas repetitivas: bucles</h2>
+
+    <h3>4.1. Concepto de bucle</h3>
+
+    <p>
+        Un bucle é unha estrutura que permite repetir un conxunto de instrucións
+        varias veces. Utilízase cando unha tarefa debe executarse de maneira
+        repetida, por exemplo, para percorrer unha serie de valores ou realizar
+        unha operación ata que se cumpra unha condición.
+    </p>
+
+    <p>
+        MariaDB dispón de tres estruturas principais para crear bucles en
+        programas almacenados:
+    </p>
+
+    <ul>
+        <li><code>WHILE</code>.</li>
+        <li><code>REPEAT</code>.</li>
+        <li><code>LOOP</code>.</li>
+    </ul>
+
+    <h3>4.2. Bucle WHILE</h3>
+
+    <p>
+        O bucle <code>WHILE</code> repite un bloque de instrucións mentres
+        unha condición sexa verdadeira.
+    </p>
+
+    <p>A súa estrutura é:</p>
+
+    <pre><code>WHILE condicion DO
+    instrucións;
+END WHILE;</code></pre>
+
+    <p>
+        A condición compróbase antes de cada repetición. Se inicialmente
+        é falsa, o bloque non chega a executarse.
+    </p>
+
+    <p>Exemplo: mostrar os números do 1 ao 5.</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_while()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    WHILE contador <= 5 DO
+        SELECT contador;
+        SET contador = contador + 1;
+    END WHILE;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        A variable <code>contador</code> comeza co valor 1. En cada repetición
+        móstrase o seu valor e increméntase nunha unidade. Cando chega a 6,
+        a condición deixa de cumprirse e o bucle finaliza.
+    </p>
+
+    <h3>4.3. Bucle REPEAT</h3>
+
+    <p>
+        O bucle <code>REPEAT</code> executa as instrucións e despois comproba
+        a condición de saída. Por este motivo, o bloque execútase polo menos
+        unha vez.
+    </p>
+
+    <p>A súa estrutura é:</p>
+
+    <pre><code>REPEAT
+    instrucións;
+UNTIL condicion
+END REPEAT;</code></pre>
+
+    <p>Exemplo equivalente ao anterior:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_repeat()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    REPEAT
+        SELECT contador;
+        SET contador = contador + 1;
+    UNTIL contador > 5
+    END REPEAT;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        A diferenza do <code>WHILE</code>, a condición compróbase ao final
+        de cada repetición. O bloque execútase antes de avaliar a condición.
+    </p>
+
+    <h3>4.4. Bucle LOOP</h3>
+
+    <p>
+        O bucle <code>LOOP</code> repite as instrucións indefinidamente ata
+        que se executa unha instrución que interrompe o bucle.
+    </p>
+
+    <p>A súa estrutura básica é:</p>
+
+    <pre><code>nome_bucle: LOOP
+    instrucións;
+
+    IF condicion_salida THEN
+        LEAVE nome_bucle;
+    END IF;
+END LOOP nome_bucle;</code></pre>
+
+    <p>Exemplo:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_loop()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    repetir: LOOP
+        SELECT contador;
+
+        SET contador = contador + 1;
+
+        IF contador > 5 THEN
+            LEAVE repetir;
+        END IF;
+    END LOOP repetir;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        O nome <code>repetir</code> identifica o bucle. A instrución
+        <code>LEAVE repetir</code> permite saír del cando se cumpre
+        a condición indicada.
+    </p>
+
+    <h3>4.5. Comparación dos bucles</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Bucle</th>
+                <th>Momento de comprobación</th>
+                <th>Execución mínima</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>WHILE</code></td>
+                <td>Antes de executar o bloque.</td>
+                <td>Pode non executarse ningunha vez.</td>
+            </tr>
+            <tr>
+                <td><code>REPEAT</code></td>
+                <td>Despois de executar o bloque.</td>
+                <td>Polo menos unha vez.</td>
+            </tr>
+            <tr>
+                <td><code>LOOP</code></td>
+                <td>Non incorpora unha condición de saída automática.</td>
+                <td>Polo menos unha vez, se non se abandona o bloque.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="advertencia">
+        <strong>Atención cos bucles infinitos:</strong> se a condición de saída
+        nunca chega a cumprirse, o procedemento pode quedar executándose
+        indefinidamente. É fundamental actualizar correctamente as variables
+        que interveñen na condición.
+    </div>
+
+    <h3>4.6. Instrucións LEAVE e ITERATE</h3>
+
+    <p>
+        Dentro dos bucles podemos utilizar dúas instrucións adicionais:
+    </p>
+
+    <ul>
+        <li>
+            <code>LEAVE</code>: abandona inmediatamente o bucle identificado
+            polo seu nome.
+        </li>
+        <li>
+            <code>ITERATE</code>: salta ao inicio da seguinte repetición
+            do bucle, sen executar o resto das instrucións desa iteración.
+        </li>
+    </ul>
+
+    <p>Exemplo de utilización de ITERATE:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_iterate()
+BEGIN
+    DECLARE contador INT DEFAULT 0;
+
+    repetir: LOOP
+        SET contador = contador + 1;
+
+        IF contador = 3 THEN
+            ITERATE repetir;
+        END IF;
+
+        SELECT contador;
+
+        IF contador >= 5 THEN
+            LEAVE repetir;
+        END IF;
+    END LOOP repetir;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Neste exemplo, cando o contador chega a 3, <code>ITERATE</code>
+        salta ao comezo da seguinte repetición. Por iso, o valor 3 non se
+        mostra mediante a consulta <code>SELECT</code>.
+    </p>
+
+    <h2>5. Procedementos almacenados</h2>
+
+    <h3>5.1. Que é un procedemento almacenado?</h3>
+
+    <p>
+        Un procedemento almacenado é un programa SQL que se garda no servidor
+        da base de datos e que pode executarse posteriormente mediante unha
+        chamada.
+    </p>
+
+    <p>
+        A diferenza dun ficheiro SQL, que contén sentenzas que se executan
+        cando se procesa o ficheiro, un procedemento almacenado queda definido
+        na base de datos e pode invocarse tantas veces como sexa necesario.
+    </p>
+
+    <p>Os procedementos almacenados permiten:</p>
+
+    <ul>
+        <li>Agrupar varias operacións SQL nunha única chamada.</li>
+        <li>Reutilizar código sen ter que escribir de novo todas as sentenzas.</li>
+        <li>Utilizar variables e estruturas de control.</li>
+        <li>Recibir valores mediante parámetros.</li>
+        <li>Executar operacións complexas de manipulación de datos.</li>
+        <li>Centralizar determinadas tarefas no servidor de bases de datos.</li>
+    </ul>
+
+    <h3>5.2. Creación dun procedemento con CREATE PROCEDURE</h3>
+
+    <p>
+        Para crear un procedemento almacenado utilizamos a sentenza
+        <code>CREATE PROCEDURE</code>.
+    </p>
+
+    <p>A estrutura xeral é:</p>
+
+    <pre><code>CREATE PROCEDURE nome_procedemento()
+BEGIN
+    sentenzas SQL;
+END;</code></pre>
+
+    <p>
+        O bloque <code>BEGIN ... END</code> delimita o conxunto de instrucións
+        que forman parte do procedemento.
+    </p>
+
+    <p>Exemplo dun procedemento sinxelo:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE listar_alumnos()
+BEGIN
+    SELECT * FROM alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Este procedemento non recibe parámetros e devolve todos os rexistros
+        da táboa <code>alumnos</code>.
+    </p>
+
+    <h3>5.3. O delimitador DELIMITER</h3>
+
+    <p>
+        Nos exemplos anteriores aparece a instrución <code>DELIMITER</code>.
+        É importante comprender a súa finalidade para poder crear procedementos
+        almacenados desde o cliente SQL.
+    </p>
+
+    <p>
+        Normalmente, o punto e coma (<code>;</code>) indica o final dunha
+        sentenza SQL. Porén, dentro dun procedemento necesitamos utilizar
+        varios puntos e coma para separar as instrucións internas.
+    </p>
+
+    <p>
+        Para evitar que o cliente interprete cada punto e coma interno como
+        o final da definición do procedemento, cambiamos temporalmente o
+        delimitador.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo()
+BEGIN
+    SELECT 'Primeira instrución';
+    SELECT 'Segunda instrución';
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Neste exemplo, o delimitador cambia de <code>;</code> a
+        <code>//</code>. Deste xeito, os puntos e coma internos forman parte
+        do corpo do procedemento. Unha vez finalizada a súa creación,
+        restablecemos o delimitador habitual.
+    </p>
+
+    <div class="callout">
+        <strong>Importante:</strong> <code>DELIMITER</code> é unha instrución
+        do cliente SQL, non unha sentenza que execute o servidor MariaDB.
+        Utilízase en clientes como a consola de MariaDB ou MySQL Workbench
+        para delimitar correctamente os bloques de código.
+    </div>
+
+    <h3>5.4. Parámetros dun procedemento</h3>
+
+    <p>
+        Os procedementos poden recibir información mediante parámetros.
+        Estes parámetros permiten adaptar o comportamento do procedemento
+        aos valores proporcionados en cada chamada.
+    </p>
+
+    <p>
+        MariaDB dispón de tres tipos de parámetros:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Significado</th>
+                <th>Utilización</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>IN</code></td>
+                <td>Entrada.</td>
+                <td>Recibe un valor desde a chamada.</td>
+            </tr>
+            <tr>
+                <td><code>OUT</code></td>
+                <td>Saída.</td>
+                <td>Devolve un valor ao código que chamou o procedemento.</td>
+            </tr>
+            <tr>
+                <td><code>INOUT</code></td>
+                <td>Entrada e saída.</td>
+                <td>Recibe un valor e pode devolvelo modificado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>5.5. Parámetros de entrada: IN</h3>
+
+    <p>
+        Os parámetros <code>IN</code> permiten enviar valores ao procedemento.
+        Dentro del, o valor recibido pode utilizarse nas consultas e operacións.
+    </p>
+
+    <p>Exemplo: buscar un alumno polo seu identificador.</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE buscar_alumno(
+    IN p_id INT
+)
+BEGIN
+    SELECT *
+    FROM alumnos
+    WHERE id = p_id;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        O parámetro <code>p_id</code> recibe o identificador do alumno que
+        se quere consultar.
+    </p>
+
+    <p>Para executar o procedemento:</p>
+
+    <pre><code>CALL buscar_alumno(1);
+
+CALL buscar_alumno(2);</code></pre>
+
+    <p>
+        Cada chamada executa a consulta co identificador indicado.
+    </p>
+
+    <h3>5.6. Parámetros de saída: OUT</h3>
+
+    <p>
+        Os parámetros <code>OUT</code> permiten devolver información desde
+        o procedemento ao código que o chamou.
+    </p>
+
+    <p>
+        Por exemplo, podemos crear un procedemento que devolva o número
+        total de alumnos:
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE contar_alumnos(
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*)
+    INTO p_total
+    FROM alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Para chamar o procedemento utilizamos unha variable de usuario
+        como argumento de saída:
+    </p>
+
+    <pre><code>CALL contar_alumnos(@total);
+
+SELECT @total AS numero_alumnos;</code></pre>
+
+    <p>
+        O procedemento calcula o número de alumnos e almacena o resultado
+        no parámetro <code>p_total</code>. Ao finalizar a chamada, o valor
+        queda dispoñible na variable <code>@total</code>.
+    </p>
+
+    <h3>5.7. Parámetros INOUT</h3>
+
+    <p>
+        Os parámetros <code>INOUT</code> permiten enviar un valor ao procedemento
+        e recibir posteriormente o valor modificado.
+    </p>
+
+    <p>Exemplo: incrementar un valor nunha unidade.</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE incrementar(
+    INOUT p_numero INT
+)
+BEGIN
+    SET p_numero = p_numero + 1;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>Para executar o procedemento:</p>
+
+    <pre><code>SET @valor = 10;
+
+CALL incrementar(@valor);
+
+SELECT @valor;</code></pre>
+
+    <p>
+        A variable comeza co valor 10. O procedemento recibe ese valor,
+        increméntao e devolve o resultado á mesma variable.
+    </p>
+
+    <h3>5.8. Eliminar e modificar procedementos</h3>
+
+    <p>
+        Para eliminar un procedemento almacenado utilizamos
+        <code>DROP PROCEDURE</code>:
+    </p>
+
+    <pre><code>DROP PROCEDURE IF EXISTS buscar_alumno;</code></pre>
+
+    <p>
+        A cláusula <code>IF EXISTS</code> evita que se produza un erro
+        se o procedemento non existe.
+    </p>
+
+    <p>
+        Se necesitamos cambiar a definición dun procedemento, podemos
+        eliminalo e crealo de novo. Tamén podemos consultar os procedementos
+        existentes:
+    </p>
+
+    <pre><code>SHOW PROCEDURE STATUS
+WHERE Db = 'academia';</code></pre>
+
+    <p>
+        Para consultar a definición dun procedemento concreto:
+    </p>
+
+    <pre><code>SHOW CREATE PROCEDURE buscar_alumno;</code></pre>
+
+    <h2>6. Exemplo completo: procedemento para matricular un alumno</h2>
+
+    <p>
+        Imos combinar os conceptos anteriores para crear un procedemento que
+        permita matricular un alumno nunha asignatura.
+    </p>
+
+    <p>
+        Supoñemos que existe unha táboa <code>matriculas</code> coa seguinte
+        estrutura simplificada:
+    </p>
+
+    <pre><code>CREATE TABLE matriculas (
+    alumno_id INT,
+    asignatura_id INT,
+    nota DECIMAL(4,2),
+    PRIMARY KEY (alumno_id, asignatura_id),
+    FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
+    FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id)
+) ENGINE=InnoDB;</code></pre>
+
+    <p>
+        O procedemento recibirá o identificador do alumno e o identificador
+        da asignatura. Antes de inserir a matrícula, comprobará que non exista
+        xa unha matrícula para esa combinación.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE matricular_alumno(
+    IN p_alumno_id INT,
+    IN p_asignatura_id INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+
+    SELECT COUNT(*)
+    INTO existe
+    FROM matriculas
+    WHERE alumno_id = p_alumno_id
+      AND asignatura_id = p_asignatura_id;
+
+    IF existe = 0 THEN
+
+        INSERT INTO matriculas (
+            alumno_id,
+            asignatura_id,
+            nota
+        )
+        VALUES (
+            p_alumno_id,
+            p_asignatura_id,
+            NULL
+        );
+
+        SELECT 'Matrícula realizada correctamente' AS resultado;
+
+    ELSE
+
+        SELECT 'O alumno xa está matriculado' AS resultado;
+
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        O procedemento realiza as seguintes operacións:
+    </p>
+
+    <ol>
+        <li>Recibe os identificadores do alumno e da asignatura.</li>
+        <li>Declara a variable local <code>existe</code>.</li>
+        <li>Consulta cantas matrículas existen para esa combinación.</li>
+        <li>Se o resultado é cero, insire a nova matrícula.</li>
+        <li>Se xa existe unha matrícula, non realiza a inserción.</li>
+        <li>Devolve unha mensaxe indicando o resultado da operación.</li>
+    </ol>
+
+    <p>Para executalo:</p>
+
+    <pre><code>CALL matricular_alumno(1, 2);</code></pre>
+
+    <p>
+        A restrición de clave primaria composta tamén impide que se repita
+        a combinación de alumno e asignatura. A comprobación previa permite,
+        ademais, devolver unha mensaxe máis clara antes de tentar inserir
+        un rexistro duplicado.
+    </p>
+
+    <div class="advertencia">
+        <strong>Importante:</strong> este exemplo comproba que a matrícula non
+        existe, pero non verifica expresamente que o alumno e a asignatura
+        existan. As claves foráneas son as encargadas de garantir a integridade
+        referencial durante a inserción.
+    </div>
+
+    <h2>7. Boas prácticas na creación de guións e procedementos</h2>
+
+    <p>
+        Os guións e procedementos almacenados permiten automatizar tarefas,
+        pero tamén poden provocar cambios importantes na base de datos.
+        É recomendable seguir unha serie de pautas:
+    </p>
+
+    <ul>
+        <li>
+            <strong>Organizar o código:</strong> separar as operacións en bloques
+            e utilizar comentarios para explicar a súa finalidade.
+        </li>
+        <li>
+            <strong>Utilizar nomes claros:</strong> escoller nomes descritivos
+            para variables, parámetros e procedementos.
+        </li>
+        <li>
+            <strong>Comprobar as condicións:</strong> revisar especialmente
+            as condicións que controlan actualizacións e eliminacións.
+        </li>
+        <li>
+            <strong>Evitar bucles infinitos:</strong> asegurarse de que as
+            variables utilizadas nas condicións se actualizan correctamente.
+        </li>
+        <li>
+            <strong>Controlar os erros:</strong> prever que pode ocorrer se
+            unha consulta non devolve resultados ou se unha operación viola
+            unha restrición.
+        </li>
+        <li>
+            <strong>Protexer os datos:</strong> utilizar transaccións cando
+            varias operacións deban realizarse como unha unidade.
+        </li>
+        <li>
+            <strong>Probar os procedementos:</strong> executalos con diferentes
+            valores, incluídos os casos límite e os valores incorrectos.
+        </li>
+        <li>
+            <strong>Documentar o código:</strong> indicar que parámetros recibe
+            o procedemento, que operación realiza e que resultados devolve.
+        </li>
+    </ul>
+
+    <h2>8. Resumo das principais instrucións</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Instrución</th>
+                <th>Finalidade</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>DECLARE</code></td>
+                <td>Declarar unha variable local.</td>
+            </tr>
+            <tr>
+                <td><code>SET</code></td>
+                <td>Asignar un valor a unha variable.</td>
+            </tr>
+            <tr>
+                <td><code>SELECT ... INTO</code></td>
+                <td>Gardar o resultado dunha consulta nunha variable.</td>
+            </tr>
+            <tr>
+                <td><code>IF ... THEN</code></td>
+                <td>Executar instrucións se se cumpre unha condición.</td>
+            </tr>
+            <tr>
+                <td><code>ELSEIF</code></td>
+                <td>Comprobar unha condición alternativa.</td>
+            </tr>
+            <tr>
+                <td><code>ELSE</code></td>
+                <td>Executar instrucións cando non se cumpre ningunha condición anterior.</td>
+            </tr>
+            <tr>
+                <td><code>WHILE</code></td>
+                <td>Repetir instrucións mentres unha condición sexa verdadeira.</td>
+            </tr>
+            <tr>
+                <td><code>REPEAT</code></td>
+                <td>Repetir instrucións ata que se cumpra unha condición.</td>
+            </tr>
+            <tr>
+                <td><code>LOOP</code></td>
+                <td>Crear un bucle que se interrompe mediante <code>LEAVE</code>.</td>
+            </tr>
+            <tr>
+                <td><code>LEAVE</code></td>
+                <td>Saír dun bucle.</td>
+            </tr>
+            <tr>
+                <td><code>ITERATE</code></td>
+                <td>Comezar a seguinte repetición dun bucle.</td>
+            </tr>
+            <tr>
+                <td><code>CREATE PROCEDURE</code></td>
+                <td>Crear un procedemento almacenado.</td>
+            </tr>
+            <tr>
+                <td><code>CALL</code></td>
+                <td>Executar un procedemento almacenado.</td>
+            </tr>
+            <tr>
+                <td><code>DROP PROCEDURE</code></td>
+                <td>Eliminar un procedemento almacenado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>9. Guión de comprobación</h2>
+
+    <p>
+        Antes de dar por finalizado un guión SQL ou un procedemento almacenado,
+        convén revisar os seguintes aspectos:
+    </p>
+
+    <ol>
+        <li>Comprobar que se selecciona a base de datos correcta.</li>
+        <li>Revisar que as sentenzas están organizadas na orde adecuada.</li>
+        <li>Comprobar que as variables están declaradas co tipo de dato correcto.</li>
+        <li>Verificar que as condicións <code>IF</code> contemplan os casos necesarios.</li>
+        <li>Comprobar que os bucles teñen unha condición de saída.</li>
+        <li>Verificar que os parámetros de entrada e saída están correctamente definidos.</li>
+        <li>Revisar que as operacións DML afectan aos rexistros esperados.</li>
+        <li>Executar o procedemento con diferentes valores de entrada.</li>
+        <li>Comprobar os resultados e as mensaxes devoltas.</li>
+        <li>Verificar que non se producen erros de integridade referencial.</li>
+    </ol>
+
+    <div class="callout">
+        <strong>Conclusión:</strong> os guións SQL permiten organizar e executar
+        varias sentenzas de maneira secuencial. As variables, as estruturas
+        condicionais e os bucles engaden capacidade de programación, mentres
+        que os procedementos almacenados permiten gardar e reutilizar tarefas
+        complexas directamente no servidor MariaDB.
+    </div>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,1069 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD3 - Consultas SQL (IV)</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>UD3 - Consultas SQL (IV)</h1>
+
+    <p>
+        Nesta parte da unidade didáctica estudaremos as subconsultas,
+        que permiten utilizar o resultado dunha consulta SQL dentro
+        doutra consulta. Aprenderemos a utilizar subconsultas escalares,
+        operadores de pertenza, condicións de existencia, funcións de
+        resumo e subconsultas correlacionadas.
+    </p>
+
+    <!-- SESIÓN 18 -->
+
+    <section>
+        <h2>18. Introdución ás subconsultas</h2>
+
+        <h3>18.1. Que é unha subconsulta?</h3>
+
+        <p>
+            Unha subconsulta é unha consulta SQL incluída dentro doutra
+            instrución SQL. A consulta interior proporciona un resultado
+            que pode ser utilizado pola consulta principal para filtrar,
+            comparar ou seleccionar información.
+        </p>
+
+        <p>
+            As subconsultas escríbense normalmente entre parénteses e
+            poden aparecer en diferentes partes dunha instrución
+            <code>SELECT</code>, especialmente nas cláusulas
+            <code>WHERE</code>, <code>HAVING</code> e
+            <code>FROM</code>.
+        </p>
+
+        <pre><code>SELECT columnas
+FROM taboa
+WHERE columna operador (
+    SELECT columna
+    FROM outra_taboa
+    WHERE condicion
+);</code></pre>
+
+        <p>
+            A consulta interior proporciona o valor ou os valores
+            que necesita a consulta exterior.
+        </p>
+
+        <div class="callout">
+            <strong>Idea clave:</strong>
+            unha subconsulta permite resolver unha condición utilizando
+            información que se obtén doutra consulta, sen necesidade
+            de realizar varias consultas independentes.
+        </div>
+
+        <h3>18.2. Orde de execución</h3>
+
+        <p>
+            Nunha subconsulta non correlacionada, a consulta interior
+            pode executarse de maneira independente da consulta principal.
+            Conceptualmente, primeiro obtense o resultado da subconsulta
+            e despois utilízase na consulta exterior.
+        </p>
+
+        <p>
+            Esta é unha forma útil de entender as subconsultas, aínda que
+            o optimizador de MariaDB pode transformar a consulta e
+            executar ambas as partes mediante outro plan de execución.
+        </p>
+
+        <h3>18.3. Subconsultas escalares</h3>
+
+        <p>
+            Unha subconsulta escalar é aquela que devolve un único valor:
+            unha fila e unha columna.
+        </p>
+
+        <p>
+            Este valor pode utilizarse nunha comparación mediante
+            operadores como:
+        </p>
+
+        <ul>
+            <li><code>=</code>: igual.</li>
+            <li><code>&lt;&gt;</code>: diferente.</li>
+            <li><code>&gt;</code>: maior que.</li>
+            <li><code>&lt;</code>: menor que.</li>
+            <li><code>&gt;=</code>: maior ou igual que.</li>
+            <li><code>&lt;=</code>: menor ou igual que.</li>
+        </ul>
+
+        <h3>18.4. Exemplo con operador de igualdade</h3>
+
+        <p>
+            Supoñamos que queremos obter os alumnos que pertencen ao
+            curso DAW1.
+        </p>
+
+        <p>
+            Podemos utilizar unha subconsulta para obter primeiro o
+            identificador do curso DAW1:
+        </p>
+
+        <pre><code>SELECT id
+FROM cursos
+WHERE nombre = 'DAW1';</code></pre>
+
+        <p>
+            O resultado será o identificador dese curso. Podemos utilizar
+            directamente esta consulta dentro doutra:
+        </p>
+
+        <pre><code>SELECT nombre
+FROM alumnos
+WHERE curso_id = (
+    SELECT id
+    FROM cursos
+    WHERE nombre = 'DAW1'
+);</code></pre>
+
+        <p>
+            A subconsulta obtén o identificador do curso DAW1 e a
+            consulta principal selecciona os alumnos que teñen ese
+            identificador no campo <code>curso_id</code>.
+        </p>
+
+        <h3>18.5. Subconsultas con operadores de comparación</h3>
+
+        <p>
+            Podemos utilizar operadores de comparación para relacionar
+            os datos dunha táboa cun valor calculado mediante unha
+            subconsulta.
+        </p>
+
+        <p>
+            Por exemplo, queremos obter os alumnos que teñen unha idade
+            superior á idade media de todos os alumnos.
+        </p>
+
+        <pre><code>SELECT nombre, edad
+FROM alumnos
+WHERE edad > (
+    SELECT AVG(edad)
+    FROM alumnos
+);</code></pre>
+
+        <p>
+            A subconsulta calcula a idade media e a consulta principal
+            mostra os alumnos que superan ese valor.
+        </p>
+
+        <h3>18.6. Comparar cun valor máximo ou mínimo</h3>
+
+        <p>
+            As funcións de resumo tamén poden utilizarse dentro das
+            subconsultas escalares.
+        </p>
+
+        <p>
+            Obter os alumnos que teñen a idade máxima:
+        </p>
+
+        <pre><code>SELECT nombre, edad
+FROM alumnos
+WHERE edad = (
+    SELECT MAX(edad)
+    FROM alumnos
+);</code></pre>
+
+        <p>
+            Obter os alumnos que teñen unha idade inferior á idade máxima:
+        </p>
+
+        <pre><code>SELECT nombre, edad
+FROM alumnos
+WHERE edad < (
+    SELECT MAX(edad)
+    FROM alumnos
+);</code></pre>
+
+        <h3>18.7. Consideracións importantes</h3>
+
+        <ul>
+            <li>Unha subconsulta escalar debe devolver como máximo unha fila e unha columna.</li>
+            <li>Se devolve máis dunha fila, unha comparación como <code>=</code> produce un erro.</li>
+            <li>Se non devolve ningunha fila, o resultado escalar será <code>NULL</code>.</li>
+            <li>Se a subconsulta devolve <code>NULL</code>, as comparacións habituais non serán verdadeiras nin falsas, senón descoñecidas.</li>
+        </ul>
+
+        <div class="advertencia">
+            <strong>Atención:</strong>
+            se unha subconsulta pode devolver varios valores, non debemos
+            utilizar directamente operadores como <code>=</code> ou
+            <code>&gt;</code>. Nese caso podemos necesitar
+            <code>IN</code>, <code>EXISTS</code> ou outros operadores
+            específicos.
+        </div>
+
+        <h3>18.8. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Obtén os alumnos que pertencen ao curso DAW2 mediante unha subconsulta.</li>
+            <li>Mostra os alumnos que teñen unha idade superior á media.</li>
+            <li>Obtén os alumnos que teñen a idade mínima.</li>
+            <li>Mostra os cursos que teñen un número de horas superior á media de horas dos cursos.</li>
+            <li>Obtén os alumnos que pertencen ao curso que ten o maior número de horas.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 19 -->
+
+    <section>
+        <h2>19. Subconsultas con IN e NOT IN</h2>
+
+        <h3>19.1. Subconsultas que devolven varios valores</h3>
+
+        <p>
+            En ocasións, unha subconsulta pode devolver varios rexistros.
+            Por exemplo, podemos necesitar obter todos os identificadores
+            dos cursos que cumpren unha determinada condición.
+        </p>
+
+        <p>
+            Para utilizar estes resultados na consulta principal podemos
+            empregar os operadores <code>IN</code> e <code>NOT IN</code>.
+        </p>
+
+        <h3>19.2. Operador IN</h3>
+
+        <p>
+            O operador <code>IN</code> comproba se un valor pertence
+            ao conxunto de valores devolto pola subconsulta.
+        </p>
+
+        <pre><code>SELECT columnas
+FROM taboa
+WHERE columna IN (
+    SELECT columna
+    FROM outra_taboa
+    WHERE condicion
+);</code></pre>
+
+        <h3>19.3. Exemplo: alumnos pertencentes a determinados cursos</h3>
+
+        <p>
+            Supoñamos que queremos obter os alumnos que pertencen a cursos
+            cunha duración superior a 180 horas.
+        </p>
+
+        <p>
+            Primeiro podemos obter os identificadores dos cursos que
+            cumpren esa condición:
+        </p>
+
+        <pre><code>SELECT id
+FROM cursos
+WHERE horas > 180;</code></pre>
+
+        <p>
+            Despois utilizamos a consulta anterior como subconsulta:
+        </p>
+
+        <pre><code>SELECT nombre, curso_id
+FROM alumnos
+WHERE curso_id IN (
+    SELECT id
+    FROM cursos
+    WHERE horas > 180
+);</code></pre>
+
+        <p>
+            A consulta principal mostra os alumnos cuxo identificador
+            de curso aparece no resultado da subconsulta.
+        </p>
+
+        <h3>19.4. Operador NOT IN</h3>
+
+        <p>
+            O operador <code>NOT IN</code> permite seleccionar os
+            rexistros cuxo valor non aparece no conxunto devolto
+            pola subconsulta.
+        </p>
+
+        <pre><code>SELECT columnas
+FROM taboa
+WHERE columna NOT IN (
+    SELECT columna
+    FROM outra_taboa
+    WHERE condicion
+);</code></pre>
+
+        <h3>19.5. Exemplo: alumnos que non pertencen a cursos longos</h3>
+
+        <p>
+            Queremos obter os alumnos que non pertencen a cursos cunha
+            duración superior a 180 horas.
+        </p>
+
+        <pre><code>SELECT nombre, curso_id
+FROM alumnos
+WHERE curso_id NOT IN (
+    SELECT id
+    FROM cursos
+    WHERE horas > 180
+);</code></pre>
+
+        <p>
+            A subconsulta devolve os identificadores dos cursos con
+            máis de 180 horas. A consulta principal selecciona os alumnos
+            cuxo curso non aparece nese conxunto.
+        </p>
+
+        <h3>19.6. Diferenza entre IN e NOT IN</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operador</th>
+                    <th>Funcionamento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IN</code></td>
+                    <td>Selecciona os rexistros cuxo valor aparece no resultado da subconsulta.</td>
+                </tr>
+                <tr>
+                    <td><code>NOT IN</code></td>
+                    <td>Selecciona os rexistros cuxo valor non aparece no resultado da subconsulta.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>19.7. Atención aos valores NULL con NOT IN</h3>
+
+        <p>
+            Hai que ter especial coidado cando a subconsulta pode devolver
+            valores <code>NULL</code>.
+        </p>
+
+        <p>
+            Por exemplo:
+        </p>
+
+        <pre><code>SELECT nombre
+FROM alumnos
+WHERE curso_id NOT IN (
+    SELECT id
+    FROM cursos
+);</code></pre>
+
+        <p>
+            Se o resultado da subconsulta contén un valor
+            <code>NULL</code>, as comparacións de <code>NOT IN</code>
+            poden producir un resultado descoñecido e impedir que se
+            devolvan os rexistros esperados.
+        </p>
+
+        <p>
+            Para evitar este problema, podemos excluír explicitamente
+            os valores nulos na subconsulta:
+        </p>
+
+        <pre><code>SELECT nombre
+FROM alumnos
+WHERE curso_id NOT IN (
+    SELECT id
+    FROM cursos
+    WHERE id IS NOT NULL
+);</code></pre>
+
+        <div class="callout">
+            <strong>Recomendación:</strong>
+            cando utilices <code>NOT IN</code>, comproba que a subconsulta
+            non pode devolver valores <code>NULL</code>. Para detectar
+            rexistros sen correspondencia, tamén podes utilizar
+            <code>NOT EXISTS</code>.
+        </div>
+
+        <h3>19.8. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Obtén os alumnos que pertencen a cursos con máis de 150 horas.</li>
+            <li>Mostra os alumnos que non pertencen a cursos con máis de 180 horas.</li>
+            <li>Obtén os cursos que teñen alumnos maiores de idade.</li>
+            <li>Mostra os cursos que non teñen alumnos menores de idade.</li>
+            <li>Obtén os alumnos que pertencen a cursos cuxo número de horas é igual ou superior a 190.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 20 -->
+
+    <section>
+        <h2>20. Subconsultas con EXISTS e NOT EXISTS</h2>
+
+        <h3>20.1. Que é EXISTS?</h3>
+
+        <p>
+            O operador <code>EXISTS</code> permite comprobar se unha
+            subconsulta devolve polo menos un rexistro.
+        </p>
+
+        <p>
+            Non importa o contido das filas devoltas pola subconsulta:
+            o que interesa é saber se existe algún resultado.
+        </p>
+
+        <pre><code>SELECT columnas
+FROM taboa_principal
+WHERE EXISTS (
+    SELECT *
+    FROM outra_taboa
+    WHERE condicion
+);</code></pre>
+
+        <p>
+            Se a subconsulta devolve polo menos unha fila,
+            <code>EXISTS</code> é verdadeiro e o rexistro da consulta
+            principal pode formar parte do resultado.
+        </p>
+
+        <h3>20.2. Exemplo: cursos que teñen alumnos</h3>
+
+        <p>
+            Queremos obter os cursos que teñen polo menos un alumno
+            asociado.
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre
+FROM cursos c
+WHERE EXISTS (
+    SELECT *
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <p>
+            Para cada curso, a subconsulta comproba se existe algún
+            alumno cuxo <code>curso_id</code> coincida co identificador
+            do curso.
+        </p>
+
+        <h3>20.3. Que é NOT EXISTS?</h3>
+
+        <p>
+            O operador <code>NOT EXISTS</code> realiza a comprobación
+            contraria: é verdadeiro cando a subconsulta non devolve
+            ningún rexistro.
+        </p>
+
+        <pre><code>SELECT columnas
+FROM taboa_principal
+WHERE NOT EXISTS (
+    SELECT *
+    FROM outra_taboa
+    WHERE condicion
+);</code></pre>
+
+        <h3>20.4. Exemplo: cursos sen alumnos</h3>
+
+        <p>
+            Queremos obter os cursos que non teñen ningún alumno asociado.
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre
+FROM cursos c
+WHERE NOT EXISTS (
+    SELECT *
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <p>
+            Para cada curso, a subconsulta busca alumnos relacionados.
+            Se non atopa ningún, o curso aparece no resultado.
+        </p>
+
+        <h3>20.5. EXISTS fronte a IN</h3>
+
+        <p>
+            Tanto <code>IN</code> como <code>EXISTS</code> permiten
+            filtrar rexistros a partir de información doutra consulta,
+            pero funcionan de maneira diferente.
+        </p>
+
+        <p>
+            Exemplo utilizando <code>IN</code>:
+        </p>
+
+        <pre><code>SELECT nombre
+FROM alumnos
+WHERE curso_id IN (
+    SELECT id
+    FROM cursos
+    WHERE horas > 180
+);</code></pre>
+
+        <p>
+            A subconsulta devolve un conxunto de identificadores e
+            <code>IN</code> comproba se o identificador do alumno
+            pertence a ese conxunto.
+        </p>
+
+        <p>
+            A mesma idea pode expresarse con <code>EXISTS</code>:
+        </p>
+
+        <pre><code>SELECT a.nombre
+FROM alumnos a
+WHERE EXISTS (
+    SELECT *
+    FROM cursos c
+    WHERE c.id = a.curso_id
+      AND c.horas > 180
+);</code></pre>
+
+        <p>
+            A segunda consulta comproba se existe un curso relacionado
+            co alumno que cumpra a condición indicada.
+        </p>
+
+        <h3>20.6. EXISTS e NOT EXISTS con varias condicións</h3>
+
+        <p>
+            Podemos utilizar varias condicións dentro da subconsulta
+            para comprobar a existencia de rexistros que cumpran
+            determinados requisitos.
+        </p>
+
+        <p>
+            Por exemplo, obter os alumnos que teñen polo menos unha
+            matrícula cunha nota igual ou superior a 5:
+        </p>
+
+        <pre><code>SELECT a.id,
+       a.nombre
+FROM Alumno a
+WHERE EXISTS (
+    SELECT *
+    FROM Matricula ma
+    WHERE ma.id_alumno = a.id
+      AND ma.nota >= 5
+);</code></pre>
+
+        <p>
+            Para cada alumno compróbase se existe algunha matrícula
+            cunha nota igual ou superior a 5.
+        </p>
+
+        <p>
+            Se queremos obter os alumnos que non teñen ningunha
+            matrícula aprobada, podemos utilizar:
+        </p>
+
+        <pre><code>SELECT a.id,
+       a.nombre
+FROM Alumno a
+WHERE NOT EXISTS (
+    SELECT *
+    FROM Matricula ma
+    WHERE ma.id_alumno = a.id
+      AND ma.nota >= 5
+);</code></pre>
+
+        <h3>20.7. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Obtén os cursos que teñen polo menos un alumno.</li>
+            <li>Obtén os cursos que non teñen ningún alumno.</li>
+            <li>Mostra os alumnos que teñen polo menos unha matrícula.</li>
+            <li>Mostra os alumnos que non teñen ningunha matrícula.</li>
+            <li>Obtén os alumnos que teñen polo menos unha matrícula aprobada.</li>
+            <li>Obtén os alumnos que non teñen ningunha matrícula aprobada.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 21 -->
+
+    <section>
+        <h2>21. Subconsultas con funcións de resumo e agrupamentos</h2>
+
+        <h3>21.1. Utilizar funcións de resumo nas subconsultas</h3>
+
+        <p>
+            As subconsultas poden utilizar funcións de resumo como
+            <code>COUNT()</code>, <code>SUM()</code>, <code>AVG()</code>,
+            <code>MIN()</code> e <code>MAX()</code>.
+        </p>
+
+        <p>
+            Estas funcións permiten calcular valores que posteriormente
+            poden ser utilizados pola consulta principal.
+        </p>
+
+        <h3>21.2. Comparar cunha media</h3>
+
+        <p>
+            Queremos obter os alumnos cuxa idade é superior á idade
+            media de todos os alumnos.
+        </p>
+
+        <pre><code>SELECT nombre,
+       edad
+FROM alumnos
+WHERE edad > (
+    SELECT AVG(edad)
+    FROM alumnos
+);</code></pre>
+
+        <p>
+            A subconsulta calcula unha única media e a consulta principal
+            utiliza ese valor para seleccionar os alumnos.
+        </p>
+
+        <h3>21.3. Comparar co número máximo de horas</h3>
+
+        <p>
+            Podemos obter os cursos que teñen o maior número de horas
+            mediante unha subconsulta:
+        </p>
+
+        <pre><code>SELECT nombre,
+       horas
+FROM cursos
+WHERE horas = (
+    SELECT MAX(horas)
+    FROM cursos
+);</code></pre>
+
+        <p>
+            A subconsulta calcula o número máximo de horas e a consulta
+            principal selecciona os cursos que teñen ese valor.
+        </p>
+
+        <h3>21.4. Subconsultas con GROUP BY</h3>
+
+        <p>
+            Tamén podemos realizar agrupamentos dentro dunha subconsulta.
+            Isto permite calcular valores para cada grupo e utilizar
+            posteriormente eses resultados na consulta principal.
+        </p>
+
+        <p>
+            Por exemplo, queremos obter os identificadores dos cursos
+            que teñen máis de dous alumnos.
+        </p>
+
+        <pre><code>SELECT curso_id
+FROM alumnos
+GROUP BY curso_id
+HAVING COUNT(*) > 2;</code></pre>
+
+        <p>
+            A consulta agrupa os alumnos por curso e selecciona os
+            grupos que teñen máis de dous alumnos.
+        </p>
+
+        <p>
+            Podemos utilizar esta consulta como subconsulta:
+        </p>
+
+        <pre><code>SELECT id,
+       nombre
+FROM cursos
+WHERE id IN (
+    SELECT curso_id
+    FROM alumnos
+    GROUP BY curso_id
+    HAVING COUNT(*) > 2
+);</code></pre>
+
+        <p>
+            A consulta principal mostra os cursos que teñen máis de
+            dous alumnos.
+        </p>
+
+        <h3>21.5. Subconsultas con SUM</h3>
+
+        <p>
+            Supoñamos que queremos obter os módulos nos que a suma das
+            notas das matrículas é superior a un determinado valor.
+        </p>
+
+        <p>
+            Podemos calcular primeiro os módulos que cumpren esa
+            condición:
+        </p>
+
+        <pre><code>SELECT id_modulo
+FROM Matricula
+GROUP BY id_modulo
+HAVING SUM(nota) > 20;</code></pre>
+
+        <p>
+            A consulta principal utiliza os identificadores obtidos:
+        </p>
+
+        <pre><code>SELECT id,
+       nombre
+FROM Modulo
+WHERE id IN (
+    SELECT id_modulo
+    FROM Matricula
+    GROUP BY id_modulo
+    HAVING SUM(nota) > 20
+);</code></pre>
+
+        <h3>21.6. Subconsultas con AVG e agrupamentos</h3>
+
+        <p>
+            Podemos calcular a nota media de cada módulo e utilizar
+            os resultados para seleccionar aqueles módulos cuxa media
+            supera un valor determinado.
+        </p>
+
+        <pre><code>SELECT id,
+       nombre
+FROM Modulo
+WHERE id IN (
+    SELECT id_modulo
+    FROM Matricula
+    GROUP BY id_modulo
+    HAVING AVG(nota) >= 7
+);</code></pre>
+
+        <p>
+            A subconsulta calcula a media das notas por módulo e
+            selecciona os identificadores dos módulos cunha media
+            igual ou superior a 7.
+        </p>
+
+        <h3>21.7. Combinar subconsultas con consultas principais</h3>
+
+        <p>
+            Unha subconsulta pode formar parte dunha consulta principal
+            que tamén conteña composicións entre táboas, filtros ou
+            ordenacións.
+        </p>
+
+        <p>
+            Por exemplo, queremos mostrar os nomes dos alumnos que
+            teñen unha nota superior á media de todas as matrículas:
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+WHERE ma.nota > (
+    SELECT AVG(nota)
+    FROM Matricula
+)
+ORDER BY ma.nota DESC;</code></pre>
+
+        <p>
+            A subconsulta calcula a nota media global e a consulta
+            principal mostra as matrículas que superan esa media,
+            xunto co nome dos alumnos.
+        </p>
+
+        <h3>21.8. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Obtén os cursos que teñen máis de dous alumnos mediante unha subconsulta con <code>GROUP BY</code> e <code>HAVING</code>.</li>
+            <li>Mostra os cursos que teñen un número de horas superior á media de todos os cursos.</li>
+            <li>Obtén os módulos nos que a nota media das matrículas é igual ou superior a 7.</li>
+            <li>Mostra os alumnos que teñen algunha nota superior á media global das matrículas.</li>
+            <li>Obtén os módulos que teñen máis de cinco matrículas.</li>
+            <li>Mostra os cursos cuxo número de alumnos é superior á media de alumnos por curso.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 22 -->
+
+    <section>
+        <h2>22. Subconsultas correlacionadas</h2>
+
+        <h3>22.1. Que é unha subconsulta correlacionada?</h3>
+
+        <p>
+            Unha subconsulta correlacionada é aquela que utiliza
+            información da consulta principal.
+        </p>
+
+        <p>
+            A diferenza dunha subconsulta independente, a subconsulta
+            correlacionada fai referencia a unha columna da consulta
+            exterior. Por este motivo, o seu resultado depende do
+            rexistro que se está avaliando na consulta principal.
+        </p>
+
+        <pre><code>SELECT columnas
+FROM taboa principal
+WHERE condicion (
+    SELECT *
+    FROM outra_taboa
+    WHERE outra_taboa.clave = principal.clave
+);</code></pre>
+
+        <div class="callout">
+            <strong>Idea clave:</strong>
+            a subconsulta correlacionada utiliza valores do rexistro
+            actual da consulta principal para realizar a súa comprobación.
+        </div>
+
+        <h3>22.2. Exemplo: cursos que teñen alumnos</h3>
+
+        <p>
+            Queremos obter os cursos que teñen polo menos un alumno.
+            Podemos resolver este problema mediante unha subconsulta
+            correlacionada con <code>EXISTS</code>.
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre
+FROM cursos c
+WHERE EXISTS (
+    SELECT *
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <p>
+            A condición <code>a.curso_id = c.id</code> relaciona a
+            subconsulta co rexistro actual da consulta principal.
+        </p>
+
+        <p>
+            Para cada curso, a subconsulta comproba se existe algún
+            alumno asociado.
+        </p>
+
+        <h3>22.3. Exemplo: cursos sen alumnos</h3>
+
+        <p>
+            Se queremos obter os cursos que non teñen alumnos, podemos
+            utilizar <code>NOT EXISTS</code>:
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre
+FROM cursos c
+WHERE NOT EXISTS (
+    SELECT *
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <h3>22.4. Exemplo: alumnos cunha nota superior á súa media</h3>
+
+        <p>
+            Imos utilizar as táboas <code>Alumno</code> e
+            <code>Matricula</code>.
+        </p>
+
+        <p>
+            Queremos obter as matrículas nas que a nota é superior
+            á media das notas do mesmo alumno.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+WHERE ma.nota > (
+    SELECT AVG(ma2.nota)
+    FROM Matricula ma2
+    WHERE ma2.id_alumno = a.id
+);</code></pre>
+
+        <p>
+            A subconsulta calcula a nota media das matrículas do alumno
+            actual. A consulta principal compara cada nota individual
+            con esa media.
+        </p>
+
+        <p>
+            Os alias permiten distinguir as dúas referencias á táboa
+            <code>Matricula</code>:
+        </p>
+
+        <ul>
+            <li><code>ma</code>: matrícula que se está avaliando na consulta principal.</li>
+            <li><code>ma2</code>: matrículas utilizadas para calcular a media do alumno.</li>
+        </ul>
+
+        <h3>22.5. Exemplo: alumnos que teñen todas as matrículas aprobadas</h3>
+
+        <p>
+            Queremos obter os alumnos que non teñen ningunha matrícula
+            cunha nota inferior a 5.
+        </p>
+
+        <pre><code>SELECT a.id,
+       a.nombre
+FROM Alumno a
+WHERE NOT EXISTS (
+    SELECT *
+    FROM Matricula ma
+    WHERE ma.id_alumno = a.id
+      AND ma.nota < 5
+);</code></pre>
+
+        <p>
+            A subconsulta busca matrículas suspensas para cada alumno.
+            Se non atopa ningunha, o alumno aparece no resultado.
+        </p>
+
+        <div class="advertencia">
+            <strong>Importante:</strong>
+            esta consulta tamén inclúe os alumnos que non teñen ningunha
+            matrícula, porque tampouco existe para eles ningunha
+            matrícula suspensa. Se queremos esixir que teñan polo menos
+            unha matrícula, debemos engadir unha segunda condición
+            <code>EXISTS</code>.
+        </div>
+
+        <pre><code>SELECT a.id,
+       a.nombre
+FROM Alumno a
+WHERE EXISTS (
+    SELECT *
+    FROM Matricula ma
+    WHERE ma.id_alumno = a.id
+)
+AND NOT EXISTS (
+    SELECT *
+    FROM Matricula ma
+    WHERE ma.id_alumno = a.id
+      AND ma.nota < 5
+);</code></pre>
+
+        <h3>22.6. Diferenza entre subconsultas independentes e correlacionadas</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Características</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Independente</td>
+                    <td>Non depende de valores da consulta principal. Pode calcularse de maneira independente.</td>
+                </tr>
+                <tr>
+                    <td>Correlacionada</td>
+                    <td>Utiliza columnas da consulta principal e o seu resultado depende do rexistro que se está avaliando.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>22.7. Consideracións sobre o rendemento</h3>
+
+        <p>
+            As subconsultas correlacionadas poden resultar máis complexas
+            de executar, xa que dependen dos rexistros da consulta
+            principal.
+        </p>
+
+        <p>
+            Non obstante, o optimizador de MariaDB pode transformar
+            determinadas subconsultas para mellorar o seu rendemento.
+            Non debemos asumir que unha subconsulta correlacionada
+            se executa sempre literalmente unha vez por cada rexistro.
+        </p>
+
+        <p>
+            Para analizar o comportamento dunha consulta podemos utilizar
+            <code>EXPLAIN</code>, que permite consultar o plan de execución.
+        </p>
+
+        <pre><code>EXPLAIN
+SELECT c.id,
+       c.nombre
+FROM cursos c
+WHERE EXISTS (
+    SELECT *
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <h3>22.8. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Obtén os cursos que teñen polo menos un alumno utilizando <code>EXISTS</code>.</li>
+            <li>Obtén os cursos que non teñen alumnos mediante <code>NOT EXISTS</code>.</li>
+            <li>Mostra os alumnos que teñen unha nota superior á súa propia media.</li>
+            <li>Obtén os alumnos que teñen todas as súas matrículas aprobadas e polo menos unha matrícula.</li>
+            <li>Mostra os módulos nos que existe algunha matrícula cunha nota inferior a 5.</li>
+            <li>Obtén os módulos nos que todas as matrículas teñen unha nota igual ou superior a 5, esixindo que exista polo menos unha matrícula.</li>
+        </ol>
+    </section>
+
+    <!-- RESUMO FINAL -->
+
+    <section>
+        <h2>Resumo das subconsultas</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Uso principal</th>
+                    <th>Exemplo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Escalar</td>
+                    <td>Comparar cun único valor.</td>
+                    <td><code>WHERE idade &gt; (SELECT AVG(idade) ...)</code></td>
+                </tr>
+                <tr>
+                    <td>IN</td>
+                    <td>Comprobar se un valor pertence a un conxunto.</td>
+                    <td><code>WHERE curso_id IN (SELECT ...)</code></td>
+                </tr>
+                <tr>
+                    <td>NOT IN</td>
+                    <td>Comprobar se un valor non pertence a un conxunto.</td>
+                    <td><code>WHERE curso_id NOT IN (SELECT ...)</code></td>
+                </tr>
+                <tr>
+                    <td>EXISTS</td>
+                    <td>Comprobar se existe polo menos un rexistro.</td>
+                    <td><code>WHERE EXISTS (SELECT ...)</code></td>
+                </tr>
+                <tr>
+                    <td>NOT EXISTS</td>
+                    <td>Comprobar se non existe ningún rexistro.</td>
+                    <td><code>WHERE NOT EXISTS (SELECT ...)</code></td>
+                </tr>
+                <tr>
+                    <td>Correlacionada</td>
+                    <td>Relacionar a subconsulta coa fila actual da consulta principal.</td>
+                    <td><code>WHERE ma.id_alumno = a.id</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            As subconsultas permiten expresar condicións complexas
+            utilizando información procedente doutras consultas.
+            A elección do operador depende do tipo de resultado que
+            devolve a subconsulta e da condición que queremos comprobar.
+        </p>
+
+    </section>
+
+</main>
+
+</body>
+</html>

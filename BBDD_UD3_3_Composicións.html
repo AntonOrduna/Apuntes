@@ -1,0 +1,871 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD3 - Consultas SQL (III)</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>UD3 - Consultas SQL (III)</h1>
+    <p>
+        Nesta parte da unidade didáctica estudaremos como combinar información
+        procedente de varias táboas mediante composicións internas e externas.
+        Aprenderemos a relacionar tres ou máis táboas, aplicar condicións de
+        filtrado e identificar rexistros que non teñen correspondencia noutras
+        táboas.
+    </p>
+
+    <!-- SESIÓN 13 -->
+
+    <section>
+        <h2>13. Composicións internas con varias táboas</h2>
+
+        <h3>13.1. Recuperar información de varias táboas</h3>
+
+        <p>
+            Nunha base de datos relacional, a información adoita estar distribuída
+            en diferentes táboas. Para obter información completa é necesario
+            combinar os rexistros relacionados mediante as súas claves.
+        </p>
+
+        <p>
+            A instrución <code>INNER JOIN</code> permite combinar dúas táboas
+            utilizando unha condición de unión. Cando necesitamos información
+            de máis de dúas táboas, podemos encadear varias composicións
+            <code>INNER JOIN</code>.
+        </p>
+
+        <div class="callout">
+            <strong>Idea clave:</strong>
+            cada <code>JOIN</code> incorpora unha nova táboa ao resultado,
+            utilizando unha condición que relaciona os seus rexistros cos
+            das táboas xa incluídas na consulta.
+        </div>
+
+        <h3>13.2. Sintaxe con varias táboas</h3>
+
+        <pre><code>SELECT columnas
+FROM taboa1
+INNER JOIN taboa2
+    ON taboa1.clave = taboa2.clave
+INNER JOIN taboa3
+    ON taboa2.clave = taboa3.clave;</code></pre>
+
+        <p>
+            Cada composición debe incluír a súa propia condición
+            <code>ON</code>, que indica como se relacionan as dúas partes
+            da consulta.
+        </p>
+
+        <h3>13.3. Exemplo: alumnos e cursos</h3>
+
+        <p>
+            Supoñamos que temos dúas táboas relacionadas:
+        </p>
+
+        <ul>
+            <li><code>cursos</code>: almacena os cursos dispoñibles.</li>
+            <li><code>alumnos</code>: almacena os alumnos e o curso ao que pertencen.</li>
+        </ul>
+
+        <p>
+            A relación establécese mediante o campo <code>curso_id</code>
+            da táboa <code>alumnos</code>, que referencia o campo
+            <code>id</code> da táboa <code>cursos</code>.
+        </p>
+
+        <pre><code>SELECT alumnos.nombre,
+       cursos.nombre AS curso
+FROM alumnos
+INNER JOIN cursos
+    ON alumnos.curso_id = cursos.id;</code></pre>
+
+        <p>
+            O resultado mostra o nome de cada alumno xunto co nome do curso
+            no que está matriculado. Só aparecen os alumnos que teñen un
+            curso correspondente.
+        </p>
+
+        <h3>13.4. Uso de alias nas táboas</h3>
+
+        <p>
+            Cando unha consulta utiliza varias táboas, podemos asignarlles
+            alias para simplificar a escritura e mellorar a súa lectura.
+            O alias defínese inmediatamente despois do nome da táboa.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       c.nombre AS curso
+FROM alumnos AS a
+INNER JOIN cursos AS c
+    ON a.curso_id = c.id;</code></pre>
+
+        <p>
+            Neste exemplo:
+        </p>
+
+        <ul>
+            <li><code>a</code> é o alias da táboa <code>alumnos</code>.</li>
+            <li><code>c</code> é o alias da táboa <code>cursos</code>.</li>
+            <li><code>AS curso</code> é o alias da columna no resultado.</li>
+        </ul>
+
+        <div class="advertencia">
+            <strong>Importante:</strong>
+            cando unha columna existe en varias táboas, é recomendable
+            indicar sempre a táboa ou o seu alias. Por exemplo,
+            <code>a.id</code> e <code>c.id</code> permiten distinguir
+            os dous campos.
+        </div>
+
+        <h3>13.5. Condicións de unión</h3>
+
+        <p>
+            A condición de unión establece que rexistros deben combinarse.
+            Normalmente utiliza unha clave primaria e unha clave foránea.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       c.nombre AS curso
+FROM alumnos a
+INNER JOIN cursos c
+    ON a.curso_id = c.id;</code></pre>
+
+        <p>
+            A condición <code>ON a.curso_id = c.id</code> indica que
+            cada alumno se combina co curso cuxo identificador coincide
+            co valor almacenado na súa clave foránea.
+        </p>
+
+        <h3>13.6. Diferenza entre ON e WHERE</h3>
+
+        <p>
+            A cláusula <code>ON</code> establece a relación entre as táboas.
+            A cláusula <code>WHERE</code> filtra os rexistros que forman
+            parte do resultado.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       c.nombre AS curso
+FROM alumnos a
+INNER JOIN cursos c
+    ON a.curso_id = c.id
+WHERE c.nombre = 'DAW1';</code></pre>
+
+        <p>
+            A consulta combina alumnos e cursos e, posteriormente, mostra
+            unicamente os alumnos pertencentes ao curso DAW1.
+        </p>
+
+        <h3>13.7. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Obtén o nome de todos os alumnos xunto co nome do seu curso.</li>
+            <li>Mostra o identificador e o nome dos alumnos xunto co identificador e o nome do curso.</li>
+            <li>Utiliza alias para abreviar os nomes das táboas.</li>
+            <li>Obtén os alumnos que pertencen ao curso DAM1.</li>
+            <li>Mostra os alumnos ordenados polo nome do curso e polo nome do alumno.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 14 -->
+
+    <section>
+        <h2>14. Composicións internas con tres ou máis táboas</h2>
+
+        <h3>14.1. Relacionar varias táboas</h3>
+
+        <p>
+            Nas bases de datos reais é habitual que a información necesaria
+            para unha consulta estea distribuída en tres ou máis táboas.
+            Podemos combinar todas elas mediante varias cláusulas
+            <code>INNER JOIN</code>.
+        </p>
+
+        <p>
+            Cada nova composición debe indicar a condición que permite
+            relacionar a táboa incorporada coas táboas anteriores.
+        </p>
+
+        <h3>14.2. Exemplo con tres táboas</h3>
+
+        <p>
+            Imos utilizar un exemplo cunha base de datos que almacena
+            información sobre alumnos, matrículas e módulos.
+        </p>
+
+        <ul>
+            <li><code>Alumno</code>: datos dos alumnos.</li>
+            <li><code>Matricula</code>: relación entre alumnos e módulos, incluíndo a cualificación.</li>
+            <li><code>Modulo</code>: información dos módulos formativos.</li>
+        </ul>
+
+        <p>
+            A relación entre as táboas é a seguinte:
+        </p>
+
+        <ul>
+            <li><code>Matricula.id_alumno</code> referencia <code>Alumno.id</code>.</li>
+            <li><code>Matricula.id_modulo</code> referencia <code>Modulo.id</code>.</li>
+        </ul>
+
+        <pre><code>SELECT a.nombre,
+       m.nombre AS modulo,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+INNER JOIN Modulo m
+    ON ma.id_modulo = m.id;</code></pre>
+
+        <p>
+            A consulta combina as tres táboas para obter o nome do alumno,
+            o módulo no que está matriculado e a nota obtida.
+        </p>
+
+        <h3>14.3. Engadir condicións de filtrado</h3>
+
+        <p>
+            Podemos combinar os <code>JOIN</code> con condicións
+            <code>WHERE</code> para seleccionar unicamente os rexistros
+            que cumpren determinados requisitos.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       m.nombre AS modulo,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+INNER JOIN Modulo m
+    ON ma.id_modulo = m.id
+WHERE ma.nota >= 5;</code></pre>
+
+        <p>
+            Neste caso, só se mostran as matrículas nas que o alumno
+            obtivo unha nota igual ou superior a 5.
+        </p>
+
+        <h3>14.4. Combinar filtros</h3>
+
+        <p>
+            Podemos utilizar os operadores lóxicos para aplicar varias
+            condicións á vez.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       m.nombre AS modulo,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+INNER JOIN Modulo m
+    ON ma.id_modulo = m.id
+WHERE ma.nota >= 5
+  AND m.nombre = 'Bases de datos';</code></pre>
+
+        <p>
+            A consulta mostra os alumnos que aprobaron o módulo
+            Bases de datos.
+        </p>
+
+        <h3>14.5. Ordenar os resultados</h3>
+
+        <p>
+            A cláusula <code>ORDER BY</code> permite ordenar os resultados
+            dunha consulta que combina varias táboas. Podemos ordenar
+            por columnas de calquera das táboas incluídas na composición.
+        </p>
+
+        <pre><code>SELECT a.nombre,
+       m.nombre AS modulo,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+INNER JOIN Modulo m
+    ON ma.id_modulo = m.id
+ORDER BY m.nombre ASC,
+         ma.nota DESC;</code></pre>
+
+        <p>
+            Primeiro ordénanse os resultados polo nome do módulo e,
+            dentro de cada módulo, pola nota de maior a menor.
+        </p>
+
+        <h3>14.6. Exemplo completo</h3>
+
+        <p>
+            Queremos obter os alumnos, os módulos nos que están matriculados
+            e as súas notas. Só deben aparecer as notas superiores ou iguais
+            a 5, ordenadas por módulo e alumno.
+        </p>
+
+        <pre><code>SELECT a.nombre AS alumno,
+       m.nombre AS modulo,
+       ma.nota
+FROM Alumno a
+INNER JOIN Matricula ma
+    ON a.id = ma.id_alumno
+INNER JOIN Modulo m
+    ON ma.id_modulo = m.id
+WHERE ma.nota >= 5
+ORDER BY m.nombre ASC,
+         a.nombre ASC;</code></pre>
+
+        <h3>14.7. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Mostra o nome dos alumnos, os módulos nos que están matriculados e as súas notas.</li>
+            <li>Obtén os alumnos que teñen unha nota superior ou igual a 7.</li>
+            <li>Mostra unicamente as matrículas dun módulo determinado.</li>
+            <li>Obtén os alumnos aprobados nun módulo concreto, ordenados pola nota de maior a menor.</li>
+            <li>Mostra todas as matrículas ordenadas primeiro polo nome do alumno e despois polo nome do módulo.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 15 -->
+
+    <section>
+        <h2>15. Composicións externas: LEFT JOIN</h2>
+
+        <h3>15.1. Limitacións de INNER JOIN</h3>
+
+        <p>
+            A composición interna <code>INNER JOIN</code> devolve unicamente
+            os rexistros que teñen correspondencia nas dúas táboas.
+            Isto significa que os rexistros sen relación quedan excluídos
+            do resultado.
+        </p>
+
+        <p>
+            Por exemplo, se temos un curso que aínda non ten alumnos,
+            unha consulta con <code>INNER JOIN</code> entre
+            <code>cursos</code> e <code>alumnos</code> non mostrará ese curso.
+        </p>
+
+        <h3>15.2. Que é LEFT JOIN?</h3>
+
+        <p>
+            A composición externa esquerda, <code>LEFT JOIN</code>,
+            devolve:
+        </p>
+
+        <ul>
+            <li>Todos os rexistros da táboa situada á esquerda do JOIN.</li>
+            <li>Os rexistros correspondentes da táboa situada á dereita.</li>
+            <li>Valores <code>NULL</code> nas columnas da táboa dereita cando non existe correspondencia.</li>
+        </ul>
+
+        <div class="callout">
+            <strong>Idea clave:</strong>
+            <code>LEFT JOIN</code> conserva todos os rexistros da primeira
+            táboa, aínda que non teñan unha relación coa segunda.
+        </div>
+
+        <h3>15.3. Sintaxe</h3>
+
+        <pre><code>SELECT columnas
+FROM taboa_esquerda
+LEFT JOIN taboa_dereita
+    ON taboa_esquerda.clave = taboa_dereita.clave;</code></pre>
+
+        <h3>15.4. Exemplo: todos os cursos e os seus alumnos</h3>
+
+        <p>
+            Queremos mostrar todos os cursos, incluídos aqueles nos que
+            aínda non hai alumnos matriculados.
+        </p>
+
+        <pre><code>SELECT c.nombre AS curso,
+       a.nombre AS alumno
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id;</code></pre>
+
+        <p>
+            O resultado incluirá todos os cursos. Se un curso non ten
+            alumnos, a columna <code>alumno</code> aparecerá con valor
+            <code>NULL</code>.
+        </p>
+
+        <h3>15.5. Interpretación dos resultados</h3>
+
+        <p>
+            Nun resultado de <code>LEFT JOIN</code> podemos atopar dous
+            tipos de rexistros:
+        </p>
+
+        <ul>
+            <li>Rexistros con correspondencia: aparecen os datos das dúas táboas.</li>
+            <li>Rexistros sen correspondencia: aparecen os datos da táboa esquerda e valores <code>NULL</code> na táboa dereita.</li>
+        </ul>
+
+        <p>
+            Os valores <code>NULL</code> non indican necesariamente un erro.
+            Significan que non existe un rexistro relacionado na táboa dereita.
+        </p>
+
+        <h3>15.6. Diferencia entre INNER JOIN e LEFT JOIN</h3>
+
+        <pre><code>-- Só cursos con alumnos
+SELECT c.nombre, a.nombre
+FROM cursos c
+INNER JOIN alumnos a
+    ON c.id = a.curso_id;
+
+-- Todos os cursos, teñan ou non alumnos
+SELECT c.nombre, a.nombre
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id;</code></pre>
+
+        <p>
+            A diferenza está nos rexistros que se conservan: o
+            <code>INNER JOIN</code> esixe correspondencia, mentres que
+            o <code>LEFT JOIN</code> conserva todos os rexistros da
+            táboa esquerda.
+        </p>
+
+        <h3>15.7. LEFT JOIN con varias táboas</h3>
+
+        <p>
+            Tamén podemos combinar varias táboas mediante composicións
+            externas.
+        </p>
+
+        <pre><code>SELECT c.nombre AS curso,
+       a.nombre AS alumno,
+       ma.nota
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+LEFT JOIN Matricula ma
+    ON a.id = ma.id_alumno;</code></pre>
+
+        <p>
+            A consulta conserva todos os cursos. Se un curso non ten alumnos,
+            ou se un alumno non ten matrículas, as columnas correspondentes
+            aparecerán con valores <code>NULL</code>.
+        </p>
+
+        <h3>15.8. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Mostra todos os cursos e os alumnos asociados a cada un.</li>
+            <li>Inclúe no resultado os cursos que non teñen alumnos.</li>
+            <li>Mostra todos os cursos e, cando existan, os alumnos e as súas matrículas.</li>
+            <li>Compara o resultado dunha consulta con <code>INNER JOIN</code> e outra con <code>LEFT JOIN</code>.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 16 -->
+
+    <section>
+        <h2>16. Composicións externas: RIGHT JOIN</h2>
+
+        <h3>16.1. Que é RIGHT JOIN?</h3>
+
+        <p>
+            A composición externa dereita, <code>RIGHT JOIN</code>,
+            funciona de maneira similar a <code>LEFT JOIN</code>, pero
+            conserva todos os rexistros da táboa situada á dereita da
+            composición.
+        </p>
+
+        <p>
+            Devolve:
+        </p>
+
+        <ul>
+            <li>Todos os rexistros da táboa dereita.</li>
+            <li>Os rexistros correspondentes da táboa esquerda.</li>
+            <li>Valores <code>NULL</code> nas columnas da táboa esquerda cando non existe correspondencia.</li>
+        </ul>
+
+        <h3>16.2. Sintaxe</h3>
+
+        <pre><code>SELECT columnas
+FROM taboa_esquerda
+RIGHT JOIN taboa_dereita
+    ON taboa_esquerda.clave = taboa_dereita.clave;</code></pre>
+
+        <h3>16.3. Exemplo: todos os alumnos e os seus cursos</h3>
+
+        <p>
+            Imos utilizar unha composición dereita entre as táboas
+            <code>cursos</code> e <code>alumnos</code>.
+        </p>
+
+        <pre><code>SELECT c.nombre AS curso,
+       a.nombre AS alumno
+FROM cursos c
+RIGHT JOIN alumnos a
+    ON c.id = a.curso_id;</code></pre>
+
+        <p>
+            Esta consulta conserva todos os alumnos. Se algún alumno non
+            ten un curso correspondente, as columnas da táboa
+            <code>cursos</code> aparecerán con valor <code>NULL</code>.
+        </p>
+
+        <h3>16.4. Comparación entre LEFT JOIN e RIGHT JOIN</h3>
+
+        <p>
+            A principal diferenza entre ambas as composicións é a táboa
+            cuxos rexistros se conservan.
+        </p>
+
+        <pre><code>-- Conserva todos os cursos
+SELECT c.nombre, a.nombre
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id;
+
+-- Conserva todos os alumnos
+SELECT c.nombre, a.nombre
+FROM cursos c
+RIGHT JOIN alumnos a
+    ON c.id = a.curso_id;</code></pre>
+
+        <p>
+            As dúas consultas parten da mesma relación, pero conservan
+            táboas diferentes.
+        </p>
+
+        <h3>16.5. Detección de rexistros sen correspondencia</h3>
+
+        <p>
+            Un dos usos máis interesantes das composicións externas é
+            localizar rexistros que non teñen relación con outros.
+        </p>
+
+        <p>
+            Para iso, realizamos un <code>LEFT JOIN</code> ou
+            <code>RIGHT JOIN</code> e filtramos os resultados nos que
+            a columna correspondente da outra táboa ten valor
+            <code>NULL</code>.
+        </p>
+
+        <h3>16.6. Exemplo: cursos sen alumnos</h3>
+
+        <p>
+            Queremos localizar os cursos nos que non hai ningún alumno.
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+WHERE a.id IS NULL;</code></pre>
+
+        <p>
+            A consulta conserva inicialmente todos os cursos. Despois,
+            a condición <code>WHERE a.id IS NULL</code> selecciona
+            unicamente aqueles para os que non se atopou ningún alumno.
+        </p>
+
+        <h3>16.7. Exemplo: alumnos sen curso asociado</h3>
+
+        <p>
+            Tamén podemos detectar alumnos que non teñen un curso
+            correspondente.
+        </p>
+
+        <pre><code>SELECT a.id,
+       a.nombre
+FROM alumnos a
+LEFT JOIN cursos c
+    ON a.curso_id = c.id
+WHERE c.id IS NULL;</code></pre>
+
+        <p>
+            Esta consulta mostra os alumnos para os que non existe
+            unha correspondencia na táboa <code>cursos</code>.
+        </p>
+
+        <div class="advertencia">
+            <strong>Importante:</strong>
+            para comprobar se existe correspondencia, debemos utilizar
+            unha columna da táboa que podería non ter rexistro asociado
+            e que normalmente non admite valores <code>NULL</code>,
+            como a súa clave primaria.
+        </div>
+
+        <h3>16.8. LEFT JOIN ou RIGHT JOIN?</h3>
+
+        <p>
+            Calquera consulta que utilice <code>RIGHT JOIN</code> pode
+            normalmente escribirse utilizando <code>LEFT JOIN</code>,
+            cambiando a orde das táboas.
+        </p>
+
+        <pre><code>-- Usando RIGHT JOIN
+SELECT c.nombre, a.nombre
+FROM cursos c
+RIGHT JOIN alumnos a
+    ON c.id = a.curso_id;
+
+-- Consulta equivalente usando LEFT JOIN
+SELECT c.nombre, a.nombre
+FROM alumnos a
+LEFT JOIN cursos c
+    ON a.curso_id = c.id;</code></pre>
+
+        <p>
+            Ambas as consultas conservan todos os alumnos e incorporan
+            a información do curso cando existe correspondencia.
+        </p>
+
+        <h3>16.9. Exercicios de consolidación</h3>
+
+        <ol>
+            <li>Mostra todos os alumnos e o nome do seu curso mediante <code>RIGHT JOIN</code>.</li>
+            <li>Obtén os alumnos que non teñen un curso asociado.</li>
+            <li>Reescribe unha consulta con <code>RIGHT JOIN</code> utilizando <code>LEFT JOIN</code>.</li>
+            <li>Compara os resultados das dúas consultas.</li>
+        </ol>
+    </section>
+
+    <!-- SESIÓN 17 -->
+
+    <section>
+        <h2>17. Consultas con composicións externas e condicións de filtrado</h2>
+
+        <h3>17.1. Combinar JOIN e WHERE</h3>
+
+        <p>
+            As composicións externas poden combinarse con condicións
+            de filtrado para seleccionar os rexistros que cumpren
+            determinados requisitos.
+        </p>
+
+        <p>
+            Non obstante, é importante comprender como afectan as
+            condicións <code>WHERE</code> ao resultado dunha composición
+            externa, especialmente cando existen valores
+            <code>NULL</code>.
+        </p>
+
+        <h3>17.2. Filtrar os resultados dun LEFT JOIN</h3>
+
+        <p>
+            Supoñamos que queremos mostrar todos os cursos e os alumnos
+            que pertencen ao curso DAW1.
+        </p>
+
+        <pre><code>SELECT c.nombre AS curso,
+       a.nombre AS alumno
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+WHERE c.nombre = 'DAW1';</code></pre>
+
+        <p>
+            A consulta conserva a lóxica do <code>LEFT JOIN</code> para
+            o curso DAW1: se non ten alumnos, seguirá aparecendo cun
+            valor <code>NULL</code> na columna correspondente.
+        </p>
+
+        <h3>17.3. Filtrar a táboa dereita utilizando ON</h3>
+
+        <p>
+            Existe unha diferenza importante entre colocar unha condición
+            na cláusula <code>ON</code> ou na cláusula <code>WHERE</code>.
+        </p>
+
+        <p>
+            Queremos mostrar todos os cursos e só os alumnos maiores de
+            idade asociados a cada curso.
+        </p>
+
+        <pre><code>SELECT c.nombre AS curso,
+       a.nombre AS alumno,
+       a.edad
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+   AND a.edad >= 18;</code></pre>
+
+        <p>
+            Neste caso, todos os cursos aparecen no resultado. Para cada
+            curso só se incorporan os alumnos que teñen 18 anos ou máis.
+            Os cursos sen alumnos que cumpran esa condición aparecen
+            igualmente, coas columnas de alumno a <code>NULL</code>.
+        </p>
+
+        <h3>17.4. Diferenza entre ON e WHERE nunha composición externa</h3>
+
+        <p>
+            Compara as seguintes consultas:
+        </p>
+
+        <pre><code>-- Consulta A: condición na cláusula ON
+SELECT c.nombre AS curso,
+       a.nombre AS alumno
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+   AND a.edad >= 18;
+
+-- Consulta B: condición na cláusula WHERE
+SELECT c.nombre AS curso,
+       a.nombre AS alumno
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+WHERE a.edad >= 18;</code></pre>
+
+        <p>
+            A primeira consulta conserva todos os cursos, aínda que non
+            teñan alumnos maiores de idade.
+        </p>
+
+        <p>
+            A segunda consulta elimina os rexistros nos que
+            <code>a.edad</code> é <code>NULL</code>, porque a condición
+            <code>a.edad >= 18</code> non se cumpre para eses valores.
+            Polo tanto, pode comportarse como unha composición interna
+            respecto dese filtro.
+        </p>
+
+        <div class="callout">
+            <strong>Regra práctica:</strong>
+            utiliza <code>ON</code> para definir a relación e as
+            condicións que deben cumprir os rexistros da táboa relacionada.
+            Utiliza <code>WHERE</code> para filtrar o resultado final.
+            Se queres conservar os rexistros sen correspondencia,
+            comproba que as condicións de <code>WHERE</code> non os
+            eliminen.
+        </div>
+
+        <h3>17.5. Detectar rexistros sen correspondencia con filtros</h3>
+
+        <p>
+            Podemos combinar unha composición externa con condicións
+            para detectar rexistros que non teñen relación ou que non
+            cumpren determinados requisitos.
+        </p>
+
+        <p>
+            Por exemplo, queremos localizar os cursos que non teñen
+            alumnos maiores de idade:
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+   AND a.edad >= 18
+WHERE a.id IS NULL;</code></pre>
+
+        <p>
+            A condición incluída en <code>ON</code> limita os alumnos
+            considerados aos maiores de idade. A condición
+            <code>WHERE a.id IS NULL</code> selecciona os cursos
+            nos que non se atopou ningún alumno que cumpra ese requisito.
+        </p>
+
+        <h3>17.6. Combinar LEFT JOIN con GROUP BY</h3>
+
+        <p>
+            Tamén podemos utilizar composicións externas xunto con
+            funcións de agregación para contar rexistros relacionados,
+            incluíndo aqueles que non teñen correspondencia.
+        </p>
+
+        <p>
+            Queremos mostrar todos os cursos e o número de alumnos
+            asociados a cada un.
+        </p>
+
+        <pre><code>SELECT c.id,
+       c.nombre AS curso,
+       COUNT(a.id) AS total_alumnos
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+GROUP BY c.id, c.nombre;</code></pre>
+
+        <p>
+            A consulta mostra todos os cursos. Os cursos sen alumnos
+            aparecen cun total de cero.
+        </p>
+
+        <div class="advertencia">
+            <strong>Atención:</strong>
+            neste exemplo utilizamos <code>COUNT(a.id)</code> e non
+            <code>COUNT(*)</code>. Nun <code>LEFT JOIN</code>, un curso
+            sen alumnos produce igualmente unha fila no resultado
+            intermedio, pero <code>a.id</code> terá valor
+            <code>NULL</code>. <code>COUNT(a.id)</code> non conta
+            ese valor, polo que devolve cero.
+        </div>
+
+        <h3>17.7. Exercicios prácticos</h3>
+
+        <p>
+            Resolve os seguintes exercicios utilizando as táboas
+            <code>cursos</code> e <code>alumnos</code>:
+        </p>
+
+        <ol>
+            <li>Mostra todos os cursos xunto cos alumnos asociados, incluíndo os cursos sen alumnos.</li>
+            <li>Obtén os cursos que non teñen ningún alumno.</li>
+            <li>Mostra todos os cursos e os alumnos maiores de idade asociados a cada un, sen eliminar os cursos que non teñan alumnos que cumpran esa condición.</li>
+            <li>Obtén os cursos que non teñen ningún alumno maior de idade.</li>
+            <li>Mostra o número de alumnos de cada curso, incluíndo os cursos sen alumnos.</li>
+            <li>Obtén todos os cursos e o número de alumnos maiores de idade asociados a cada un.</li>
+            <li>Mostra os cursos que teñen máis de dous alumnos.</li>
+            <li>Obtén os cursos que non teñen alumnos e ordénaos polo nome.</li>
+        </ol>
+
+        <h3>17.8. Resumo das composicións externas</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo de JOIN</th>
+                    <th>Rexistros que conserva</th>
+                    <th>Uso habitual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>INNER JOIN</code></td>
+                    <td>Só os que teñen correspondencia nas dúas táboas.</td>
+                    <td>Combinar información relacionada.</td>
+                </tr>
+                <tr>
+                    <td><code>LEFT JOIN</code></td>
+                    <td>Todos os rexistros da táboa esquerda.</td>
+                    <td>Incluír rexistros sen correspondencia na táboa dereita.</td>
+                </tr>
+                <tr>
+                    <td><code>RIGHT JOIN</code></td>
+                    <td>Todos os rexistros da táboa dereita.</td>
+                    <td>Incluír rexistros sen correspondencia na táboa esquerda.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            As composicións externas permiten conservar información
+            que desaparecería nunha composición interna. Son especialmente
+            útiles para localizar rexistros sen relación, realizar
+            informes completos e calcular totais que inclúan categorías
+            sen rexistros asociados.
+        </p>
+    </section>
+
+</main>
+
+</body>
+</html>

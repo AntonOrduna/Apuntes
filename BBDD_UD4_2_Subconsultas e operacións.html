@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD4 - Manipulación de datos: subconsultas e operacións complexas de edición</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+    <main class="contenido">
+
+        <h1>UD4. Manipulación de datos: subconsultas e operacións complexas de edición</h1>
+
+        <p>
+            Nas sesións anteriores traballamos coas principais sentenzas DML de MariaDB:
+            <code>INSERT</code>, <code>UPDATE</code> e <code>DELETE</code>. Estas sentenzas
+            permiten inserir, modificar e eliminar rexistros dunha táboa, normalmente
+            utilizando valores concretos ou condicións sinxelas.
+        </p>
+
+        <p>
+            Porén, en moitas situacións os datos que necesitamos inserir, modificar ou
+            eliminar dependen do contido doutras táboas. Por exemplo, podemos necesitar
+            actualizar o prezo dos produtos pertencentes a unha categoría determinada,
+            inserir nunha táboa os alumnos que cumpren unha condición ou eliminar as
+            matrículas correspondentes a cursos que xa finalizaron.
+        </p>
+
+        <p>
+            Para resolver este tipo de operacións utilizaremos subconsultas e combinacións
+            de táboas. Estas ferramentas permiten construír sentenzas de edición máis
+            flexibles e complexas, nas que os resultados dunha consulta determinan os
+            rexistros que se van modificar.
+        </p>
+
+        <h2>1. Subconsultas en sentenzas de modificación</h2>
+
+        <h3>1.1. Concepto de subconsulta</h3>
+
+        <p>
+            Unha subconsulta é unha consulta SQL incluída dentro doutra sentenza SQL.
+            A consulta interna execútase para obter información que posteriormente utiliza
+            a consulta externa.
+        </p>
+
+        <p>
+            As subconsultas poden utilizarse en diferentes operacións SQL, incluídas as
+            sentenzas de modificación de datos:
+        </p>
+
+        <ul>
+            <li><code>INSERT</code>: inserir rexistros obtidos mediante unha consulta.</li>
+            <li><code>UPDATE</code>: modificar rexistros utilizando valores ou condicións calculadas por outra consulta.</li>
+            <li><code>DELETE</code>: eliminar rexistros en función dos resultados dunha consulta.</li>
+        </ul>
+
+        <p>
+            A estrutura xeral dunha subconsulta consiste en introducir unha sentenza
+            <code>SELECT</code> dentro doutra operación SQL, normalmente entre parénteses.
+        </p>
+
+        <div class="ejemplo">
+            <h4>Exemplo de subconsulta</h4>
+
+            <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id = (
+    SELECT id
+    FROM cursos
+    WHERE nombre = 'DAW1'
+);</code></pre>
+
+            <p>
+                A consulta interna busca o identificador do curso chamado DAW1.
+                A consulta externa utiliza ese identificador para seleccionar os alumnos
+                que pertencen a ese curso.
+            </p>
+        </div>
+
+        <h3>1.2. Tipos de subconsultas</h3>
+
+        <p>
+            Segundo o resultado que devolven, podemos distinguir diferentes tipos de
+            subconsultas:
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Resultado</th>
+                    <th>Exemplo de uso</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Escalar</td>
+                    <td>Un único valor: unha fila e unha columna.</td>
+                    <td>Comparar cun identificador ou cunha media.</td>
+                </tr>
+                <tr>
+                    <td>De varias filas</td>
+                    <td>Unha lista de valores.</td>
+                    <td>Utilizar os operadores <code>IN</code> ou <code>NOT IN</code>.</td>
+                </tr>
+                <tr>
+                    <td>De varias columnas</td>
+                    <td>Un conxunto de columnas.</td>
+                    <td>Comparacións entre varias columnas relacionadas.</td>
+                </tr>
+                <tr>
+                    <td>Correlacionada</td>
+                    <td>Depende dos valores da consulta externa.</td>
+                    <td>Comprobar a existencia de rexistros relacionados.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Importante:</strong> cando unha subconsulta se utiliza cun operador
+            de comparación como <code>=</code>, <code>&gt;</code> ou <code>&lt;</code>,
+            normalmente debe devolver un único valor. Se pode devolver varios resultados,
+            débense utilizar operadores como <code>IN</code> ou <code>EXISTS</code>.
+        </div>
+
+        <h2>2. Inserción de datos mediante subconsultas</h2>
+
+        <h3>2.1. INSERT INTO ... SELECT</h3>
+
+        <p>
+            A sentenza <code>INSERT INTO ... SELECT</code> permite inserir nunha táboa
+            os rexistros obtidos mediante unha consulta. A diferenza do <code>INSERT</code>
+            tradicional, non é necesario indicar manualmente cada conxunto de valores:
+            os datos proceden doutra táboa ou dunha combinación de táboas.
+        </p>
+
+        <p>A súa estrutura xeral é a seguinte:</p>
+
+        <pre><code>INSERT INTO táboa_destino (columna1, columna2, ...)
+SELECT columna1, columna2, ...
+FROM táboa_orixe
+WHERE condición;</code></pre>
+
+        <p>
+            A consulta <code>SELECT</code> debe devolver o mesmo número de columnas que
+            as indicadas no <code>INSERT</code>, e os tipos de datos deben ser compatibles.
+            A orde das columnas tamén debe corresponderse.
+        </p>
+
+        <h3>2.2. Inserir datos dunha táboa noutra</h3>
+
+        <p>
+            Supoñamos que queremos crear unha táboa que almacene os alumnos que pertencen
+            a un curso determinado. Primeiro creamos a táboa de destino:
+        </p>
+
+        <pre><code>CREATE TABLE alumnos_daw1 (
+    id INT,
+    nombre VARCHAR(100),
+    edad INT
+) ENGINE=InnoDB;</code></pre>
+
+        <p>
+            Agora podemos inserir os alumnos que pertencen ao curso DAW1 mediante unha
+            consulta:
+        </p>
+
+        <pre><code>INSERT INTO alumnos_daw1 (id, nombre, edad)
+SELECT id, nombre, edad
+FROM alumnos
+WHERE curso_id = (
+    SELECT id
+    FROM cursos
+    WHERE nombre = 'DAW1'
+);</code></pre>
+
+        <p>
+            A subconsulta obtén o identificador do curso DAW1. A consulta principal
+            selecciona os alumnos dese curso e o <code>INSERT</code> incorpora os
+            resultados á nova táboa.
+        </p>
+
+        <div class="advertencia">
+            <strong>Atención:</strong> se a táboa de destino xa contén os mesmos rexistros
+            e non existe unha restrición que impida a duplicación, a operación pode
+            inserir datos repetidos. É importante comprobar previamente o contido da
+            táboa ou utilizar unha condición que evite duplicados.
+        </div>
+
+        <h3>2.3. Inserción de datos procedentes de varias táboas</h3>
+
+        <p>
+            A consulta utilizada nun <code>INSERT INTO ... SELECT</code> pode combinar
+            información de varias táboas mediante <code>JOIN</code>. Isto permite inserir
+            rexistros que conteñen datos relacionados.
+        </p>
+
+        <p>
+            Por exemplo, podemos crear unha táboa que almacene o nome de cada alumno
+            xunto co nome do curso no que está matriculado:
+        </p>
+
+        <pre><code>CREATE TABLE resumo_alumnos (
+    alumno_id INT,
+    alumno VARCHAR(100),
+    curso VARCHAR(50)
+) ENGINE=InnoDB;</code></pre>
+
+        <p>Para encher esta táboa utilizamos unha combinación de alumnos e cursos:</p>
+
+        <pre><code>INSERT INTO resumo_alumnos (alumno_id, alumno, curso)
+SELECT
+    a.id,
+    a.nombre,
+    c.nombre
+FROM alumnos a
+INNER JOIN cursos c
+    ON a.curso_id = c.id;</code></pre>
+
+        <p>
+            A consulta selecciona os datos de ambas as táboas e combina os rexistros
+            mediante a relación entre <code>alumnos.curso_id</code> e
+            <code>cursos.id</code>. O resultado completo insírese en
+            <code>resumo_alumnos</code>.
+        </p>
+
+        <h3>2.4. Inserción de resultados calculados</h3>
+
+        <p>
+            A consulta que acompaña o <code>INSERT</code> tamén pode realizar operacións
+            de cálculo, agrupación e filtrado. Por exemplo, podemos crear unha táboa
+            que almacene o número de alumnos de cada curso:
+        </p>
+
+        <pre><code>CREATE TABLE resumo_cursos (
+    curso VARCHAR(50),
+    total_alumnos INT
+) ENGINE=InnoDB;
+
+INSERT INTO resumo_cursos (curso, total_alumnos)
+SELECT
+    c.nombre,
+    COUNT(a.id)
+FROM cursos c
+LEFT JOIN alumnos a
+    ON c.id = a.curso_id
+GROUP BY c.id, c.nombre;</code></pre>
+
+        <p>
+            Neste caso, a consulta combina as táboas, agrupa os resultados por curso
+            e calcula o número de alumnos de cada un. O resultado de cada grupo
+            convértese nun rexistro da táboa de destino.
+        </p>
+
+        <div class="callout">
+            <strong>Idea clave:</strong> <code>INSERT INTO ... SELECT</code> non está
+            limitado a copiar rexistros. Pode inserir resultados de consultas complexas
+            que inclúan combinacións, condicións, funcións de agregación e agrupacións.
+        </div>
+
+        <h2>3. Actualización de datos mediante subconsultas</h2>
+
+        <h3>3.1. Uso de subconsultas en UPDATE</h3>
+
+        <p>
+            Unha subconsulta tamén pode proporcionar os valores que se van asignar nunha
+            actualización. Isto resulta especialmente útil cando o novo valor depende
+            doutra táboa.
+        </p>
+
+        <p>A estrutura xeral é:</p>
+
+        <pre><code>UPDATE táboa
+SET columna = (
+    SELECT valor
+    FROM outra_táboa
+    WHERE condición
+)
+WHERE condición;</code></pre>
+
+        <p>
+            Por exemplo, supoñamos que queremos actualizar o identificador dun curso
+            asociado a un alumno, utilizando o nome do curso para localizar o seu novo
+            identificador:
+        </p>
+
+        <pre><code>UPDATE alumnos
+SET curso_id = (
+    SELECT id
+    FROM cursos
+    WHERE nombre = 'DAM1'
+)
+WHERE nombre = 'Ana García';</code></pre>
+
+        <p>
+            A subconsulta obtén o identificador de DAM1. A sentenza principal asigna
+            ese identificador ao alumno Ana García.
+        </p>
+
+        <div class="advertencia">
+            <strong>Importante:</strong> a subconsulta utilizada para asignar un valor
+            debe devolver como máximo unha fila. Se devolve varias filas, MariaDB
+            producirá un erro.
+        </div>
+
+        <h3>3.2. Actualización condicionada por outra táboa</h3>
+
+        <p>
+            Tamén podemos utilizar unha subconsulta dentro da condición
+            <code>WHERE</code>. Desta maneira, seleccionamos os rexistros que se van
+            actualizar en función da información doutra táboa.
+        </p>
+
+        <p>
+            Por exemplo, podemos incrementar a idade dun alumno se pertence ao curso DAW1:
+        </p>
+
+        <pre><code>UPDATE alumnos
+SET edad = edad + 1
+WHERE curso_id = (
+    SELECT id
+    FROM cursos
+    WHERE nombre = 'DAW1'
+);</code></pre>
+
+        <p>
+            A subconsulta identifica o curso e a actualización aplícase a todos os
+            alumnos que pertencen a el.
+        </p>
+
+        <h3>3.3. Actualización mediante valores calculados</h3>
+
+        <p>
+            As subconsultas tamén poden calcular valores que se utilizarán nunha
+            actualización. Por exemplo, se temos unha táboa de produtos e outra de
+            categorías, poderiamos actualizar o prezo dos produtos utilizando un
+            incremento definido para cada categoría.
+        </p>
+
+        <p>
+            O seguinte exemplo supón que existe unha táboa <code>categorias</code>
+            cun campo <code>incremento</code> e unha táboa <code>productos</code>
+            relacionada mediante <code>categoria_id</code>:
+        </p>
+
+        <pre><code>UPDATE productos p
+SET precio = precio * (
+    1 + (
+        SELECT c.incremento
+        FROM categorias c
+        WHERE c.id = p.categoria_id
+    )
+)
+WHERE EXISTS (
+    SELECT 1
+    FROM categorias c
+    WHERE c.id = p.categoria_id
+);</code></pre>
+
+        <p>
+            Para cada produto, a subconsulta obtén o incremento correspondente á súa
+            categoría. O prezo actualízase aplicando ese incremento.
+        </p>
+
+        <p>
+            Este exemplo utiliza unha subconsulta correlacionada, xa que fai referencia
+            á columna <code>p.categoria_id</code> da consulta externa.
+        </p>
+
+        <h2>4. Eliminación de datos mediante subconsultas</h2>
+
+        <h3>4.1. Uso de subconsultas en DELETE</h3>
+
+        <p>
+            A sentenza <code>DELETE</code> permite utilizar subconsultas para determinar
+            que rexistros deben eliminarse. Desta maneira, a condición de eliminación
+            pode depender dos datos doutras táboas.
+        </p>
+
+        <p>A estrutura xeral é:</p>
+
+        <pre><code>DELETE FROM táboa
+WHERE columna IN (
+    SELECT columna
+    FROM outra_táboa
+    WHERE condición
+);</code></pre>
+
+        <p>
+            Por exemplo, podemos eliminar todos os alumnos que pertencen ao curso DAW1:
+        </p>
+
+        <pre><code>DELETE FROM alumnos
+WHERE curso_id = (
+    SELECT id
+    FROM cursos
+    WHERE nombre = 'DAW1'
+);</code></pre>
+
+        <p>
+            A subconsulta obtén o identificador do curso DAW1 e a sentenza
+            <code>DELETE</code> elimina os alumnos asociados a ese curso.
+        </p>
+
+        <h3>4.2. Eliminar rexistros en función dunha consulta</h3>
+
+        <p>
+            Outro exemplo sería eliminar as matrículas de alumnos que pertencen a un
+            curso determinado:
+        </p>
+
+        <pre><code>DELETE FROM matriculas
+WHERE alumno_id IN (
+    SELECT id
+    FROM alumnos
+    WHERE curso_id = (
+        SELECT id
+        FROM cursos
+        WHERE nombre = 'DAW1'
+    )
+);</code></pre>
+
+        <p>
+            Neste caso hai dúas subconsultas. A máis interna localiza o curso DAW1;
+            a intermedia obtén os identificadores dos alumnos dese curso; e a sentenza
+            principal elimina as matrículas correspondentes a eses alumnos.
+        </p>
+
+        <div class="callout">
+            <strong>Precaución:</strong> antes de executar un <code>DELETE</code> con
+            subconsultas, é recomendable executar a consulta <code>SELECT</code>
+            equivalente para comprobar exactamente que rexistros serán afectados.
+        </div>
+
+        <h2>5. Operadores IN, NOT IN, EXISTS e NOT EXISTS</h2>
+
+        <p>
+            Cando unha subconsulta pode devolver varios rexistros, necesitamos operadores
+            que permitan comprobar se un valor está incluído nos resultados ou se existe
+            algún rexistro que cumpra unha condición.
+        </p>
+
+        <h3>5.1. Operador IN</h3>
+
+        <p>
+            O operador <code>IN</code> comproba se un valor coincide con algún dos valores
+            devoltos por unha subconsulta.
+        </p>
+
+        <p>Por exemplo, eliminar as matrículas dos alumnos que pertencen a DAW1 ou DAM1:</p>
+
+        <pre><code>DELETE FROM matriculas
+WHERE alumno_id IN (
+    SELECT id
+    FROM alumnos
+    WHERE curso_id IN (
+        SELECT id
+        FROM cursos
+        WHERE nombre IN ('DAW1', 'DAM1')
+    )
+);</code></pre>
+
+        <p>
+            A subconsulta devolve os identificadores dos alumnos dos dous cursos.
+            A operación elimina as matrículas cuxo alumno aparece nesa lista.
+        </p>
+
+        <h3>5.2. Operador NOT IN</h3>
+
+        <p>
+            O operador <code>NOT IN</code> realiza a comprobación contraria: selecciona
+            os rexistros cuxo valor non aparece entre os resultados da subconsulta.
+        </p>
+
+        <p>Por exemplo, eliminar os alumnos que non pertencen a ningún curso:</p>
+
+        <pre><code>DELETE FROM alumnos
+WHERE curso_id NOT IN (
+    SELECT id
+    FROM cursos
+);</code></pre>
+
+        <p>
+            Esta sentenza elimina os alumnos cuxo identificador de curso non aparece
+            na táboa <code>cursos</code>.
+        </p>
+
+        <div class="advertencia">
+            <strong>Atención co valor NULL:</strong> se unha subconsulta utilizada con
+            <code>NOT IN</code> devolve algún valor <code>NULL</code>, o resultado das
+            comparacións pode non ser o esperado. Cando existe esta posibilidade,
+            adoita ser máis seguro utilizar <code>NOT EXISTS</code>.
+        </div>
+
+        <h3>5.3. Operador EXISTS</h3>
+
+        <p>
+            O operador <code>EXISTS</code> comproba se unha subconsulta devolve polo menos
+            un rexistro. Non importa o valor concreto das columnas seleccionadas:
+            unicamente interesa saber se existe algún resultado.
+        </p>
+
+        <p>
+            Por exemplo, podemos actualizar a idade dos alumnos que teñen polo menos
+            unha matrícula:
+        </p>
+
+        <pre><code>UPDATE alumnos a
+SET edad = edad + 1
+WHERE EXISTS (
+    SELECT 1
+    FROM matriculas m
+    WHERE m.alumno_id = a.id
+);</code></pre>
+
+        <p>
+            A subconsulta busca matrículas relacionadas con cada alumno. Se atopa
+            polo menos unha, <code>EXISTS</code> devolve verdadeiro e o alumno
+            actualízase.
+        </p>
+
+        <h3>5.4. Operador NOT EXISTS</h3>
+
+        <p>
+            O operador <code>NOT EXISTS</code> comproba que unha subconsulta non devolve
+            ningún rexistro. Utilízase para localizar elementos que non teñen rexistros
+            relacionados.
+        </p>
+
+        <p>
+            Por exemplo, eliminar os alumnos que non teñen ningunha matrícula:
+        </p>
+
+        <pre><code>DELETE FROM alumnos a
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM matriculas m
+    WHERE m.alumno_id = a.id
+);</code></pre>
+
+        <p>
+            Para cada alumno, a subconsulta comproba se existe algunha matrícula
+            asociada. Se non existe ningunha, o alumno elimínase.
+        </p>
+
+        <h3>5.5. Comparación dos operadores</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operador</th>
+                    <th>Función</th>
+                    <th>Uso habitual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IN</code></td>
+                    <td>Comproba se un valor pertence a unha lista de resultados.</td>
+                    <td>Modificar rexistros relacionados con un conxunto de valores.</td>
+                </tr>
+                <tr>
+                    <td><code>NOT IN</code></td>
+                    <td>Comproba se un valor non pertence á lista.</td>
+                    <td>Localizar valores que non aparecen noutra consulta.</td>
+                </tr>
+                <tr>
+                    <td><code>EXISTS</code></td>
+                    <td>Comproba se existe polo menos un resultado.</td>
+                    <td>Actuar cando hai rexistros relacionados.</td>
+                </tr>
+                <tr>
+                    <td><code>NOT EXISTS</code></td>
+                    <td>Comproba que non existe ningún resultado.</td>
+                    <td>Localizar rexistros sen elementos relacionados.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>6. Operacións de edición con varias táboas</h2>
+
+        <h3>6.1. UPDATE con JOIN</h3>
+
+        <p>
+            MariaDB permite utilizar combinacións de táboas directamente nunha sentenza
+            <code>UPDATE</code>. Esta opción facilita a modificación de rexistros cando
+            o novo valor ou a condición depende doutra táboa.
+        </p>
+
+        <p>A estrutura xeral é:</p>
+
+        <pre><code>UPDATE táboa1
+JOIN táboa2
+    ON táboa1.campo = táboa2.campo
+SET táboa1.columna = valor
+WHERE condición;</code></pre>
+
+        <p>
+            Por exemplo, queremos actualizar a idade dos alumnos que pertencen ao curso
+            DAW1:
+        </p>
+
+        <pre><code>UPDATE alumnos a
+INNER JOIN cursos c
+    ON a.curso_id = c.id
+SET a.edad = a.edad + 1
+WHERE c.nombre = 'DAW1';</code></pre>
+
+        <p>
+            A combinación relaciona alumnos e cursos. A condición selecciona o curso
+            DAW1 e a actualización modifica a idade de todos os alumnos dese curso.
+        </p>
+
+        <h3>6.2. Actualizar información utilizando varias táboas</h3>
+
+        <p>
+            Podemos combinar máis de dúas táboas nunha mesma operación. Por exemplo,
+            imaxinemos que queremos modificar a nota das matrículas dos alumnos que
+            pertencen a DAW1.
+        </p>
+
+        <pre><code>UPDATE matriculas m
+INNER JOIN alumnos a
+    ON m.alumno_id = a.id
+INNER JOIN cursos c
+    ON a.curso_id = c.id
+SET m.nota = 5
+WHERE c.nombre = 'DAW1';</code></pre>
+
+        <p>
+            A sentenza combina as tres táboas para localizar as matrículas dos alumnos
+            do curso indicado. Só se modifican os rexistros da táboa
+            <code>matriculas</code>.
+        </p>
+
+        <div class="callout">
+            <strong>Importante:</strong> nun <code>UPDATE</code> con varias táboas,
+            hai que indicar claramente que táboa se quere modificar. As combinacións
+            permiten localizar os rexistros relacionados, pero non implican que todas
+            as táboas combinadas se actualicen automaticamente.
+        </div>
+
+        <h2>7. Eliminación de rexistros mediante combinacións de táboas</h2>
+
+        <h3>7.1. DELETE con JOIN</h3>
+
+        <p>
+            Do mesmo xeito que podemos actualizar información mediante combinacións,
+            tamén podemos eliminar rexistros utilizando condicións baseadas noutras
+            táboas.
+        </p>
+
+        <p>
+            MariaDB permite indicar que táboa ou táboas se van eliminar nun
+            <code>DELETE</code> con <code>JOIN</code>.
+        </p>
+
+        <p>A estrutura básica para eliminar rexistros dunha táboa é:</p>
+
+        <pre><code>DELETE alias
+FROM táboa1 alias
+JOIN táboa2
+    ON alias.campo = táboa2.campo
+WHERE condición;</code></pre>
+
+        <p>
+            Por exemplo, podemos eliminar as matrículas dos alumnos que pertencen
+            ao curso DAW1:
+        </p>
+
+        <pre><code>DELETE m
+FROM matriculas m
+INNER JOIN alumnos a
+    ON m.alumno_id = a.id
+INNER JOIN cursos c
+    ON a.curso_id = c.id
+WHERE c.nombre = 'DAW1';</code></pre>
+
+        <p>
+            A sentenza combina as tres táboas para localizar as matrículas dos alumnos
+            de DAW1. A cláusula <code>DELETE m</code> indica que unicamente se eliminan
+            rexistros da táboa <code>matriculas</code>.
+        </p>
+
+        <h3>7.2. Eliminar rexistros de varias táboas</h3>
+
+        <p>
+            MariaDB tamén permite eliminar rexistros de varias táboas relacionadas
+            nunha mesma sentenza, sempre que se indique que táboas son as afectadas.
+        </p>
+
+        <p>Por exemplo:</p>
+
+        <pre><code>DELETE m, a
+FROM matriculas m
+INNER JOIN alumnos a
+    ON m.alumno_id = a.id
+WHERE a.nombre = 'Ana García';</code></pre>
+
+        <p>
+            Esta operación elimina tanto as matrículas de Ana García como o seu
+            rexistro na táboa <code>alumnos</code>.
+        </p>
+
+        <div class="advertencia">
+            <strong>Precaución:</strong> eliminar rexistros de varias táboas require
+            especial atención ás relacións de clave foránea. Se existen outras táboas
+            que referencian os rexistros que se queren eliminar, as restricións de
+            integridade poden impedir a operación. É necesario comprobar previamente
+            as dependencias e as políticas de eliminación definidas nas claves foráneas.
+        </div>
+
+        <h3>7.3. DELETE con LEFT JOIN</h3>
+
+        <p>
+            Unha combinación <code>LEFT JOIN</code> tamén permite localizar rexistros
+            que non teñen correspondencia noutra táboa. É unha técnica útil para
+            identificar e eliminar rexistros sen relacións.
+        </p>
+
+        <p>
+            Por exemplo, podemos eliminar alumnos que non teñen ningunha matrícula:
+        </p>
+
+        <pre><code>DELETE a
+FROM alumnos a
+LEFT JOIN matriculas m
+    ON a.id = m.alumno_id
+WHERE m.alumno_id IS NULL;</code></pre>
+
+        <p>
+            O <code>LEFT JOIN</code> conserva todos os alumnos, aínda que non teñan
+            matrículas. Cando non existe unha matrícula asociada, as columnas da táboa
+            <code>matriculas</code> aparecen como <code>NULL</code>. A condición
+            <code>WHERE m.alumno_id IS NULL</code> identifica precisamente eses alumnos.
+        </p>
+
+        <h2>8. Resolución de operacións complexas de edición</h2>
+
+        <h3>8.1. Combinar subconsultas e condicións</h3>
+
+        <p>
+            As operacións de edición máis complexas adoitan combinar diferentes técnicas:
+        </p>
+
+        <ul>
+            <li>Subconsultas para obter identificadores ou valores.</li>
+            <li>Operadores <code>IN</code> e <code>EXISTS</code> para comprobar relacións.</li>
+            <li>Combinacións <code>JOIN</code> para acceder a información de varias táboas.</li>
+            <li>Condicións <code>WHERE</code> para limitar os rexistros afectados.</li>
+            <li>Funcións de agregación para calcular valores a partir de varios rexistros.</li>
+        </ul>
+
+        <p>
+            Antes de executar unha operación complexa é conveniente separar o problema
+            en pasos e comprobar os resultados das consultas que determinan os rexistros
+            afectados.
+        </p>
+
+        <h3>8.2. Exemplo: actualizar notas segundo a media do curso</h3>
+
+        <p>
+            Supoñamos que queremos incrementar nun punto as notas dos alumnos cuxa
+            cualificación está por baixo da media do seu curso. Para iso necesitamos
+            relacionar matrículas, alumnos e cursos, e calcular a media das notas de
+            cada curso.
+        </p>
+
+        <pre><code>UPDATE matriculas m
+INNER JOIN alumnos a
+    ON m.alumno_id = a.id
+INNER JOIN cursos c
+    ON a.curso_id = c.id
+SET m.nota = m.nota + 1
+WHERE m.nota &lt; (
+    SELECT AVG(m2.nota)
+    FROM matriculas m2
+    INNER JOIN alumnos a2
+        ON m2.alumno_id = a2.id
+    WHERE a2.curso_id = c.id
+);</code></pre>
+
+        <p>
+            A consulta interna calcula a media das notas dos alumnos do mesmo curso
+            que o rexistro que se está avaliando. A actualización incrementa un punto
+            as notas inferiores a esa media.
+        </p>
+
+        <p>
+            Trátase dunha subconsulta correlacionada porque utiliza o identificador
+            do curso da consulta externa.
+        </p>
+
+        <h3>8.3. Exemplo: inserir alumnos que aínda non teñen matrícula</h3>
+
+        <p>
+            Outra situación habitual consiste en inserir nunha táboa os alumnos que
+            aínda non teñen ningún rexistro asociado noutra táboa.
+        </p>
+
+        <p>
+            Supoñamos que existe unha táboa <code>alumnos_sen_matricula</code> coas
+            columnas <code>alumno_id</code> e <code>nombre</code>. Podemos enchela
+            mediante a seguinte operación:
+        </p>
+
+        <pre><code>INSERT INTO alumnos_sen_matricula (alumno_id, nombre)
+SELECT a.id, a.nombre
+FROM alumnos a
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM matriculas m
+    WHERE m.alumno_id = a.id
+);</code></pre>
+
+        <p>
+            A consulta selecciona os alumnos para os que non existe ningunha matrícula.
+            Os resultados insírense directamente na táboa de destino.
+        </p>
+
+        <h3>8.4. Exemplo: eliminar cursos sen alumnos</h3>
+
+        <p>
+            Podemos utilizar <code>NOT EXISTS</code> para localizar cursos que non
+            teñen ningún alumno asociado:
+        </p>
+
+        <pre><code>SELECT *
+FROM cursos c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <p>
+            Unha vez comprobados os resultados, poderiamos eliminar eses cursos:
+        </p>
+
+        <pre><code>DELETE FROM cursos c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM alumnos a
+    WHERE a.curso_id = c.id
+);</code></pre>
+
+        <p>
+            A eliminación só será posible se non existen outras restricións ou
+            dependencias que impidan borrar eses cursos.
+        </p>
+
+        <h2>9. Boas prácticas nas operacións complexas</h2>
+
+        <p>
+            As operacións DML que inclúen subconsultas e combinacións poden afectar
+            a un número elevado de rexistros. Unha condición incorrecta pode provocar
+            modificacións ou eliminacións non desexadas.
+        </p>
+
+        <p>Para reducir este risco é recomendable seguir estas pautas:</p>
+
+        <ol>
+            <li>
+                <strong>Analizar as relacións:</strong> identificar as táboas implicadas
+                e as claves que permiten relacionalas.
+            </li>
+            <li>
+                <strong>Construír primeiro a consulta:</strong> desenvolver un
+                <code>SELECT</code> que devolva exactamente os rexistros que se queren
+                modificar.
+            </li>
+            <li>
+                <strong>Comprobar os resultados:</strong> revisar os identificadores
+                e os datos seleccionados antes de executar a operación DML.
+            </li>
+            <li>
+                <strong>Utilizar condicións específicas:</strong> evitar actualizacións
+                ou eliminacións sen unha cláusula <code>WHERE</code> cando non se
+                pretende afectar a toda a táboa.
+            </li>
+            <li>
+                <strong>Respectar a integridade referencial:</strong> comprobar as
+                claves foráneas e as políticas <code>ON DELETE</code> e
+                <code>ON UPDATE</code>.
+            </li>
+            <li>
+                <strong>Utilizar transaccións:</strong> cando as operacións o permitan,
+                executar os cambios dentro dunha transacción para poder revisalos
+                antes de confirmalos.
+            </li>
+        </ol>
+
+        <h3>9.1. Uso de transaccións para protexer operacións DML</h3>
+
+        <p>
+            As táboas InnoDB permiten executar operacións DML dentro dunha transacción.
+            Isto é especialmente útil cando unha modificación implica varias sentenzas
+            que deben completarse correctamente.
+        </p>
+
+        <p>Por exemplo:</p>
+
+        <pre><code>START TRANSACTION;
+
+UPDATE alumnos
+SET edad = edad + 1
+WHERE curso_id = 1;
+
+DELETE FROM matriculas
+WHERE alumno_id IN (
+    SELECT id
+    FROM alumnos
+    WHERE curso_id = 1
+);
+
+-- Se todo é correcto:
+COMMIT;
+
+-- Se se detecta algún problema, antes do COMMIT:
+-- ROLLBACK;</code></pre>
+
+        <p>
+            A sentenza <code>COMMIT</code> confirma os cambios realizados. Pola contra,
+            <code>ROLLBACK</code> desfai os cambios da transacción que aínda non foron
+            confirmados.
+        </p>
+
+        <div class="advertencia">
+            <strong>Importante:</strong> as transaccións protexen as operacións DML
+            compatibles con InnoDB, pero non permiten desfacer automaticamente
+            operacións DDL como <code>CREATE TABLE</code>, <code>DROP TABLE</code>
+            ou <code>TRUNCATE TABLE</code>.
+        </div>
+
+        <h2>10. Resumo das principais estruturas</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operación</th>
+                    <th>Estrutura</th>
+                    <th>Finalidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>INSERT con consulta</td>
+                    <td><code>INSERT INTO ... SELECT</code></td>
+                    <td>Inserir resultados dunha consulta.</td>
+                </tr>
+                <tr>
+                    <td>UPDATE con subconsulta</td>
+                    <td><code>UPDATE ... SET ... (SELECT ...)</code></td>
+                    <td>Utilizar resultados doutra consulta para actualizar valores.</td>
+                </tr>
+                <tr>
+                    <td>DELETE con subconsulta</td>
+                    <td><code>DELETE ... WHERE ... IN (SELECT ...)</code></td>
+                    <td>Eliminar rexistros identificados mediante unha consulta.</td>
+                </tr>
+                <tr>
+                    <td>Comprobar pertenza</td>
+                    <td><code>IN</code> / <code>NOT IN</code></td>
+                    <td>Comprobar se un valor está ou non nun conxunto de resultados.</td>
+                </tr>
+                <tr>
+                    <td>Comprobar existencia</td>
+                    <td><code>EXISTS</code> / <code>NOT EXISTS</code></td>
+                    <td>Comprobar se existen rexistros relacionados.</td>
+                </tr>
+                <tr>
+                    <td>Actualizar con combinacións</td>
+                    <td><code>UPDATE ... JOIN</code></td>
+                    <td>Modificar rexistros utilizando información doutras táboas.</td>
+                </tr>
+                <tr>
+                    <td>Eliminar con combinacións</td>
+                    <td><code>DELETE ... JOIN</code></td>
+                    <td>Eliminar rexistros utilizando condicións baseadas noutras táboas.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>11. Guión de comprobación</h2>
+
+        <p>
+            Antes de executar unha operación complexa de inserción, actualización
+            ou eliminación, convén comprobar os seguintes aspectos:
+        </p>
+
+        <ol>
+            <li>Identificar a táboa ou táboas que interveñen na operación.</li>
+            <li>Localizar as relacións entre elas mediante as claves primarias e foráneas.</li>
+            <li>Construír a consulta <code>SELECT</code> que identifica os rexistros afectados.</li>
+            <li>Comprobar que a consulta devolve os resultados esperados.</li>
+            <li>Seleccionar a operación adecuada: <code>INSERT</code>, <code>UPDATE</code> ou <code>DELETE</code>.</li>
+            <li>Decidir se é necesario utilizar unha subconsulta ou unha combinación <code>JOIN</code>.</li>
+            <li>Revisar as condicións e comprobar que non se afectan rexistros adicionais.</li>
+            <li>Comprobar as restricións de integridade referencial.</li>
+            <li>Executar a operación e verificar os cambios realizados.</li>
+            <li>Se se utiliza unha transacción, confirmar os cambios con <code>COMMIT</code> ou desfacelos con <code>ROLLBACK</code>.</li>
+        </ol>
+
+        <div class="callout">
+            <strong>Conclusión:</strong> as subconsultas e as combinacións de táboas
+            permiten realizar operacións de edición baseadas na información existente
+            na base de datos. O seu uso facilita a automatización de tarefas complexas
+            e evita ter que consultar manualmente identificadores ou valores para
+            utilizalos posteriormente noutras sentenzas SQL.
+        </div>
+
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,1196 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD3 - Consultas SQL</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Unidade didáctica 3. Consultas SQL</h1>
+
+    <p>
+        Nesta unidade aprenderemos a realizar consultas sobre bases de datos
+        relacionais mediante SQL. Traballaremos coa sentenza <code>SELECT</code>
+        para recuperar información, seleccionar columnas, filtrar rexistros
+        e ordenar os resultados.
+    </p>
+
+    <p>
+        Os exemplos realizaranse utilizando MariaDB/MySQL e MySQL Workbench.
+        Tamén se explicará como executar as consultas directamente desde a
+        consola do sistema.
+    </p>
+
+    <!-- ================================================== -->
+    <h2>1. Introdución ás consultas SQL</h2>
+    <!-- ================================================== -->
+
+    <h3>1.1. Que é unha consulta SQL?</h3>
+
+    <p>
+        Unha consulta SQL é unha instrución que permite recuperar información
+        almacenada nunha base de datos. As consultas utilízanse para obter
+        datos dunha ou varias táboas sen modificar o contido almacenado.
+    </p>
+
+    <p>
+        A sentenza principal para consultar información é <code>SELECT</code>.
+        A súa finalidade é indicar que datos queremos recuperar e de que táboa
+        ou táboas proceden.
+    </p>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        As consultas realizadas con <code>SELECT</code> non modifican os datos
+        da base de datos. Úsanse exclusivamente para recuperar e visualizar
+        información.
+    </div>
+
+    <h3>1.2. Ferramentas para executar consultas</h3>
+
+    <p>
+        Existen diferentes ferramentas que permiten escribir e executar
+        instrucións SQL. Durante esta unidade utilizaremos principalmente
+        MySQL Workbench e a consola de MariaDB/MySQL.
+    </p>
+
+    <h4>MySQL Workbench</h4>
+
+    <p>
+        MySQL Workbench é unha ferramenta gráfica que permite administrar
+        bases de datos e executar sentenzas SQL.
+    </p>
+
+    <p>Para executar unha consulta:</p>
+
+    <ol>
+        <li>Iniciar MySQL Workbench.</li>
+        <li>Conectarse ao servidor de bases de datos.</li>
+        <li>Seleccionar a base de datos que se vai utilizar.</li>
+        <li>Escribir a consulta no editor SQL.</li>
+        <li>Executar a instrución mediante o botón de execución ou a combinación Ctrl + Enter.</li>
+        <li>Consultar os resultados na zona inferior do editor.</li>
+    </ol>
+
+    <h4>Consola de MariaDB/MySQL</h4>
+
+    <p>
+        Tamén podemos executar consultas directamente desde o terminal.
+        Para iso debemos iniciar sesión no servidor de bases de datos.
+    </p>
+
+    <pre><code>mysql -u root -p</code></pre>
+
+    <p>
+        Introducimos o contrasinal correspondente. Unha vez dentro do cliente,
+        podemos executar instrucións SQL directamente.
+    </p>
+
+    <pre><code>SHOW DATABASES;</code></pre>
+
+    <p>
+        Para seleccionar unha base de datos utilizamos <code>USE</code>.
+    </p>
+
+    <pre><code>USE centro_educativo;</code></pre>
+
+    <p>
+        A partir dese momento, as consultas executaranse sobre a base de
+        datos seleccionada, salvo que indiquemos explicitamente outra.
+    </p>
+
+    <h3>1.3. Estrutura básica de SELECT</h3>
+
+    <p>
+        A estrutura máis sinxela dunha consulta SQL é a seguinte:
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa;</code></pre>
+
+    <p>As dúas partes principais son:</p>
+
+    <ul>
+        <li>
+            <strong>SELECT:</strong> indica as columnas que queremos recuperar.
+        </li>
+        <li>
+            <strong>FROM:</strong> indica a táboa da que proceden os datos.
+        </li>
+    </ul>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Consultar todos os alumnos</h4>
+
+        <pre><code>SELECT *
+FROM alumnos;</code></pre>
+
+        <p>
+            O símbolo <code>*</code> indica que queremos recuperar todas
+            as columnas da táboa.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Consultar todos os cursos</h4>
+
+        <pre><code>SELECT *
+FROM cursos;</code></pre>
+    </div>
+
+    <h3>1.4. Terminación das instrucións</h3>
+
+    <p>
+        As instrucións SQL adoitan finalizar cun punto e coma (<code>;</code>).
+        Este carácter indica o final da sentenza.
+    </p>
+
+    <pre><code>SELECT * FROM alumnos;
+
+SELECT * FROM cursos;</code></pre>
+
+    <p>
+        SQL non distingue normalmente entre maiúsculas e minúsculas nas
+        palabras reservadas. Por convención, escribiremos as palabras clave
+        en maiúsculas para facilitar a lectura.
+    </p>
+
+    <div class="callout">
+        <strong>Boas prácticas:</strong>
+        Recoméndase escribir cada cláusula da consulta nunha liña diferente
+        e utilizar maiúsculas para as palabras reservadas.
+    </div>
+
+    <!-- ================================================== -->
+    <h2>2. Proxección de rexistros</h2>
+    <!-- ================================================== -->
+
+    <h3>2.1. Selección de columnas</h3>
+
+    <p>
+        A proxección consiste en seleccionar que columnas dunha táboa queremos
+        mostrar nunha consulta.
+    </p>
+
+    <p>
+        Non sempre necesitamos recuperar toda a información dunha táboa.
+        Podemos seleccionar unicamente os campos que nos interesan.
+    </p>
+
+    <pre><code>SELECT columna1, columna2
+FROM nome_taboa;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Consultar os nomes dos alumnos</h4>
+
+        <pre><code>SELECT nome
+FROM alumnos;</code></pre>
+
+        <p>
+            O resultado mostrará unicamente a columna <code>nome</code>.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Consultar o nome e a idade</h4>
+
+        <pre><code>SELECT nome, idade
+FROM alumnos;</code></pre>
+
+        <p>
+            A consulta recupera dúas columnas da táboa <code>alumnos</code>.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Consultar o nome e as horas dos cursos</h4>
+
+        <pre><code>SELECT nome, horas
+FROM cursos;</code></pre>
+    </div>
+
+    <h3>2.2. Uso do asterisco (*)</h3>
+
+    <p>
+        Cando queremos recuperar todas as columnas dunha táboa podemos
+        utilizar o carácter <code>*</code>.
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos;</code></pre>
+
+    <p>
+        Esta consulta devolve todas as columnas e todos os rexistros da táboa.
+    </p>
+
+    <div class="advertencia">
+        <strong>Recomendación:</strong>
+        Aínda que o uso de <code>*</code> é cómodo, nas consultas habituais
+        é preferible indicar explicitamente as columnas necesarias.
+        Isto facilita a lectura das consultas e evita recuperar información
+        innecesaria.
+    </div>
+
+    <h3>2.3. Eliminación de rexistros duplicados con DISTINCT</h3>
+
+    <p>
+        Por defecto, SQL devolve todos os rexistros que cumpren as condicións
+        da consulta, incluíndo os valores repetidos.
+    </p>
+
+    <p>
+        A palabra reservada <code>DISTINCT</code> permite eliminar os
+        resultados duplicados.
+    </p>
+
+    <pre><code>SELECT DISTINCT columna
+FROM nome_taboa;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Consultar as idades diferentes dos alumnos</h4>
+
+        <pre><code>SELECT DISTINCT idade
+FROM alumnos;</code></pre>
+
+        <p>
+            Se varios alumnos teñen a mesma idade, esa idade aparecerá
+            unha única vez no resultado.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Consultar os cursos diferentes</h4>
+
+        <pre><code>SELECT DISTINCT curso_id
+FROM alumnos;</code></pre>
+
+        <p>
+            A consulta mostra os identificadores dos cursos nos que hai
+            alumnado, sen repetir ningún valor.
+        </p>
+    </div>
+
+    <h3>2.4. DISTINCT sobre varias columnas</h3>
+
+    <p>
+        Podemos aplicar <code>DISTINCT</code> sobre varias columnas.
+        Neste caso elimínanse as combinacións de valores duplicadas.
+    </p>
+
+    <pre><code>SELECT DISTINCT idade, curso_id
+FROM alumnos;</code></pre>
+
+    <p>
+        Dúas filas só se consideran duplicadas cando coinciden todos
+        os valores das columnas seleccionadas.
+    </p>
+
+    <div class="callout">
+        <strong>Para lembrar:</strong>
+        <ul>
+            <li><code>SELECT *</code>: recupera todas as columnas.</li>
+            <li><code>SELECT nome, idade</code>: recupera columnas concretas.</li>
+            <li><code>SELECT DISTINCT idade</code>: elimina valores repetidos.</li>
+        </ul>
+    </div>
+
+    <!-- ================================================== -->
+    <h2>3. Filtrado de rexistros con WHERE</h2>
+    <!-- ================================================== -->
+
+    <h3>3.1. Que é o filtrado de rexistros?</h3>
+
+    <p>
+        Ata agora realizamos consultas que devolvían todos os rexistros
+        dunha táboa. Con frecuencia necesitamos recuperar só aqueles que
+        cumpren determinadas condicións.
+    </p>
+
+    <p>
+        A cláusula <code>WHERE</code> permite establecer condicións para
+        seleccionar os rexistros que queremos visualizar.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+WHERE condicion;</code></pre>
+
+    <p>
+        A condición avalíase para cada rexistro. Só se mostran aqueles
+        nos que o resultado da condición é verdadeiro.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Consultar alumnos maiores de idade</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade >= 18;</code></pre>
+
+        <p>
+            Só aparecen os alumnos cuxa idade é maior ou igual a 18.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Consultar os cursos con máis de 150 horas</h4>
+
+        <pre><code>SELECT *
+FROM cursos
+WHERE horas > 150;</code></pre>
+    </div>
+
+    <h3>3.2. Operadores de comparación</h3>
+
+    <p>
+        Os operadores de comparación permiten establecer condicións
+        comparando o valor dunha columna cun valor determinado.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Operador</th>
+                <th>Significado</th>
+                <th>Exemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>=</code></td>
+                <td>Igual</td>
+                <td><code>idade = 18</code></td>
+            </tr>
+            <tr>
+                <td><code>&lt;&gt;</code></td>
+                <td>Distinto</td>
+                <td><code>idade &lt;&gt; 18</code></td>
+            </tr>
+            <tr>
+                <td><code>!=</code></td>
+                <td>Distinto</td>
+                <td><code>idade != 18</code></td>
+            </tr>
+            <tr>
+                <td><code>&gt;</code></td>
+                <td>Maior que</td>
+                <td><code>idade &gt; 18</code></td>
+            </tr>
+            <tr>
+                <td><code>&lt;</code></td>
+                <td>Menor que</td>
+                <td><code>idade &lt; 18</code></td>
+            </tr>
+            <tr>
+                <td><code>&gt;=</code></td>
+                <td>Maior ou igual que</td>
+                <td><code>idade &gt;= 18</code></td>
+            </tr>
+            <tr>
+                <td><code>&lt;=</code></td>
+                <td>Menor ou igual que</td>
+                <td><code>idade &lt;= 18</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>3.3. Comparación de valores numéricos</h3>
+
+    <p>
+        Cando traballamos con columnas numéricas podemos utilizar
+        os operadores matemáticos de comparación.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Alumnos cunha idade concreta</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade = 20;</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Cursos con 200 horas</h4>
+
+        <pre><code>SELECT *
+FROM cursos
+WHERE horas = 200;</code></pre>
+    </div>
+
+    <h3>3.4. Comparación de cadeas de texto</h3>
+
+    <p>
+        Para comparar valores de texto utilizamos normalmente o operador
+        <code>=</code>. Os valores de tipo texto deben escribirse entre
+        comiñas simples.
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos
+WHERE nome = 'Ana García';</code></pre>
+
+    <p>
+        Tamén podemos buscar valores diferentes:
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos
+WHERE nome &lt;&gt; 'Ana García';</code></pre>
+
+    <div class="advertencia">
+        <strong>Atención:</strong>
+        Os valores de texto deben escribirse entre comiñas simples.
+        Non debemos confundir os nomes das columnas cos valores que
+        queremos comparar.
+    </div>
+
+    <!-- ================================================== -->
+    <h2>4. Operadores lóxicos</h2>
+    <!-- ================================================== -->
+
+    <h3>4.1. Uso de AND</h3>
+
+    <p>
+        O operador <code>AND</code> permite combinar varias condicións.
+        Para que un rexistro apareza no resultado, todas as condicións
+        deben cumprirse.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+WHERE condicion1 AND condicion2;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo. Alumnos maiores de idade que teñen 20 anos ou máis</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade >= 18
+AND idade <= 25;</code></pre>
+
+        <p>
+            Só se mostrarán os alumnos que teñan unha idade comprendida
+            entre 18 e 25 anos, ambos incluídos.
+        </p>
+    </div>
+
+    <h3>4.2. Uso de OR</h3>
+
+    <p>
+        O operador <code>OR</code> permite combinar condicións nas que
+        abonda con que se cumpra unha delas.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+WHERE condicion1 OR condicion2;</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo. Consultar alumnos de 18 ou 20 anos</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade = 18
+OR idade = 20;</code></pre>
+
+        <p>
+            Aparecerán os alumnos que teñan 18 anos ou 20 anos.
+        </p>
+    </div>
+
+    <h3>4.3. Uso de NOT</h3>
+
+    <p>
+        O operador <code>NOT</code> nega unha condición. Selecciona
+        os rexistros que non cumpren a condición indicada.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Alumnos que non teñen 20 anos</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE NOT idade = 20;</code></pre>
+
+        <p>
+            Esta consulta equivale a utilizar o operador <code>&lt;&gt;</code>:
+        </p>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade &lt;&gt; 20;</code></pre>
+    </div>
+
+    <h3>4.4. Combinación de operadores lóxicos</h3>
+
+    <p>
+        Podemos combinar <code>AND</code>, <code>OR</code> e
+        <code>NOT</code> nunha mesma consulta para establecer condicións
+        máis complexas.
+    </p>
+
+    <p>
+        Cando combinamos diferentes operadores é recomendable utilizar
+        parénteses para indicar claramente a orde na que deben avaliarse
+        as condicións.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Alumnos de 18 anos ou alumnos de 20 anos que pertencen ao curso 1</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade = 18
+OR (idade = 20 AND curso_id = 1);</code></pre>
+
+        <p>
+            A consulta selecciona:
+        </p>
+
+        <ul>
+            <li>Todos os alumnos que teñen 18 anos.</li>
+            <li>Os alumnos que teñen 20 anos e pertencen ao curso 1.</li>
+        </ul>
+    </div>
+
+    <h3>4.5. Prioridade dos operadores</h3>
+
+    <p>
+        SQL establece unha orde de prioridade para avaliar os operadores
+        lóxicos:
+    </p>
+
+    <ol>
+        <li><code>NOT</code></li>
+        <li><code>AND</code></li>
+        <li><code>OR</code></li>
+    </ol>
+
+    <p>
+        Isto significa que <code>AND</code> se avalía antes que
+        <code>OR</code>. Se queremos cambiar esta orde debemos utilizar
+        parénteses.
+    </p>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        Non debemos confiar na prioridade dos operadores cando unha consulta
+        combina varias condicións. O uso de parénteses fai que a consulta
+        sexa máis clara e evita resultados inesperados.
+    </div>
+
+    <!-- ================================================== -->
+    <h2>5. Outros operadores de filtrado</h2>
+    <!-- ================================================== -->
+
+    <h3>5.1. Operador BETWEEN</h3>
+
+    <p>
+        O operador <code>BETWEEN</code> permite comprobar se un valor
+        está dentro dun intervalo.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+WHERE columna BETWEEN valor1 AND valor2;</code></pre>
+
+    <p>
+        Os valores inicial e final están incluídos no intervalo.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Alumnos con idades entre 18 e 22 anos</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade BETWEEN 18 AND 22;</code></pre>
+
+        <p>
+            Esta consulta equivale a:
+        </p>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade >= 18
+AND idade <= 22;</code></pre>
+    </div>
+
+    <h3>5.2. Operador IN</h3>
+
+    <p>
+        O operador <code>IN</code> permite comprobar se o valor dunha
+        columna coincide con algún dos valores dunha lista.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+WHERE columna IN (valor1, valor2, valor3);</code></pre>
+
+    <div class="exemplo">
+        <h4>Exemplo. Consultar alumnos dos cursos 1 e 3</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id IN (1, 3);</code></pre>
+
+        <p>
+            Esta consulta equivale a utilizar varias condicións
+            unidas mediante <code>OR</code>:
+        </p>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id = 1
+OR curso_id = 3;</code></pre>
+    </div>
+
+    <p>
+        Tamén podemos utilizar <code>NOT IN</code> para seleccionar
+        os rexistros cuxo valor non aparece na lista.
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id NOT IN (1, 3);</code></pre>
+
+    <h3>5.3. Operador LIKE</h3>
+
+    <p>
+        O operador <code>LIKE</code> permite buscar patróns dentro
+        dunha cadea de texto. Utilízase principalmente cando non
+        coñecemos o valor completo que queremos buscar.
+    </p>
+
+    <p>
+        Para construír os patróns utilízanse dous caracteres especiais:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Carácter</th>
+                <th>Significado</th>
+                <th>Exemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>%</code></td>
+                <td>Representa cero ou máis caracteres.</td>
+                <td><code>'A%'</code></td>
+            </tr>
+            <tr>
+                <td><code>_</code></td>
+                <td>Representa exactamente un carácter.</td>
+                <td><code>'A_a'</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Nomes que comezan pola letra A</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE nome LIKE 'A%';</code></pre>
+
+        <p>
+            O símbolo <code>%</code> indica que despois da letra A pode
+            aparecer calquera secuencia de caracteres.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Nomes que terminan en z</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE nome LIKE '%z';</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 3. Nomes que conteñen a palabra García</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE nome LIKE '%García%';</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo 4. Nomes que comezan por A e teñen tres caracteres</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE nome LIKE 'A__';</code></pre>
+
+        <p>
+            Cada guión baixo representa exactamente un carácter.
+        </p>
+    </div>
+
+    <div class="callout">
+        <strong>Para lembrar:</strong>
+        <ul>
+            <li><code>'A%'</code>: comeza por A.</li>
+            <li><code>'%A'</code>: termina en A.</li>
+            <li><code>'%A%'</code>: contén a letra A.</li>
+            <li><code>'A_'</code>: comeza por A e ten dous caracteres.</li>
+        </ul>
+    </div>
+
+    <h3>5.4. Operador IS NULL</h3>
+
+    <p>
+        Nas bases de datos podemos atopar columnas que non teñen ningún
+        valor asignado. Estes casos represéntanse mediante o valor
+        especial <code>NULL</code>.
+    </p>
+
+    <p>
+        <code>NULL</code> non é o mesmo que cero, unha cadea baleira
+        ou un espazo en branco. Representa a ausencia dun valor.
+    </p>
+
+    <p>
+        Para comprobar se unha columna contén un valor nulo utilizamos
+        <code>IS NULL</code>.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 1. Alumnos sen curso asignado</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id IS NULL;</code></pre>
+    </div>
+
+    <p>
+        Para recuperar os rexistros nos que a columna si ten un valor
+        utilizamos <code>IS NOT NULL</code>.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo 2. Alumnos que teñen un curso asignado</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE curso_id IS NOT NULL;</code></pre>
+    </div>
+
+    <div class="advertencia">
+        <strong>Erro habitual:</strong>
+        Non debemos utilizar <code>= NULL</code> nin <code>&lt;&gt; NULL</code>.
+        As comparacións con NULL deben realizarse mediante
+        <code>IS NULL</code> e <code>IS NOT NULL</code>.
+    </div>
+
+    <h3>5.5. Combinación de operadores</h3>
+
+    <p>
+        Todos os operadores anteriores poden combinarse mediante
+        <code>AND</code>, <code>OR</code> e <code>NOT</code>.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Alumnos maiores de idade dos cursos 1 ou 2</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade >= 18
+AND curso_id IN (1, 2);</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo. Alumnos cuxo nome comeza por A ou por M</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE nome LIKE 'A%'
+OR nome LIKE 'M%';</code></pre>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo. Cursos con máis de 100 e menos de 200 horas</h4>
+
+        <pre><code>SELECT *
+FROM cursos
+WHERE horas > 100
+AND horas < 200;</code></pre>
+    </div>
+
+    <!-- ================================================== -->
+    <h2>6. Ordenación dos resultados con ORDER BY</h2>
+    <!-- ================================================== -->
+
+    <h3>6.1. Que é a ordenación?</h3>
+
+    <p>
+        Por defecto, unha consulta SQL non garante unha orde concreta
+        nos rexistros devoltos. Se necesitamos presentar os resultados
+        nunha orde determinada debemos utilizar a cláusula
+        <code>ORDER BY</code>.
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+ORDER BY columna;</code></pre>
+
+    <p>
+        Podemos ordenar os resultados utilizando columnas numéricas,
+        cadeas de texto ou datas.
+    </p>
+
+    <h3>6.2. Ordenación ascendente</h3>
+
+    <p>
+        A palabra reservada <code>ASC</code> indica que os resultados
+        deben ordenarse de forma ascendente.
+    </p>
+
+    <ul>
+        <li>Os números ordénanse de menor a maior.</li>
+        <li>O texto ordénase alfabeticamente.</li>
+        <li>As datas ordénanse da máis antiga á máis recente.</li>
+    </ul>
+
+    <div class="exemplo">
+        <h4>Exemplo. Ordenar os alumnos polo nome</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+ORDER BY nome ASC;</code></pre>
+    </div>
+
+    <p>
+        O modificador <code>ASC</code> é opcional, xa que é a ordenación
+        predeterminada.
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos
+ORDER BY nome;</code></pre>
+
+    <h3>6.3. Ordenación descendente</h3>
+
+    <p>
+        A palabra reservada <code>DESC</code> permite ordenar os resultados
+        de forma descendente.
+    </p>
+
+    <ul>
+        <li>Os números ordénanse de maior a menor.</li>
+        <li>O texto ordénase en orde alfabética inversa.</li>
+        <li>As datas ordénanse da máis recente á máis antiga.</li>
+    </ul>
+
+    <div class="exemplo">
+        <h4>Exemplo. Ordenar os cursos polo número de horas</h4>
+
+        <pre><code>SELECT *
+FROM cursos
+ORDER BY horas DESC;</code></pre>
+
+        <p>
+            Os cursos con maior número de horas aparecerán primeiro.
+        </p>
+    </div>
+
+    <h3>6.4. Ordenación por varias columnas</h3>
+
+    <p>
+        Podemos ordenar os resultados utilizando máis dunha columna.
+        Neste caso, SQL aplica a ordenación seguindo a orde na que
+        aparecen as columnas dentro de <code>ORDER BY</code>.
+    </p>
+
+    <pre><code>SELECT *
+FROM alumnos
+ORDER BY curso_id ASC, nome ASC;</code></pre>
+
+    <p>
+        A consulta ordena primeiro polo identificador do curso.
+        Cando varios alumnos pertencen ao mesmo curso, ordénaos
+        alfabeticamente polo nome.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Ordenar por curso e idade</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+ORDER BY curso_id ASC, idade DESC;</code></pre>
+
+        <p>
+            Os alumnos aparecen agrupados por curso e, dentro de cada
+            curso, ordenados de maior a menor idade.
+        </p>
+    </div>
+
+    <h3>6.5. Combinación de WHERE e ORDER BY</h3>
+
+    <p>
+        Podemos combinar o filtrado de rexistros coa ordenación dos
+        resultados nunha mesma consulta.
+    </p>
+
+    <div class="exemplo">
+        <h4>Exemplo. Consultar os alumnos maiores de idade ordenados por idade</h4>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE idade >= 18
+ORDER BY idade DESC;</code></pre>
+
+        <p>
+            Primeiro selecciónanse os alumnos que cumpren a condición
+            e despois ordénanse os resultados.
+        </p>
+    </div>
+
+    <h3>6.6. Orde das cláusulas nunha consulta</h3>
+
+    <p>
+        Nas consultas que estamos traballando, a orde das cláusulas
+        debe ser a seguinte:
+    </p>
+
+    <pre><code>SELECT columnas
+FROM nome_taboa
+WHERE condicion
+ORDER BY columna ASC;</code></pre>
+
+    <p>
+        Non podemos colocar <code>ORDER BY</code> antes de
+        <code>WHERE</code>. A estrutura da consulta debe respectar
+        esta orde.
+    </p>
+
+    <div class="callout">
+        <strong>Resumo:</strong>
+        <ul>
+            <li><code>WHERE</code> selecciona os rexistros que cumpren unha condición.</li>
+            <li><code>ORDER BY</code> ordena os rexistros devoltos.</li>
+            <li><code>ASC</code> establece unha orde ascendente.</li>
+            <li><code>DESC</code> establece unha orde descendente.</li>
+            <li>Pódense ordenar os resultados por varias columnas.</li>
+        </ul>
+    </div>
+
+    <!-- ================================================== -->
+    <h2>7. Resumo das principais sentenzas e operadores</h2>
+    <!-- ================================================== -->
+
+    <table>
+        <thead>
+            <tr>
+                <th>Elemento</th>
+                <th>Función</th>
+                <th>Exemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>SELECT</code></td>
+                <td>Seleccionar columnas.</td>
+                <td><code>SELECT nome</code></td>
+            </tr>
+            <tr>
+                <td><code>*</code></td>
+                <td>Seleccionar todas as columnas.</td>
+                <td><code>SELECT *</code></td>
+            </tr>
+            <tr>
+                <td><code>DISTINCT</code></td>
+                <td>Eliminar resultados duplicados.</td>
+                <td><code>SELECT DISTINCT idade</code></td>
+            </tr>
+            <tr>
+                <td><code>FROM</code></td>
+                <td>Indicar a táboa.</td>
+                <td><code>FROM alumnos</code></td>
+            </tr>
+            <tr>
+                <td><code>WHERE</code></td>
+                <td>Filtrar rexistros.</td>
+                <td><code>WHERE idade >= 18</code></td>
+            </tr>
+            <tr>
+                <td><code>AND</code></td>
+                <td>Todas as condicións deben cumprirse.</td>
+                <td><code>idade >= 18 AND idade <= 25</code></td>
+            </tr>
+            <tr>
+                <td><code>OR</code></td>
+                <td>Abonda con que se cumpra unha condición.</td>
+                <td><code>idade = 18 OR idade = 20</code></td>
+            </tr>
+            <tr>
+                <td><code>NOT</code></td>
+                <td>Negar unha condición.</td>
+                <td><code>NOT idade = 20</code></td>
+            </tr>
+            <tr>
+                <td><code>BETWEEN</code></td>
+                <td>Comprobar un intervalo.</td>
+                <td><code>idade BETWEEN 18 AND 25</code></td>
+            </tr>
+            <tr>
+                <td><code>IN</code></td>
+                <td>Comprobar se un valor está nunha lista.</td>
+                <td><code>curso_id IN (1, 2)</code></td>
+            </tr>
+            <tr>
+                <td><code>LIKE</code></td>
+                <td>Buscar patróns de texto.</td>
+                <td><code>nome LIKE 'A%'</code></td>
+            </tr>
+            <tr>
+                <td><code>IS NULL</code></td>
+                <td>Buscar valores nulos.</td>
+                <td><code>curso_id IS NULL</code></td>
+            </tr>
+            <tr>
+                <td><code>IS NOT NULL</code></td>
+                <td>Buscar valores non nulos.</td>
+                <td><code>curso_id IS NOT NULL</code></td>
+            </tr>
+            <tr>
+                <td><code>ORDER BY</code></td>
+                <td>Ordenar os resultados.</td>
+                <td><code>ORDER BY nome</code></td>
+            </tr>
+            <tr>
+                <td><code>ASC</code></td>
+                <td>Ordenación ascendente.</td>
+                <td><code>ORDER BY idade ASC</code></td>
+            </tr>
+            <tr>
+                <td><code>DESC</code></td>
+                <td>Ordenación descendente.</td>
+                <td><code>ORDER BY idade DESC</code></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================== -->
+    <h2>8. Exercicios de consolidación</h2>
+    <!-- ================================================== -->
+
+    <p>
+        Os seguintes exercicios permiten practicar os conceptos
+        explicados ao longo destas seis sesións. As consultas deben
+        executarse sobre a base de datos utilizada durante a unidade.
+    </p>
+
+    <h3>Bloque 1. Consultas básicas</h3>
+
+    <ol>
+        <li>Mostrar todos os rexistros da táboa <code>alumnos</code>.</li>
+        <li>Mostrar todos os rexistros da táboa <code>cursos</code>.</li>
+        <li>Mostrar unicamente os nomes dos alumnos.</li>
+        <li>Mostrar o nome e a idade de todos os alumnos.</li>
+        <li>Mostrar o nome e o número de horas de cada curso.</li>
+        <li>Mostrar as idades diferentes que aparecen na táboa de alumnos.</li>
+        <li>Mostrar os identificadores dos cursos diferentes nos que hai alumnos.</li>
+    </ol>
+
+    <h3>Bloque 2. Filtrado de rexistros</h3>
+
+    <ol start="8">
+        <li>Mostrar os alumnos que teñen máis de 18 anos.</li>
+        <li>Mostrar os alumnos que teñen exactamente 20 anos.</li>
+        <li>Mostrar os cursos que teñen máis de 150 horas.</li>
+        <li>Mostrar os cursos que teñen menos de 200 horas.</li>
+        <li>Mostrar os alumnos que teñen entre 18 e 22 anos.</li>
+        <li>Mostrar os alumnos que pertencen aos cursos 1 e 2.</li>
+        <li>Mostrar os alumnos que non pertencen ao curso 1.</li>
+    </ol>
+
+    <h3>Bloque 3. Operadores lóxicos e patróns</h3>
+
+    <ol start="15">
+        <li>Mostrar os alumnos maiores de idade que pertencen ao curso 1.</li>
+        <li>Mostrar os alumnos que teñen 18 ou 20 anos.</li>
+        <li>Mostrar os alumnos que pertencen ao curso 1 ou ao curso 3 e teñen máis de 18 anos.</li>
+        <li>Mostrar os alumnos cuxo nome comeza pola letra A.</li>
+        <li>Mostrar os alumnos cuxo nome contén a letra a.</li>
+        <li>Mostrar os alumnos cuxo nome termina en z.</li>
+        <li>Mostrar os alumnos que non teñen curso asignado.</li>
+        <li>Mostrar os alumnos que teñen un curso asignado.</li>
+    </ol>
+
+    <h3>Bloque 4. Ordenación</h3>
+
+    <ol start="23">
+        <li>Mostrar todos os alumnos ordenados alfabeticamente polo nome.</li>
+        <li>Mostrar os alumnos ordenados de maior a menor idade.</li>
+        <li>Mostrar os cursos ordenados polo número de horas de menor a maior.</li>
+        <li>Mostrar os cursos ordenados polo número de horas de maior a menor.</li>
+        <li>Mostrar os alumnos ordenados primeiro polo identificador do curso e despois polo nome.</li>
+        <li>Mostrar os alumnos maiores de idade ordenados de maior a menor idade.</li>
+    </ol>
+
+    <div class="callout">
+        <strong>Recomendación para resolver os exercicios:</strong>
+        Antes de escribir unha consulta, identifica que columnas necesitas,
+        de que táboa proceden os datos, que condicións deben cumprir os
+        rexistros e se é necesario ordenar os resultados.
+    </div>
+
+    <!-- ================================================== -->
+    <h2>9. Estrutura xeral dunha consulta SQL</h2>
+    <!-- ================================================== -->
+
+    <p>
+        Despois de estudar os conceptos anteriores, podemos combinar
+        as distintas cláusulas nunha mesma consulta.
+    </p>
+
+    <pre><code>SELECT DISTINCT columna1, columna2
+FROM nome_taboa
+WHERE condicion1
+  AND condicion2
+ORDER BY columna1 ASC;</code></pre>
+
+    <p>
+        Nesta estrutura:
+    </p>
+
+    <ol>
+        <li><code>SELECT</code> indica as columnas que queremos recuperar.</li>
+        <li><code>DISTINCT</code> elimina as combinacións duplicadas.</li>
+        <li><code>FROM</code> indica a táboa de orixe.</li>
+        <li><code>WHERE</code> establece as condicións de selección.</li>
+        <li><code>ORDER BY</code> ordena os resultados.</li>
+    </ol>
+
+    <div class="exemplo">
+        <h4>Exemplo final. Consulta combinada</h4>
+
+        <p>
+            Queremos obter os nomes e as idades dos alumnos maiores de idade
+            que pertencen aos cursos 1 ou 2. Os resultados deben aparecer
+            ordenados por idade de maior a menor.
+        </p>
+
+        <pre><code>SELECT nome, idade
+FROM alumnos
+WHERE idade >= 18
+AND curso_id IN (1, 2)
+ORDER BY idade DESC;</code></pre>
+
+        <p>
+            Esta consulta combina a selección de columnas, o filtrado
+            mediante operadores de comparación e a ordenación dos resultados.
+        </p>
+    </div>
+
+</main>
+
+</body>
+</html>

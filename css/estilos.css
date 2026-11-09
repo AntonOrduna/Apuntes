@@ -1,0 +1,366 @@
+/* =========================================================
+   ESTILOS GENERALES PARA APUNTES
+   Diseño orientado a HTML y exportación a PDF
+   ========================================================= */
+
+:root {
+    --color-principal: #173b63;
+    --color-secundario: #286b85;
+    --color-acento: #24745b;
+
+    --color-fondo: #f4f7fa;
+    --color-superficie: #ffffff;
+
+    --color-texto: #263238;
+    --color-texto-secundario: #5d6b75;
+    --color-borde: #dce3e9;
+
+    --color-info-fondo: #eaf3f8;
+    --color-info-borde: #286b85;
+
+    --color-ejemplo-fondo: #edf5f0;
+    --color-ejemplo-borde: #24745b;
+
+    --color-alerta-fondo: #fff5e6;
+    --color-alerta-borde: #d99a32;
+
+    --ancho-contenido: 1100px;
+}
+
+/* =========================================================
+   RESET Y CONFIGURACIÓN GENERAL
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--color-fondo);
+    color: var(--color-texto);
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+}
+
+/* =========================================================
+   CONTENEDOR PRINCIPAL
+   ========================================================= */
+
+main {
+    width: 100%;
+    max-width: var(--ancho-contenido);
+    margin: 35px auto;
+    padding: 45px 55px;
+
+    background: var(--color-superficie);
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+}
+
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
+
+h1 {
+    margin: 0 0 30px;
+    padding-bottom: 18px;
+
+    color: var(--color-principal);
+    font-size: 2.2rem;
+    line-height: 1.25;
+
+    border-bottom: 3px solid var(--color-secundario);
+}
+
+h2 {
+    margin-top: 40px;
+    margin-bottom: 18px;
+
+    color: var(--color-principal);
+    font-size: 1.65rem;
+    line-height: 1.3;
+
+    border-bottom: 1px solid var(--color-borde);
+    padding-bottom: 8px;
+}
+
+h3 {
+    margin-top: 28px;
+    margin-bottom: 12px;
+
+    color: var(--color-secundario);
+    font-size: 1.25rem;
+}
+
+h4 {
+    margin-top: 22px;
+    margin-bottom: 10px;
+
+    color: var(--color-principal);
+    font-size: 1.05rem;
+}
+
+p {
+    margin: 0 0 16px;
+}
+
+/* =========================================================
+   LISTAS
+   ========================================================= */
+
+ul,
+ol {
+    margin: 12px 0 20px;
+    padding-left: 28px;
+}
+
+li {
+    margin-bottom: 7px;
+}
+
+li::marker {
+    color: var(--color-secundario);
+}
+
+/* =========================================================
+   ENLACES
+   ========================================================= */
+
+a {
+    color: var(--color-secundario);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   BLOQUES INFORMATIVOS
+   ========================================================= */
+
+.callout {
+    margin: 22px 0;
+    padding: 18px 22px;
+
+    background: var(--color-info-fondo);
+    border-left: 5px solid var(--color-info-borde);
+    border-radius: 4px;
+}
+
+.callout strong {
+    color: var(--color-principal);
+}
+
+/* =========================================================
+   EJEMPLOS
+   ========================================================= */
+
+.ejemplo {
+    margin: 22px 0;
+    padding: 18px 22px;
+
+    background: var(--color-ejemplo-fondo);
+    border-left: 5px solid var(--color-ejemplo-borde);
+    border-radius: 4px;
+}
+
+.ejemplo h3,
+.ejemplo h4 {
+    margin-top: 0;
+    color: var(--color-acento);
+}
+
+/* =========================================================
+   ADVERTENCIAS
+   ========================================================= */
+
+.advertencia {
+    margin: 22px 0;
+    padding: 18px 22px;
+
+    background: var(--color-alerta-fondo);
+    border-left: 5px solid var(--color-alerta-borde);
+    border-radius: 4px;
+}
+
+/* =========================================================
+   CÓDIGO
+   ========================================================= */
+
+code {
+    padding: 2px 5px;
+
+    background: #edf0f3;
+    border-radius: 3px;
+
+    color: #b23a48;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9em;
+}
+
+pre {
+    margin: 18px 0 24px;
+    padding: 18px 20px;
+
+    overflow-x: auto;
+
+    background: #202b36;
+    color: #f1f4f7;
+
+    border-radius: 5px;
+
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+pre code {
+    padding: 0;
+    background: none;
+    color: inherit;
+}
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
+
+table {
+    width: 100%;
+    margin: 22px 0;
+
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+thead {
+    background: var(--color-principal);
+    color: white;
+}
+
+th,
+td {
+    padding: 11px 14px;
+    border: 1px solid var(--color-borde);
+    text-align: left;
+    vertical-align: top;
+}
+
+tbody tr:nth-child(even) {
+    background: #f4f7fa;
+}
+
+/* =========================================================
+   IMÁGENES Y FIGURAS
+   ========================================================= */
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+figure {
+    margin: 25px 0;
+    text-align: center;
+}
+
+figcaption {
+    margin-top: 8px;
+    color: var(--color-texto-secundario);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* =========================================================
+   SEPARADORES
+   ========================================================= */
+
+hr {
+    margin: 35px 0;
+    border: 0;
+    border-top: 1px solid var(--color-borde);
+}
+
+/* =========================================================
+   IMPRESIÓN Y EXPORTACIÓN A PDF
+   ========================================================= */
+
+@media print {
+
+    @page {
+        size: A4;
+        margin: 18mm 16mm 18mm 16mm;
+    }
+
+    html,
+    body {
+        background: white;
+        color: #263238;
+        font-size: 10.5pt;
+    }
+
+    main {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+
+        border: none;
+        border-radius: 0;
+    }
+
+    h1 {
+        font-size: 22pt;
+    }
+
+    h2 {
+        font-size: 16pt;
+        margin-top: 28px;
+    }
+
+    h3 {
+        font-size: 12pt;
+    }
+
+    /* Evitar cortes poco adecuados */
+    h1,
+    h2,
+    h3,
+    h4 {
+        break-after: avoid;
+    }
+
+    p,
+    li {
+        orphans: 3;
+        widows: 3;
+    }
+
+    pre,
+    table,
+    figure,
+    .callout,
+    .ejemplo,
+    .advertencia {
+        break-inside: avoid;
+    }
+
+    /* Mantener colores en la impresión */
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: none;
+    }
+}
