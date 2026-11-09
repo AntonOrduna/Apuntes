@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración y configuración avanzada de Apache</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<div class="container">
+<main class="content">
+
+    <h1 class="document-title">Administración y configuración avanzada de Apache</h1>
+    <p class="document-subtitle">
+        Configuración del servidor web Apache, módulos, VirtualHost,
+        autenticación, HTTPS y comprobación de funcionamiento mediante curl.
+    </p>
+
+    <!-- BLOQUE 1 -->
+    <section>
+        <h2>1. Administración y configuración de Apache</h2>
+
+        <h3>1.1. Instalación y funcionamiento del servicio</h3>
+
+        <p>
+            Apache HTTP Server es un servidor web que permite publicar
+            páginas y aplicaciones web mediante los protocolos HTTP y HTTPS.
+            En Debian, su instalación y administración se realizan
+            principalmente desde la terminal.
+        </p>
+
+        <p>Para instalar Apache:</p>
+
+        <pre><code>apt update
+apt install apache2</code></pre>
+
+        <p>Una vez instalado, podemos administrar el servicio mediante systemd:</p>
+
+        <pre><code># Iniciar Apache
+systemctl start apache2
+
+# Detener Apache
+systemctl stop apache2
+
+# Reiniciar Apache
+systemctl restart apache2
+
+# Recargar la configuración sin detener el servicio
+systemctl reload apache2
+
+# Consultar el estado
+systemctl status apache2
+
+# Activar el inicio automático
+systemctl enable apache2</code></pre>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 1</span>
+            <h3>Comprobar que Apache está funcionando</h3>
+
+            <p>
+                Después de instalar Apache, podemos comprobar su funcionamiento
+                abriendo un navegador y accediendo a:
+            </p>
+
+            <pre><code>http://localhost/</code></pre>
+
+            <p>
+                Si Apache está funcionando correctamente, aparecerá la página
+                de bienvenida del servidor web.
+            </p>
+
+            <p>También podemos comprobarlo desde la terminal:</p>
+
+            <pre><code>systemctl status apache2</code></pre>
+        </div>
+
+        <div class="example">
+            <span class="block-label">Prueba desde terminal con curl</span>
+            <h3>Comprobar que Apache responde</h3>
+
+            <p>
+                Podemos comprobar que el servidor Apache está funcionando
+                realizando una petición HTTP desde la propia máquina Debian.
+            </p>
+
+            <pre><code>curl -I http://localhost/</code></pre>
+
+            <p>
+                La opción <code>-I</code> solicita únicamente las cabeceras
+                HTTP de la respuesta.
+            </p>
+
+            <p>Para obtener las cabeceras y el contenido HTML:</p>
+
+            <pre><code>curl -i http://localhost/</code></pre>
+
+            <p>
+                Si Apache funciona correctamente, recibiremos una respuesta
+                similar a:
+            </p>
+
+            <pre><code>HTTP/1.1 200 OK
+Date: ...
+Server: Apache/2.4...
+Content-Type: text/html</code></pre>
+
+            <p>
+                El código <code>200 OK</code> indica que la petición se ha
+                procesado correctamente.
+            </p>
+        </div>
+
+        <h3>1.2. Archivos y directorios de configuración</h3>
+
+        <p>
+            En Debian, Apache utiliza una estructura de directorios que
+            permite organizar la configuración del servidor, los sitios web,
+            los módulos y los registros.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ruta</th>
+                    <th>Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>/etc/apache2/</code></td>
+                    <td>Directorio principal de configuración.</td>
+                </tr>
+                <tr>
+                    <td><code>/etc/apache2/apache2.conf</code></td>
+                    <td>Archivo principal de configuración.</td>
+                </tr>
+                <tr>
+                    <td><code>/etc/apache2/ports.conf</code></td>
+                    <td>Define los puertos de escucha.</td>
+                </tr>
+                <tr>
+                    <td><code>/etc/apache2/sites-available/</code></td>
+                    <td>Configuraciones de sitios virtuales disponibles.</td>
+                </tr>
+                <tr>
+                    <td><code>/etc/apache2/sites-enabled/</code></td>
+                    <td>Enlaces a los sitios virtuales habilitados.</td>
+                </tr>
+                <tr>
+                    <td><code>/etc/apache2/mods-available/</code></td>
+                    <td>Módulos disponibles.</td>
+                </tr>
+                <tr>
+                    <td><code>/etc/apache2/mods-enabled/</code></td>
+                    <td>Módulos habilitados.</td>
+                </tr>
+                <tr>
+                    <td><code>/var/www/html/</code></td>
+                    <td>Directorio web predeterminado.</td>
+                </tr>
+                <tr>
+                    <td><code>/var/log/apache2/</code></td>
+                    <td>Registros de actividad y errores.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>1.3. Directivas de configuración</h3>
+
+        <p>
+            Apache utiliza directivas para definir el comportamiento del
+            servidor. Estas directivas se escriben en archivos de configuración
+            y pueden agruparse dentro de bloques específicos.
+        </p>
+
+        <p>Algunas de las directivas más importantes son:</p>
+
+        <ul>
+            <li><code>ServerName</code>: nombre del servidor.</li>
+            <li><code>Listen</code>: puerto en el que escucha Apache.</li>
+            <li><code>DocumentRoot</code>: directorio que contiene los archivos web.</li>
+            <li><code>DirectoryIndex</code>: archivo que se carga por defecto.</li>
+            <li><code>ErrorLog</code>: archivo donde se registran los errores.</li>
+            <li><code>CustomLog</code>: archivo donde se registran las peticiones.</li>
+            <li><code>AllowOverride</code>: permite o impide el uso de archivos `.htaccess`.</li>
+        </ul>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 2</span>
+            <h3>Configuración básica de un directorio web</h3>
+
+            <p>
+                Podemos configurar el directorio principal de una aplicación
+                web mediante un bloque <code>Directory</code>.
+            </p>
+
+            <pre><code>&lt;Directory /var/www/html&gt;
+    Options -Indexes
+    AllowOverride None
+    Require all granted
+&lt;/Directory&gt;</code></pre>
+
+            <p>
+                En este ejemplo se desactiva el listado automático de
+                directorios, se impide el uso de archivos
+                <code>.htaccess</code> y se permite el acceso a los recursos.
+            </p>
+        </div>
+
+        <h3>1.4. Permisos y registros</h3>
+
+        <p>
+            El usuario que ejecuta Apache necesita permisos para leer
+            los archivos publicados. En Debian, el usuario habitual es
+            <code>www-data</code>.
+        </p>
+
+        <pre><code># Consultar los permisos
+ls -l /var/www/html
+
+# Asignar propietario y grupo
+chown -R www-data:www-data /var/www/html
+
+# Establecer permisos de lectura y ejecución
+chmod -R 755 /var/www/html</code></pre>
+
+        <p>Los registros principales son:</p>
+
+        <pre><code>/var/log/apache2/access.log
+/var/log/apache2/error.log</code></pre>
+
+        <p>Para consultar los últimos errores:</p>
+
+        <pre><code>tail -f /var/log/apache2/error.log</code></pre>
+
+        <div class="practice">
+            <span class="block-label">Ejercicio práctico no evaluable</span>
+            <h3>Ejercicio 1. Administración de Apache</h3>
+
+            <ol>
+                <li>Instala Apache en Debian.</li>
+                <li>Comprueba el estado del servicio.</li>
+                <li>Detén y vuelve a iniciar Apache.</li>
+                <li>Localiza el archivo principal de configuración.</li>
+                <li>Consulta los registros de acceso y errores.</li>
+                <li>Comprueba la respuesta HTTP utilizando <code>curl -i http://localhost/</code>.</li>
+            </ol>
+        </div>
+    </section>
+
+
+    <!-- BLOQUE 2 -->
+    <section>
+        <h2>2. Módulos y funcionalidades de Apache</h2>
+
+        <h3>2.1. Sistema de módulos</h3>
+
+        <p>
+            Apache utiliza módulos para ampliar sus funcionalidades.
+            Estos módulos permiten incorporar características como
+            autenticación, compresión, reescritura de URL, cifrado HTTPS
+            y gestión de cabeceras HTTP.
+        </p>
+
+        <p>
+            En Debian, los módulos se administran mediante los comandos
+            <code>a2enmod</code> y <code>a2dismod</code>.
+        </p>
+
+        <pre><code># Habilitar un módulo
+a2enmod nombre_modulo
+
+# Deshabilitar un módulo
+a2dismod nombre_modulo
+
+# Consultar los módulos cargados
+apache2ctl -M
+
+# Comprobar la configuración
+apache2ctl configtest</code></pre>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 1</span>
+            <h3>Habilitar módulos habituales</h3>
+
+            <p>Habilitamos los módulos de reescritura y gestión de cabeceras:</p>
+
+            <pre><code>a2enmod rewrite
+a2enmod headers
+
+systemctl reload apache2</code></pre>
+
+            <p>
+                Podemos comprobar que están cargados mediante:
+            </p>
+
+            <pre><code>apache2ctl -M</code></pre>
+        </div>
+
+        <h3>2.2. Reescritura de URL con mod_rewrite</h3>
+
+        <p>
+            El módulo <code>mod_rewrite</code> permite modificar las URL
+            solicitadas por los clientes. Se utiliza para crear direcciones
+            más sencillas, redirigir páginas antiguas o establecer reglas
+            de acceso.
+        </p>
+
+        <p>Para habilitarlo:</p>
+
+        <pre><code>a2enmod rewrite
+systemctl reload apache2</code></pre>
+
+        <p>
+            Las reglas se definen mediante las directivas
+            <code>RewriteEngine</code>, <code>RewriteRule</code> y
+            <code>RewriteCond</code>.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 2</span>
+            <h3>Redirigir una URL antigua hacia una nueva</h3>
+
+            <p>
+                Supongamos que queremos que las peticiones a
+                <code>/antigua</code> se redirijan a
+                <code>/nueva</code>.
+            </p>
+
+            <p>Dentro del VirtualHost podemos escribir:</p>
+
+            <pre><code>RewriteEngine On
+RewriteRule ^/antigua$ /nueva [R=301,L]</code></pre>
+
+            <p>
+                La respuesta <code>301</code> indica que la redirección
+                es permanente. La opción <code>L</code> indica que no
+                se deben procesar más reglas.
+            </p>
+        </div>
+
+        <div class="example">
+            <span class="block-label">Prueba desde terminal con curl</span>
+            <h3>Comprobar una redirección</h3>
+
+            <p>
+                Podemos comprobar si Apache está realizando correctamente
+                una redirección utilizando:
+            </p>
+
+            <pre><code>curl -I http://localhost/antigua</code></pre>
+
+            <p>
+                Si la regla está configurada como una redirección permanente,
+                deberíamos recibir una respuesta similar a:
+            </p>
+
+            <pre><code>HTTP/1.1 301 Moved Permanently
+Location: http://localhost/nueva</code></pre>
+
+            <p>
+                Para seguir automáticamente la redirección y consultar
+                la respuesta final:
+            </p>
+
+            <pre><code>curl -L -i http://localhost/antigua</code></pre>
+        </div>
+
+        <h3>2.3. Gestión de cabeceras HTTP con mod_headers</h3>
+
+        <p>
+            Las cabeceras HTTP permiten transmitir información adicional
+            entre el cliente y el servidor. Apache puede modificarlas
+            mediante el módulo <code>mod_headers</code>.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 3</span>
+            <h3>Añadir cabeceras de seguridad</h3>
+
+            <p>
+                Podemos añadir determinadas cabeceras HTTP a las respuestas
+                del servidor:
+            </p>
+
+            <pre><code>Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"</code></pre>
+
+            <p>
+                Estas cabeceras permiten establecer determinadas políticas
+                de seguridad relacionadas con el contenido, la carga
+                de páginas dentro de marcos y el envío de información
+                de referencia.
+            </p>
+        </div>
+
+        <div class="practice">
+            <span class="block-label">Ejercicio práctico no evaluable</span>
+            <h3>Ejercicio 2. Módulos de Apache</h3>
+
+            <ol>
+                <li>Comprueba qué módulos tiene cargados Apache.</li>
+                <li>Habilita <code>mod_rewrite</code>.</li>
+                <li>Crea una regla para redirigir una URL antigua.</li>
+                <li>Habilita <code>mod_headers</code>.</li>
+                <li>Añade una cabecera HTTP de seguridad.</li>
+                <li>Comprueba las respuestas utilizando <code>curl -I</code>.</li>
+            </ol>
+        </div>
+    </section>
+
+
+    <!-- BLOQUE 3 -->
+    <section>
+        <h2>3. Configuración de VirtualHost</h2>
+
+        <h3>3.1. Concepto de alojamiento virtual</h3>
+
+        <p>
+            Los VirtualHost permiten alojar varios sitios web en un mismo
+            servidor Apache. Cada sitio puede tener un nombre de dominio,
+            un directorio de publicación y unos registros independientes.
+        </p>
+
+        <p>
+            Apache utiliza principalmente la cabecera HTTP
+            <code>Host</code> para determinar qué sitio debe responder
+            a una petición.
+        </p>
+
+        <p>
+            En Debian, las configuraciones de los sitios se guardan en:
+        </p>
+
+        <pre><code>/etc/apache2/sites-available/</code></pre>
+
+        <p>
+            Los sitios habilitados se encuentran en:
+        </p>
+
+        <pre><code>/etc/apache2/sites-enabled/</code></pre>
+
+        <h3>3.2. Crear un VirtualHost</h3>
+
+        <p>
+            Para crear un sitio web debemos preparar su directorio,
+            crear su archivo de configuración y habilitarlo.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 1</span>
+            <h3>Crear el sitio empresa.local</h3>
+
+            <p>Primero creamos el directorio y una página de prueba:</p>
+
+            <pre><code>mkdir -p /var/www/empresa
+
+echo "&lt;h1&gt;Web de Empresa&lt;/h1&gt;" &gt; /var/www/empresa/index.html</code></pre>
+
+            <p>
+                Creamos el archivo
+                <code>/etc/apache2/sites-available/empresa.conf</code>:
+            </p>
+
+            <pre><code>&lt;VirtualHost *:80&gt;
+    ServerName empresa.local
+
+    DocumentRoot /var/www/empresa
+
+    &lt;Directory /var/www/empresa&gt;
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    &lt;/Directory&gt;
+
+    ErrorLog ${APACHE_LOG_DIR}/empresa_error.log
+    CustomLog ${APACHE_LOG_DIR}/empresa_access.log combined
+&lt;/VirtualHost&gt;</code></pre>
+
+            <p>Habilitamos el sitio y recargamos Apache:</p>
+
+            <pre><code>a2ensite empresa.conf
+apache2ctl configtest
+systemctl reload apache2</code></pre>
+        </div>
+
+        <h3>3.3. Configurar varios sitios web</h3>
+
+        <p>
+            Podemos crear tantos VirtualHost como necesitemos, siempre
+            que dispongamos de los recursos necesarios.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 2</span>
+            <h3>Crear un segundo sitio: tienda.local</h3>
+
+            <p>Creamos su directorio y página principal:</p>
+
+            <pre><code>mkdir -p /var/www/tienda
+
+echo "&lt;h1&gt;Web de Tienda&lt;/h1&gt;" &gt; /var/www/tienda/index.html</code></pre>
+
+            <p>
+                Creamos
+                <code>/etc/apache2/sites-available/tienda.conf</code>:
+            </p>
+
+            <pre><code>&lt;VirtualHost *:80&gt;
+    ServerName tienda.local
+
+    DocumentRoot /var/www/tienda
+
+    &lt;Directory /var/www/tienda&gt;
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    &lt;/Directory&gt;
+
+    ErrorLog ${APACHE_LOG_DIR}/tienda_error.log
+    CustomLog ${APACHE_LOG_DIR}/tienda_access.log combined
+&lt;/VirtualHost&gt;</code></pre>
+
+            <p>Habilitamos el nuevo sitio:</p>
+
+            <pre><code>a2ensite tienda.conf
+apache2ctl configtest
+systemctl reload apache2</code></pre>
+        </div>
+
+        <h3>3.4. Resolución de nombres</h3>
+
+        <p>
+            Para acceder a los sitios utilizando sus nombres de dominio
+            en una red local, debemos configurar la resolución de nombres.
+        </p>
+
+        <p>
+            En una máquina Linux podemos modificar el archivo:
+        </p>
+
+        <pre><code>/etc/hosts</code></pre>
+
+        <p>Por ejemplo:</p>
+
+        <pre><code>127.0.0.1 empresa.local
+127.0.0.1 tienda.local</code></pre>
+
+        <p>
+            Si queremos acceder desde la máquina física, tendremos que
+            configurar los nombres en el archivo <code>hosts</code>
+            de esa máquina utilizando la IP de la máquina virtual Debian.
+            Si utilizamos VirtualBox con NAT, también podemos recurrir
+            al reenvío de puertos.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Prueba desde terminal con curl</span>
+            <h3>Probar un VirtualHost sin modificar el DNS</h3>
+
+            <p>
+                Podemos enviar una petición indicando manualmente la
+                cabecera HTTP <code>Host</code>. Esto permite probar
+                un VirtualHost aunque todavía no hayamos configurado
+                su nombre en el archivo <code>/etc/hosts</code>.
+            </p>
+
+            <pre><code>curl -i -H "Host: empresa.local" http://localhost/</code></pre>
+
+            <p>Para probar el segundo sitio virtual:</p>
+
+            <pre><code>curl -i -H "Host: tienda.local" http://localhost/</code></pre>
+
+            <p>
+                Apache seleccionará el VirtualHost correspondiente
+                según el valor de la cabecera <code>Host</code>.
+                En la respuesta podremos comprobar qué página ha servido.
+            </p>
+        </div>
+
+        <div class="practice">
+            <span class="block-label">Ejercicio práctico no evaluable</span>
+            <h3>Ejercicio 3. Configuración de VirtualHost</h3>
+
+            <ol>
+                <li>Crea dos directorios web independientes.</li>
+                <li>Prepara una página HTML diferente en cada directorio.</li>
+                <li>Configura dos VirtualHost con nombres distintos.</li>
+                <li>Habilita ambos sitios y comprueba la configuración.</li>
+                <li>Configura la resolución de nombres en Debian.</li>
+                <li>Prueba ambos sitios con el navegador.</li>
+                <li>Repite las pruebas utilizando <code>curl -i -H "Host: ..."</code>.</li>
+                <li>Comprueba los registros de acceso de cada sitio.</li>
+            </ol>
+        </div>
+    </section>
+
+
+    <!-- BLOQUE 4 -->
+    <section>
+        <h2>4. Autenticación y control de acceso</h2>
+
+        <h3>4.1. Autenticación HTTP</h3>
+
+        <p>
+            Apache permite proteger determinados directorios mediante
+            autenticación HTTP. De esta forma, los usuarios deben
+            proporcionar unas credenciales válidas antes de acceder
+            a los recursos protegidos.
+        </p>
+
+        <p>
+            Uno de los mecanismos más sencillos es la autenticación básica
+            (<code>Basic Authentication</code>).
+        </p>
+
+        <p>
+            Este sistema transmite las credenciales codificadas en Base64,
+            pero no cifradas. Por tanto, debe utilizarse junto con HTTPS
+            para evitar que las credenciales puedan ser interceptadas.
+        </p>
+
+        <h3>4.2. Crear usuarios y contraseñas</h3>
+
+        <p>
+            Apache utiliza la herramienta <code>htpasswd</code> para
+            gestionar los usuarios y sus contraseñas.
+        </p>
+
+        <p>Instalamos la herramienta si no está disponible:</p>
+
+        <pre><code>apt install apache2-utils</code></pre>
+
+        <p>Creamos un archivo de usuarios:</p>
+
+        <pre><code>htpasswd -c /etc/apache2/.htpasswd alumno</code></pre>
+
+        <p>
+            La opción <code>-c</code> crea el archivo. Para añadir nuevos
+            usuarios no debemos volver a utilizarla:
+        </p>
+
+        <pre><code>htpasswd /etc/apache2/.htpasswd profesor</code></pre>
+
+        <h3>4.3. Proteger un directorio</h3>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 1</span>
+            <h3>Proteger el directorio privado</h3>
+
+            <p>Creamos un directorio privado:</p>
+
+            <pre><code>mkdir -p /var/www/empresa/privado
+
+echo "&lt;h1&gt;Zona privada&lt;/h1&gt;" &gt; /var/www/empresa/privado/index.html</code></pre>
+
+            <p>
+                Añadimos las siguientes directivas dentro del VirtualHost
+                o en la configuración correspondiente para proteger el directorio
+                privado mediante autenticación.
+            </p>
+
+        <div class="knowledge">
+            <span class="block-label">Importante</span>
+            <p>
+                En el directorio privado, la directiva
+                <code>Require valid-user</code> sustituye a
+                <code>Require all granted</code>.
+            </p>
+            <p>
+                No debemos mantener ambas directivas como requisitos
+                independientes, ya que cambiaría el comportamiento de
+                autorización y podría permitir el acceso sin autenticación.
+            </p>
+        </div>
+
+            <pre><code>&lt;Directory /var/www/empresa/privado&gt;
+    AuthType Basic
+    AuthName "Zona privada"
+    AuthBasicProvider file
+    AuthUserFile /etc/apache2/.htpasswd
+    Require valid-user
+&lt;/Directory&gt;</code></pre>
+
+            <p>
+                Con esta configuración, Apache solicitará un usuario
+                y una contraseña para acceder al directorio.
+            </p>
+
+            <p>Comprobamos la sintaxis y recargamos el servicio:</p>
+
+            <pre><code>apache2ctl configtest
+systemctl reload apache2</code></pre>
+        </div>
+
+        <div class="example">
+            <span class="block-label">Prueba desde terminal con curl</span>
+            <h3>Probar la autenticación básica</h3>
+
+            <p>
+                Podemos comprobar el acceso a un directorio protegido
+                sin utilizar el navegador.
+            </p>
+
+            <p>Primero realizamos una petición sin proporcionar credenciales:</p>
+
+            <pre><code>curl -i http://localhost/privado/</code></pre>
+
+            <p>
+                Apache debería responder con
+                <code>401 Unauthorized</code> y solicitar autenticación.
+            </p>
+
+            <p>
+                Después repetimos la petición proporcionando un usuario
+                y contraseña:
+            </p>
+
+            <pre><code>curl -i -u alumno http://localhost/privado/</code></pre>
+
+            <p>
+                <code>curl</code> solicitará la contraseña por terminal.
+                Si las credenciales son correctas y el usuario tiene permiso,
+                recibiremos una respuesta satisfactoria, normalmente
+                <code>200 OK</code>.
+            </p>
+
+            <p>
+                También podemos consultar las cabeceras sin mostrar
+                el contenido de la página:
+            </p>
+
+            <pre><code>curl -I -u alumno http://localhost/privado/</code></pre>
+        </div>
+
+        <h3>4.4. Restricciones por dirección IP</h3>
+
+        <p>
+            Además de la autenticación, Apache permite restringir el acceso
+            a determinados recursos según la dirección IP del cliente.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 2</span>
+            <h3>Permitir el acceso únicamente desde una IP</h3>
+
+            <pre><code>&lt;Directory /var/www/empresa/privado&gt;
+    Require ip 192.168.1.100
+&lt;/Directory&gt;</code></pre>
+
+            <p>
+                También podemos permitir el acceso a una red completa:
+            </p>
+
+            <pre><code>&lt;Directory /var/www/empresa/privado&gt;
+    Require ip 192.168.1.0/24
+&lt;/Directory&gt;</code></pre>
+
+            <p>
+                En este caso, solamente los equipos de esa red podrán
+                acceder al directorio.
+            </p>
+        </div>
+
+        <h3>4.5. Permisos del sistema de archivos</h3>
+
+        <p>
+            La autenticación HTTP no sustituye a los permisos del sistema
+            de archivos. Apache también necesita permisos adecuados para
+            leer los recursos publicados.
+        </p>
+
+        <p>
+            El archivo de contraseñas debe encontrarse fuera del directorio
+            público y ser legible por el proceso de Apache, sin permitir
+            su modificación por usuarios no autorizados.
+        </p>
+
+        <div class="practice">
+            <span class="block-label">Ejercicio práctico no evaluable</span>
+            <h3>Ejercicio 4. Protección de directorios</h3>
+
+            <ol>
+                <li>Crea un directorio privado dentro de uno de tus sitios web.</li>
+                <li>Instala la herramienta <code>htpasswd</code>.</li>
+                <li>Crea dos usuarios con contraseñas diferentes.</li>
+                <li>Configura la autenticación básica en Apache.</li>
+                <li>Comprueba que sin credenciales se obtiene un error 401.</li>
+                <li>Accede con cada usuario desde el navegador.</li>
+                <li>Repite las pruebas utilizando <code>curl -u</code>.</li>
+                <li>Configura una restricción de acceso por dirección IP y comprueba su funcionamiento.</li>
+            </ol>
+        </div>
+    </section>
+
+
+    <!-- BLOQUE 5 -->
+    <section>
+        <h2>5. HTTPS y certificados digitales</h2>
+
+        <h3>5.1. Funcionamiento de HTTPS</h3>
+
+        <p>
+            HTTPS es la versión segura del protocolo HTTP. Utiliza TLS
+            para cifrar las comunicaciones entre el navegador y el servidor.
+        </p>
+
+        <p>HTTPS proporciona principalmente:</p>
+
+        <ul>
+            <li><strong>Confidencialidad:</strong> los datos transmitidos están cifrados.</li>
+            <li><strong>Integridad:</strong> permite detectar modificaciones de los datos.</li>
+            <li><strong>Autenticación:</strong> permite comprobar la identidad del servidor mediante un certificado.</li>
+        </ul>
+
+        <p>
+            El protocolo HTTPS utiliza habitualmente el puerto
+            <code>443</code>, mientras que HTTP utiliza el puerto
+            <code>80</code>.
+        </p>
+
+        <h3>5.2. Certificados digitales</h3>
+
+        <p>
+            Un certificado digital permite asociar una identidad con
+            una clave pública. Los navegadores utilizan estos certificados
+            para verificar la identidad del servidor.
+        </p>
+
+        <p>Podemos distinguir dos tipos habituales de certificados:</p>
+
+        <ul>
+            <li>
+                <strong>Certificados autofirmados:</strong> generados
+                por el propio administrador. Son útiles en laboratorios
+                y entornos de pruebas.
+            </li>
+            <li>
+                <strong>Certificados emitidos por una autoridad certificadora:</strong>
+                permiten que los navegadores confíen en el servidor si
+                la autoridad está reconocida.
+            </li>
+        </ul>
+
+        <h3>5.3. Crear un certificado autofirmado</h3>
+
+        <p>
+            Para habilitar HTTPS en un entorno de pruebas podemos generar
+            un certificado autofirmado utilizando OpenSSL.
+        </p>
+
+        <p>Primero instalamos OpenSSL:</p>
+
+        <pre><code>apt install openssl</code></pre>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 1</span>
+            <h3>Generar una clave privada y un certificado</h3>
+
+            <p>
+                Creamos un directorio para almacenar los certificados:
+            </p>
+
+            <pre><code>mkdir -p /etc/apache2/ssl</code></pre>
+
+            <p>
+                Generamos una clave privada y un certificado autofirmado
+                incluyendo el nombre del servidor:
+            </p>
+
+            <pre><code>openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+-keyout /etc/apache2/ssl/empresa.key \
+-out /etc/apache2/ssl/empresa.crt \
+-subj "/C=ES/ST=Galicia/L=A Coruna/O=Empresa/OU=IT/CN=empresa.local" \
+-addext "subjectAltName=DNS:empresa.local"</code></pre>
+
+            <p>
+                Se generan dos archivos:
+            </p>
+
+            <ul>
+                <li><code>empresa.key</code>: clave privada.</li>
+                <li><code>empresa.crt</code>: certificado digital.</li>
+            </ul>
+
+            <p>
+                La clave privada debe mantenerse protegida y no debe
+                compartirse con los clientes.
+            </p>
+        </div>
+
+        <h3>5.4. Configurar Apache para utilizar HTTPS</h3>
+
+        <p>
+            Primero habilitamos el módulo SSL:
+        </p>
+
+        <pre><code>a2enmod ssl
+systemctl reload apache2</code></pre>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 2</span>
+            <h3>Crear un VirtualHost HTTPS</h3>
+
+            <p>
+                Creamos un archivo de configuración para el sitio seguro,
+                por ejemplo:
+                <code>/etc/apache2/sites-available/empresa-ssl.conf</code>.
+            </p>
+
+            <pre><code>&lt;VirtualHost *:443&gt;
+    ServerName empresa.local
+
+    DocumentRoot /var/www/empresa
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/empresa.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/empresa.key
+
+    &lt;Directory /var/www/empresa&gt;
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    &lt;/Directory&gt;
+
+    ErrorLog ${APACHE_LOG_DIR}/empresa_ssl_error.log
+    CustomLog ${APACHE_LOG_DIR}/empresa_ssl_access.log combined
+&lt;/VirtualHost&gt;</code></pre>
+
+            <p>
+                Habilitamos el sitio y comprobamos la configuración:
+            </p>
+
+            <pre><code>a2ensite empresa-ssl.conf
+apache2ctl configtest
+systemctl reload apache2</code></pre>
+
+            <p>
+                Podemos acceder al sitio utilizando:
+            </p>
+
+            <pre><code>https://empresa.local/</code></pre>
+        </div>
+
+        <div class="example">
+            <span class="block-label">Prueba desde terminal con curl</span>
+            <h3>Comprobar una conexión HTTPS</h3>
+
+            <p>
+                Podemos realizar una petición HTTPS para comprobar que
+                Apache está atendiendo peticiones cifradas.
+            </p>
+
+            <pre><code>curl -I https://localhost/</code></pre>
+
+            <p>
+                Si utilizamos un certificado autofirmado, es posible que
+                <code>curl</code> muestre un error de validación del certificado.
+            </p>
+
+            <p>
+                Para realizar una prueba ignorando temporalmente esa
+                validación:
+            </p>
+
+            <pre><code>curl -k -I https://localhost/</code></pre>
+
+            <p>
+                La opción <code>-k</code> permite aceptar certificados
+                no verificados. Debe utilizarse únicamente en pruebas.
+            </p>
+
+            <p>También podemos consultar la respuesta completa:</p>
+
+            <pre><code>curl -k -i https://localhost/</code></pre>
+
+            <p>
+                Para probar el nombre del VirtualHost y el certificado
+                correspondiente podemos utilizar:
+            </p>
+
+            <pre><code>curl -k -i --resolve empresa.local:443:127.0.0.1 \
+https://empresa.local/</code></pre>
+        </div>
+
+        <h3>5.5. Redirigir HTTP hacia HTTPS</h3>
+
+        <p>
+            Una vez configurado HTTPS, podemos hacer que las peticiones
+            HTTP se redirijan automáticamente a la versión segura del sitio.
+        </p>
+
+        <div class="example">
+            <span class="block-label">Ejemplo 3</span>
+            <h3>Redirección permanente a HTTPS</h3>
+
+            <p>
+                En el VirtualHost del puerto 80 podemos añadir:
+            </p>
+
+            <pre><code>&lt;VirtualHost *:80&gt;
+    ServerName empresa.local
+
+    Redirect permanent / https://empresa.local/
+&lt;/VirtualHost&gt;</code></pre>
+
+            <p>
+                De esta forma, las peticiones realizadas mediante HTTP
+                recibirán una redirección permanente hacia HTTPS.
+            </p>
+        </div>
+
+        <div class="example">
+            <span class="block-label">Prueba desde terminal con curl</span>
+            <h3>Comprobar la redirección HTTP a HTTPS</h3>
+
+            <p>
+                Consultamos las cabeceras de la respuesta HTTP:
+            </p>
+
+            <pre><code>curl -I http://localhost/</code></pre>
+
+            <p>
+                Si la redirección está configurada correctamente,
+                recibiremos una respuesta similar a:
+            </p>
+
+            <pre><code>HTTP/1.1 301 Moved Permanently
+Location: https://empresa.local/</code></pre>
+
+            <p>
+                Podemos seguir la redirección automáticamente:
+            </p>
+
+            <pre><code>curl -k -L -i http://localhost/</code></pre>
+        </div>
+
+        <h3>5.6. Certificados de Let's Encrypt</h3>
+
+        <p>
+            En servidores accesibles desde Internet podemos utilizar
+            certificados gratuitos emitidos por Let's Encrypt.
+            Estos certificados son reconocidos por los principales
+            navegadores.
+        </p>
+
+        <p>
+            Una herramienta habitual para gestionar estos certificados
+            es Certbot.
+        </p>
+
+        <pre><code>apt install certbot python3-certbot-apache</code></pre>
+
+        <p>
+            Para solicitar y configurar un certificado:
+        </p>
+
+        <pre><code>certbot --apache -d ejemplo.com</code></pre>
+
+        <p>
+            Este procedimiento requiere disponer de un dominio válido
+            y que el servidor cumpla los requisitos de validación
+            de Let's Encrypt. No es una alternativa adecuada para
+            los nombres locales del laboratorio, como
+            <code>empresa.local</code>.
+        </p>
+
+        <div class="practice">
+            <span class="block-label">Ejercicio práctico no evaluable</span>
+            <h3>Ejercicio 5. Configuración de HTTPS</h3>
+
+            <ol>
+                <li>Instala OpenSSL y habilita el módulo SSL de Apache.</li>
+                <li>Genera una clave privada y un certificado autofirmado.</li>
+                <li>Configura un VirtualHost que escuche en el puerto 443.</li>
+                <li>Asocia el certificado y la clave privada al sitio web.</li>
+                <li>Comprueba que el servicio HTTPS responde correctamente.</li>
+                <li>Realiza una petición con <code>curl -k -I</code>.</li>
+                <li>Configura una redirección permanente de HTTP a HTTPS.</li>
+                <li>Comprueba la redirección utilizando <code>curl -I</code> y <code>curl -L</code>.</li>
+            </ol>
+        </div>
+    </section>
+
+
+    <!-- BLOQUE 6 -->
+    <section>
+        <h2>6. Resumen: pruebas con curl</h2>
+
+        <p>
+            La herramienta <code>curl</code> permite realizar peticiones
+            HTTP y HTTPS desde la terminal. Es especialmente útil para
+            comprobar la configuración de Apache sin necesidad de utilizar
+            un navegador.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Comprobación</th>
+                    <th>Comando</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Consultar cabeceras HTTP</td>
+                    <td><code>curl -I http://localhost/</code></td>
+                </tr>
+                <tr>
+                    <td>Consultar respuesta completa</td>
+                    <td><code>curl -i http://localhost/</code></td>
+                </tr>
+                <tr>
+                    <td>Seguir redirecciones</td>
+                    <td><code>curl -L -i http://localhost/antigua</code></td>
+                </tr>
+                <tr>
+                    <td>Probar un VirtualHost</td>
+                    <td><code>curl -i -H "Host: empresa.local" http://localhost/</code></td>
+                </tr>
+                <tr>
+                    <td>Probar autenticación HTTP</td>
+                    <td><code>curl -i -u alumno http://localhost/privado/</code></td>
+                </tr>
+                <tr>
+                    <td>Probar HTTPS</td>
+                    <td><code>curl -k -I https://localhost/</code></td>
+                </tr>
+                <tr>
+                    <td>Probar HTTPS con nombre de dominio</td>
+                    <td><code>curl -k --resolve empresa.local:443:127.0.0.1 https://empresa.local/</code></td>
+                </tr>
+                <tr>
+                    <td>Consultar cabeceras de seguridad</td>
+                    <td><code>curl -I http://localhost/</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="knowledge">
+            <span class="block-label">Conocimiento clave</span>
+
+            <p>
+                <code>curl</code> permite probar el servidor directamente
+                desde Debian. El navegador de la máquina física permite
+                comprobar el acceso desde otro equipo.
+            </p>
+
+            <p>
+                Ambas pruebas son complementarias: una configuración puede
+                funcionar en <code>localhost</code> y presentar problemas
+                de red, firewall o NAT al acceder desde el exterior.
+            </p>
+
+            <p>
+                Para las pruebas locales, Apache debe estar escuchando
+                en el puerto 80 o 443, según corresponda. Si se utiliza
+                otro puerto, habrá que indicarlo en la URL, por ejemplo:
+                <code>http://localhost:8080/</code>.
+            </p>
+        </div>
+
+        <div class="practice">
+            <span class="block-label">Ejercicio práctico no evaluable</span>
+            <h3>Ejercicio 6. Diagnóstico mediante curl</h3>
+
+            <p>
+                Utiliza <code>curl</code> para comprobar el funcionamiento
+                de los distintos elementos configurados durante la unidad.
+            </p>
+
+            <ol>
+                <li>Realiza una petición HTTP y comprueba el código de respuesta.</li>
+                <li>Consulta las cabeceras HTTP del servidor.</li>
+                <li>Prueba los dos VirtualHost utilizando la cabecera <code>Host</code>.</li>
+                <li>Comprueba el comportamiento de una URL redirigida.</li>
+                <li>Realiza una petición a un directorio protegido sin credenciales.</li>
+                <li>Repite la petición proporcionando un usuario y contraseña.</li>
+                <li>Realiza una petición HTTPS ignorando la validación del certificado autofirmado.</li>
+                <li>Comprueba que las peticiones HTTP se redirigen a HTTPS.</li>
+            </ol>
+        </div>
+    </section>
+
+</main>
+</div>
+
+<footer class="site-footer">Apuntes de clase</footer>
+
+</body>
+</html>
