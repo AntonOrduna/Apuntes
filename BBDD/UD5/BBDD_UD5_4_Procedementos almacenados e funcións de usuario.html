@@ -1,0 +1,1273 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD5 - Procedementos almacenados e funcións de usuario</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+    <h1 class="document-title">UD5. Programación de bases de datos</h1>
+    <h2>Bloque 4. Procedementos almacenados e funcións de usuario</h2>
+
+    <p>
+        Os procedementos almacenados e as funcións permiten incorporar
+        lóxica de programación directamente no servidor MariaDB. Mediante
+        estes elementos é posible encapsular operacións, reutilizar código
+        e centralizar tarefas relacionadas coa xestión da información.
+    </p>
+
+    <section>
+        <h2>1. Procedementos almacenados</h2>
+
+        <h3>1.1. Concepto</h3>
+
+        <p>
+            Un procedemento almacenado é un conxunto de instrucións SQL
+            e estruturas procedementais que se gardan na base de datos
+            para poder executalas posteriormente mediante unha chamada.
+        </p>
+
+        <p>
+            A diferenza dunha consulta SQL convencional, que se executa
+            directamente, un procedemento pode recibir parámetros,
+            declarar variables locais, realizar operacións, tomar decisións
+            e repetir instrucións.
+        </p>
+
+        <p>
+            Os procedementos almacenados utilízanse para:
+        </p>
+
+        <ul>
+            <li>Automatizar operacións habituais sobre as táboas.</li>
+            <li>Centralizar regras de negocio no servidor.</li>
+            <li>Realizar operacións que necesitan varias instrucións SQL.</li>
+            <li>Validar datos antes de inserilos ou modificalos.</li>
+            <li>Reducir a repetición de código nas aplicacións.</li>
+            <li>Controlar as operacións que poden executar os usuarios.</li>
+        </ul>
+
+        <h3>1.2. Vantaxes da programación no servidor</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Vantaxe</th>
+                    <th>Descrición</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Reutilización</td>
+                    <td>Un mesmo procedemento pode executarse desde diferentes aplicacións ou sesións.</td>
+                </tr>
+                <tr>
+                    <td>Centralización</td>
+                    <td>A lóxica de negocio almacénase nun único lugar, no servidor.</td>
+                </tr>
+                <tr>
+                    <td>Mantemento</td>
+                    <td>Permite modificar unha operación sen ter que actualizar todas as aplicacións que a utilizan.</td>
+                </tr>
+                <tr>
+                    <td>Seguridade</td>
+                    <td>Pódense conceder permisos para executar procedementos sen dar acceso directo a todas as táboas implicadas.</td>
+                </tr>
+                <tr>
+                    <td>Comunicación</td>
+                    <td>Pode reducir o número de instrucións que unha aplicación necesita enviar ao servidor.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            A programación no servidor tamén implica responsabilidades:
+            é necesario controlar os permisos, documentar o código e evitar
+            procedementos excesivamente complexos ou difíciles de manter.
+        </p>
+
+        <h3>1.3. Sintaxe de CREATE PROCEDURE</h3>
+
+        <p>
+            A instrución <code>CREATE PROCEDURE</code> permite crear un
+            procedemento almacenado.
+        </p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE nome_procedemento()
+BEGIN
+    -- Instrucións SQL
+    -- Variables, condicións e bucles
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Os parénteses conteñen os parámetros do procedemento. Se non
+            recibe parámetros, déixanse baleiros.
+        </p>
+
+        <p>
+            O corpo do procedemento delimítase mediante
+            <code>BEGIN</code> e <code>END</code>. Dentro deste bloque
+            poden aparecer instrucións SQL e estruturas de programación.
+        </p>
+
+        <div class="callout">
+            <strong>O delimitador en MySQL Workbench e MariaDB</strong>
+            <p>
+                O cliente SQL utiliza normalmente o punto e coma
+                (<code>;</code>) para identificar o final dunha instrución.
+                Como un procedemento pode conter varias instrucións
+                separadas por punto e coma, cámbiase temporalmente o
+                delimitador mediante <code>DELIMITER</code>.
+            </p>
+            <p>
+                A instrución <code>DELIMITER</code> é unha directiva do
+                cliente, non unha instrución SQL executada polo servidor.
+                Ao rematar a creación do procedemento, adoita restaurarse
+                o delimitador habitual.
+            </p>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: crear un procedemento sinxelo</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE listar_alumnos()
+BEGIN
+    SELECT *
+    FROM alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+            <p>
+                Este procedemento executa unha consulta que devolve todos
+                os rexistros da táboa <code>alumnos</code>.
+            </p>
+        </div>
+
+        <h3>1.4. Executar un procedemento mediante CALL</h3>
+
+        <p>
+            Para executar un procedemento almacenado utilízase a instrución
+            <code>CALL</code>, seguida do nome do procedemento e dos seus
+            argumentos.
+        </p>
+
+        <pre><code>CALL nome_procedemento();</code></pre>
+
+        <p>
+            No exemplo anterior, a chamada sería:
+        </p>
+
+        <pre><code>CALL listar_alumnos();</code></pre>
+
+        <p>
+            Un procedemento pode devolver resultados mediante instrucións
+            <code>SELECT</code>, modificar datos ou proporcionar valores
+            a través de parámetros de saída.
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Parámetros dos procedementos</h2>
+
+        <h3>2.1. Concepto</h3>
+
+        <p>
+            Os parámetros permiten transmitir información ao procedemento
+            cando se executa e, nalgúns casos, recuperar valores calculados
+            durante a súa execución.
+        </p>
+
+        <p>
+            MariaDB permite definir tres tipos de parámetros:
+        </p>
+
+        <ul>
+            <li><code>IN</code>: parámetro de entrada.</li>
+            <li><code>OUT</code>: parámetro de saída.</li>
+            <li><code>INOUT</code>: parámetro de entrada e saída.</li>
+        </ul>
+
+        <h3>2.2. Parámetros IN</h3>
+
+        <p>
+            Un parámetro <code>IN</code> permite enviar un valor ao
+            procedemento. O procedemento pode utilizalo nas súas operacións,
+            pero as modificacións da variable correspondente non se
+            devolven ao programa que realizou a chamada.
+        </p>
+
+        <pre><code>CREATE PROCEDURE nome(IN parametro TIPO)
+BEGIN
+    -- Utilización do parámetro
+END;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: consultar alumnos dun curso</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE alumnos_por_curso(IN p_curso VARCHAR(10))
+BEGIN
+    SELECT *
+    FROM alumnos
+    WHERE curso = p_curso;
+END //
+
+DELIMITER ;
+
+-- Consultar os alumnos do curso DAW1
+CALL alumnos_por_curso('DAW1');</code></pre>
+
+            <p>
+                O procedemento recibe o nome dun curso e utiliza ese valor
+                como condición da consulta.
+            </p>
+        </div>
+
+        <h3>2.3. Parámetros OUT</h3>
+
+        <p>
+            Un parámetro <code>OUT</code> permite devolver un valor ao
+            programa que chamou ao procedemento. O seu valor inicial non
+            se utiliza como dato de entrada.
+        </p>
+
+        <pre><code>CREATE PROCEDURE nome(OUT parametro TIPO)
+BEGIN
+    -- Asignar o valor que se quere devolver
+END;</code></pre>
+
+        <p>
+            Para recuperar o resultado desde unha sesión SQL pódese utilizar
+            unha variable de usuario.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: contar alumnos</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE contar_alumnos(OUT p_total INT)
+BEGIN
+    SELECT COUNT(*)
+    INTO p_total
+    FROM alumnos;
+END //
+
+DELIMITER ;
+
+-- Chamar ao procedemento
+CALL contar_alumnos(@total);
+
+-- Consultar o valor devolto
+SELECT @total AS total_alumnos;</code></pre>
+
+            <p>
+                O procedemento calcula o número de alumnos e almacena
+                o resultado no parámetro de saída. A chamada utiliza
+                a variable <code>@total</code> para recuperar o valor.
+            </p>
+        </div>
+
+        <h3>2.4. Parámetros INOUT</h3>
+
+        <p>
+            Un parámetro <code>INOUT</code> permite enviar un valor inicial
+            ao procedemento e devolver o seu valor modificado.
+        </p>
+
+        <pre><code>CREATE PROCEDURE nome(INOUT parametro TIPO)
+BEGIN
+    -- Utilizar e modificar o parámetro
+END;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: incrementar un valor</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE incrementar(INOUT p_numero INT)
+BEGIN
+    SET p_numero = p_numero + 1;
+END //
+
+DELIMITER ;
+
+-- Establecer o valor inicial
+SET @numero = 10;
+
+-- Enviar o valor e recuperar o resultado
+CALL incrementar(@numero);
+
+-- Consultar o novo valor
+SELECT @numero AS numero_incrementado;</code></pre>
+
+            <p>
+                A variable comeza co valor 10. O procedemento increméntaa
+                e, despois da chamada, o seu valor pasa a ser 11.
+            </p>
+        </div>
+
+        <h3>2.5. Comparación dos parámetros</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Recibe datos?</th>
+                    <th>Devolve datos?</th>
+                    <th>Uso habitual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IN</code></td>
+                    <td>Si</td>
+                    <td>Non directamente</td>
+                    <td>Enviar criterios ou valores ao procedemento.</td>
+                </tr>
+                <tr>
+                    <td><code>OUT</code></td>
+                    <td>Non</td>
+                    <td>Si</td>
+                    <td>Devolver resultados calculados.</td>
+                </tr>
+                <tr>
+                    <td><code>INOUT</code></td>
+                    <td>Si</td>
+                    <td>Si</td>
+                    <td>Modificar un valor recibido e devolvelo.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Importante</strong>
+            <p>
+                Para os parámetros <code>OUT</code> e <code>INOUT</code>,
+                cando se realizan chamadas desde SQL é habitual utilizar
+                variables de usuario, como <code>@resultado</code>.
+                Isto permite consultar posteriormente os valores devoltos.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>3. Variables locais e consultas SELECT ... INTO</h2>
+
+        <h3>3.1. Declaración con DECLARE</h3>
+
+        <p>
+            Os procedementos almacenados poden necesitar variables para
+            almacenar resultados intermedios, controlar condicións ou
+            contar iteracións.
+        </p>
+
+        <p>
+            As variables locais decláranse mediante <code>DECLARE</code>
+            ao comezo do bloque correspondente.
+        </p>
+
+        <pre><code>DECLARE nome VARCHAR(50);
+DECLARE idade INT DEFAULT 18;
+DECLARE total DECIMAL(10,2) DEFAULT 0;</code></pre>
+
+        <p>
+            Pódese establecer un valor inicial mediante a cláusula
+            <code>DEFAULT</code>.
+        </p>
+
+        <h3>3.2. Asignación mediante SET</h3>
+
+        <p>
+            A instrución <code>SET</code> permite asignar ou modificar
+            o valor dunha variable local.
+        </p>
+
+        <pre><code>DECLARE contador INT DEFAULT 0;
+
+SET contador = 10;
+SET contador = contador + 1;</code></pre>
+
+        <h3>3.3. Asignación mediante SELECT ... INTO</h3>
+
+        <p>
+            A instrución <code>SELECT ... INTO</code> permite almacenar
+            o resultado dunha consulta directamente nunha ou varias
+            variables locais.
+        </p>
+
+        <pre><code>SELECT expresion
+INTO variable
+FROM táboa
+WHERE condicion;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: obter o número de alumnos</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE obter_total_alumnos()
+BEGIN
+    DECLARE total INT;
+
+    SELECT COUNT(*)
+    INTO total
+    FROM alumnos;
+
+    SELECT total AS numero_alumnos;
+END //
+
+DELIMITER ;
+
+CALL obter_total_alumnos();</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: almacenar varios valores</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE obter_datos_curso(IN p_curso VARCHAR(10))
+BEGIN
+    DECLARE total_alumnos INT;
+    DECLARE media_notas DECIMAL(5,2);
+
+    SELECT
+        COUNT(*),
+        AVG(nota)
+    INTO
+        total_alumnos,
+        media_notas
+    FROM alumnos
+    WHERE curso = p_curso;
+
+    SELECT
+        total_alumnos,
+        media_notas;
+END //
+
+DELIMITER ;
+
+CALL obter_datos_curso('DAW1');</code></pre>
+        </div>
+
+        <h3>3.4. Aspectos que hai que ter en conta</h3>
+
+        <ul>
+            <li>
+                As variables locais deben declararse antes das instrucións
+                executables do bloque.
+            </li>
+            <li>
+                O número de variables de destino debe coincidir co número
+                de expresións devoltas pola consulta.
+            </li>
+            <li>
+                Se unha consulta non devolve filas, as variables de destino
+                non reciben un novo valor e pode producirse a condición
+                <code>NOT FOUND</code>.
+            </li>
+            <li>
+                Se unha consulta devolve varias filas nun
+                <code>SELECT ... INTO</code>, prodúcese un erro.
+            </li>
+            <li>
+                Para consultas que poden devolver varias filas deben
+                utilizarse outras estruturas, como cursores.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. Integración da lóxica de programación nos procedementos</h2>
+
+        <p>
+            Unha das principais vantaxes dos procedementos almacenados é
+            que permiten combinar instrucións SQL con estruturas de control
+            de fluxo. Isto posibilita desenvolver operacións completas
+            dentro do servidor.
+        </p>
+
+        <h3>4.1. Procedementos con condicións</h3>
+
+        <div class="ejemplo">
+            <h3>Exemplo: comprobar a dispoñibilidade dun produto</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE comprobar_stock(IN p_id_produto INT)
+BEGIN
+    DECLARE unidades INT;
+
+    SELECT stock
+    INTO unidades
+    FROM produtos
+    WHERE id = p_id_produto;
+
+    IF unidades > 0 THEN
+        SELECT 'Produto dispoñible' AS resultado;
+    ELSE
+        SELECT 'Produto sen existencias' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL comprobar_stock(1);</code></pre>
+            <p>
+                O procedemento consulta as unidades dispoñibles e utiliza
+                unha condición para determinar a mensaxe que debe mostrar.
+            </p>
+            <p>
+                Neste exemplo considérase que o identificador recibido
+                existe na táboa. A xestión de identificadores inexistentes
+                mediante condicións e manexadores de erros estudarase
+                posteriormente.
+            </p>
+        </div>
+
+        <h3>4.2. Procedementos con bucles</h3>
+
+        <div class="ejemplo">
+            <h3>Exemplo: calcular unha suma acumulada</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE sumar_numeros(IN p_limite INT, OUT p_total INT)
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+    DECLARE acumulado INT DEFAULT 0;
+
+    WHILE contador <= p_limite DO
+        SET acumulado = acumulado + contador;
+        SET contador = contador + 1;
+    END WHILE;
+
+    SET p_total = acumulado;
+END //
+
+DELIMITER ;
+
+CALL sumar_numeros(10, @resultado);
+
+SELECT @resultado AS suma_total;</code></pre>
+            <p>
+                O procedemento recibe un límite, utiliza un bucle para
+                sumar os números desde 1 ata ese límite e devolve o
+                resultado mediante un parámetro <code>OUT</code>.
+            </p>
+        </div>
+
+        <h3>4.3. Procedementos que modifican datos</h3>
+
+        <p>
+            Os procedementos tamén poden realizar operacións de inserción,
+            actualización e eliminación. Isto permite encapsular operacións
+            de negocio e controlar as condicións nas que se executan.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: aplicar un incremento salarial</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE incrementar_salario(
+    IN p_id_profesor INT,
+    IN p_porcentaxe DECIMAL(5,2)
+)
+BEGIN
+    IF p_porcentaxe > 0 AND p_porcentaxe <= 20 THEN
+
+        UPDATE profesores
+        SET salario = salario + (salario * p_porcentaxe / 100)
+        WHERE id = p_id_profesor;
+
+        SELECT 'Operación realizada' AS resultado;
+
+    ELSE
+        SELECT 'Porcentaxe non válida' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL incrementar_salario(1, 5);</code></pre>
+            <p>
+                O procedemento valida a porcentaxe recibida e só realiza
+                a actualización se o valor está dentro do intervalo
+                establecido.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>5. Funcións definidas polo usuario</h2>
+
+        <h3>5.1. Concepto</h3>
+
+        <p>
+            Unha función definida polo usuario é un programa almacenado
+            que recibe parámetros, realiza operacións e devolve un único
+            valor mediante a instrución <code>RETURN</code>.
+        </p>
+
+        <p>
+            As funcións permiten encapsular cálculos ou transformacións
+            que poden reutilizarse directamente nas consultas SQL.
+        </p>
+
+        <p>
+            Exemplos de aplicación:
+        </p>
+
+        <ul>
+            <li>Calcular o prezo final dun produto.</li>
+            <li>Determinar a cualificación correspondente a unha nota.</li>
+            <li>Calcular a antigüidade dun empregado.</li>
+            <li>Transformar ou normalizar determinados valores.</li>
+            <li>Realizar cálculos específicos dunha aplicación.</li>
+        </ul>
+
+        <h3>5.2. Sintaxe de CREATE FUNCTION</h3>
+
+        <p>
+            A instrución <code>CREATE FUNCTION</code> permite crear unha
+            función almacenada.
+        </p>
+
+        <pre><code>DELIMITER //
+
+CREATE FUNCTION nome_funcion(parametros)
+RETURNS tipo_dato
+[caracteristicas]
+BEGIN
+    -- Declaración de variables
+    -- Instrucións
+    RETURN valor;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Os elementos principais son:
+        </p>
+
+        <ul>
+            <li>
+                <strong>Nome:</strong> identificador da función.
+            </li>
+            <li>
+                <strong>Parámetros:</strong> valores que recibe a función.
+            </li>
+            <li>
+                <strong>RETURNS:</strong> tipo de dato que devolverá.
+            </li>
+            <li>
+                <strong>BEGIN ... END:</strong> bloque coas instrucións.
+            </li>
+            <li>
+                <strong>RETURN:</strong> valor que devolve a función.
+            </li>
+        </ul>
+
+        <div class="callout">
+            <strong>Diferenza entre RETURN e SELECT</strong>
+            <p>
+                Un procedemento pode devolver un ou varios conxuntos de
+                resultados mediante instrucións <code>SELECT</code>.
+                Unha función debe devolver un valor do tipo indicado
+                na cláusula <code>RETURNS</code>, mediante
+                <code>RETURN</code>.
+            </p>
+        </div>
+
+        <h3>5.3. Crear unha función sinxela</h3>
+
+        <div class="ejemplo">
+            <h3>Exemplo: calcular o dobre dun número</h3>
+            <pre><code>DELIMITER //
+
+CREATE FUNCTION dobre(p_numero INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    RETURN p_numero * 2;
+END //
+
+DELIMITER ;</code></pre>
+
+            <p>
+                A función recibe un número enteiro e devolve o seu dobre.
+                A característica <code>DETERMINISTIC</code> indica que,
+                para os mesmos argumentos, a función produce o mesmo
+                resultado.
+            </p>
+        </div>
+
+        <h3>5.4. Utilizar unha función nas consultas</h3>
+
+        <p>
+            A diferenza dos procedementos, as funcións poden utilizarse
+            como parte dunha expresión SQL, sempre que o contexto permita
+            a súa execución.
+        </p>
+
+        <pre><code>-- Executar a función directamente
+SELECT dobre(10);
+
+-- Utilizala nunha consulta
+SELECT
+    nome,
+    salario,
+    dobre(salario) AS salario_dobre
+FROM profesores;</code></pre>
+
+        <h3>5.5. Funcións con variables locais e condicións</h3>
+
+        <div class="ejemplo">
+            <h3>Exemplo: calcular o prezo con desconto</h3>
+            <pre><code>DELIMITER //
+
+CREATE FUNCTION prezo_con_desconto(
+    p_prezo DECIMAL(10,2),
+    p_desconto DECIMAL(5,2)
+)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE resultado DECIMAL(10,2);
+
+    IF p_desconto < 0 OR p_desconto > 100 THEN
+        SET resultado = p_prezo;
+    ELSE
+        SET resultado = p_prezo - (p_prezo * p_desconto / 100);
+    END IF;
+
+    RETURN ROUND(resultado, 2);
+END //
+
+DELIMITER ;
+
+SELECT prezo_con_desconto(100, 15) AS prezo_final;</code></pre>
+            <p>
+                A función recibe un prezo e unha porcentaxe de desconto.
+                Comproba que a porcentaxe sexa válida, calcula o resultado
+                e devolve o importe redondeado a dous decimais.
+            </p>
+        </div>
+
+        <h3>5.6. Funcións con estruturas repetitivas</h3>
+
+        <div class="ejemplo">
+            <h3>Exemplo: calcular o factorial</h3>
+            <pre><code>DELIMITER //
+
+CREATE FUNCTION factorial(p_numero INT)
+RETURNS BIGINT
+DETERMINISTIC
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+    DECLARE resultado BIGINT DEFAULT 1;
+
+    IF p_numero < 0 THEN
+        RETURN NULL;
+    END IF;
+
+    WHILE contador <= p_numero DO
+        SET resultado = resultado * contador;
+        SET contador = contador + 1;
+    END WHILE;
+
+    RETURN resultado;
+END //
+
+DELIMITER ;
+
+SELECT factorial(5) AS resultado;</code></pre>
+            <p>
+                A función utiliza un bucle para calcular o produto dos
+                números comprendidos entre 1 e o valor recibido.
+                Se o argumento é negativo, devolve NULL.
+            </p>
+        </div>
+
+        <h3>5.7. Características das funcións</h3>
+
+        <p>
+            Ao crear unha función pódense indicar características que
+            describen o seu comportamento.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Característica</th>
+                    <th>Descrición</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>DETERMINISTIC</code></td>
+                    <td>Indica que a función produce o mesmo resultado para os mesmos argumentos.</td>
+                </tr>
+                <tr>
+                    <td><code>NOT DETERMINISTIC</code></td>
+                    <td>Indica que o resultado pode variar aínda que os argumentos sexan iguais.</td>
+                </tr>
+                <tr>
+                    <td><code>CONTAINS SQL</code></td>
+                    <td>Indica que contén instrucións SQL, pero non instrucións que lean ou modifiquen datos.</td>
+                </tr>
+                <tr>
+                    <td><code>READS SQL DATA</code></td>
+                    <td>Indica que a función pode ler datos mediante instrucións SQL.</td>
+                </tr>
+                <tr>
+                    <td><code>MODIFIES SQL DATA</code></td>
+                    <td>Indica que a función pode modificar datos mediante instrucións SQL.</td>
+                </tr>
+                <tr>
+                    <td><code>NO SQL</code></td>
+                    <td>Indica que non contén instrucións SQL.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            Estas características describen o comportamento declarado da
+            función. Non substitúen as restricións que MariaDB aplica
+            ás operacións permitidas dentro dunha función almacenada.
+        </p>
+
+        <div class="callout">
+            <strong>Restricións das funcións almacenadas</strong>
+            <p>
+                As funcións non teñen a mesma liberdade que os procedementos.
+                Por exemplo, non poden devolver conxuntos de resultados
+                mediante un SELECT normal nin chamar a procedementos que
+                devolvan resultados. Tampouco poden executar determinadas
+                operacións que modifiquen o estado da transacción ou
+                realicen control explícito de transaccións.
+            </p>
+            <p>
+                Antes de utilizar unha función para modificar datos ou
+                realizar operacións complexas, débense consultar as
+                restricións da versión de MariaDB instalada.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>6. Diferenzas entre procedementos e funcións</h2>
+
+        <p>
+            Os procedementos e as funcións son dous tipos de programas
+            almacenados, pero teñen finalidades e formas de utilización
+            diferentes.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Característica</th>
+                    <th>Procedemento</th>
+                    <th>Función</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Creación</td>
+                    <td><code>CREATE PROCEDURE</code></td>
+                    <td><code>CREATE FUNCTION</code></td>
+                </tr>
+                <tr>
+                    <td>Execución</td>
+                    <td><code>CALL</code></td>
+                    <td>Como parte dunha expresión SQL.</td>
+                </tr>
+                <tr>
+                    <td>Valor de retorno</td>
+                    <td>Non require un valor único de retorno.</td>
+                    <td>Debe devolver un valor mediante <code>RETURN</code>.</td>
+                </tr>
+                <tr>
+                    <td>Parámetros</td>
+                    <td><code>IN</code>, <code>OUT</code> e <code>INOUT</code>.</td>
+                    <td>Parámetros de entrada.</td>
+                </tr>
+                <tr>
+                    <td>Uso habitual</td>
+                    <td>Executar operacións ou procesos completos.</td>
+                    <td>Realizar cálculos e devolver valores.</td>
+                </tr>
+                <tr>
+                    <td>Uso en SELECT</td>
+                    <td>Non se chama directamente como expresión.</td>
+                    <td>Pódese utilizar nunha expresión SQL.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo comparativo</h3>
+            <pre><code>-- Procedemento: executar unha operación
+CALL contar_alumnos(@total);
+
+-- Recuperar o resultado
+SELECT @total;
+
+-- Función: devolver un valor dentro dunha consulta
+SELECT factorial(5);</code></pre>
+        </div>
+    </section>
+
+    <section>
+        <h2>7. Modificación e eliminación de programas almacenados</h2>
+
+        <h3>7.1. Consultar os procedementos existentes</h3>
+
+        <p>
+            MariaDB permite consultar os procedementos almacenados definidos
+            nunha base de datos mediante <code>SHOW PROCEDURE STATUS</code>.
+        </p>
+
+        <pre><code>-- Consultar os procedementos
+SHOW PROCEDURE STATUS;
+
+-- Filtrar os procedementos dunha base de datos
+SHOW PROCEDURE STATUS
+WHERE Db = 'centro';</code></pre>
+
+        <h3>7.2. Consultar a definición dun procedemento</h3>
+
+        <p>
+            A instrución <code>SHOW CREATE PROCEDURE</code> permite consultar
+            a definición completa dun procedemento almacenado.
+        </p>
+
+        <pre><code>SHOW CREATE PROCEDURE listar_alumnos;</code></pre>
+
+        <p>
+            O resultado mostra a instrución utilizada para crear o
+            procedemento, incluíndo os seus parámetros e o corpo do programa.
+        </p>
+
+        <h3>7.3. Consultar as funcións existentes</h3>
+
+        <p>
+            Para consultar as funcións almacenadas pódese utilizar
+            <code>SHOW FUNCTION STATUS</code>.
+        </p>
+
+        <pre><code>-- Consultar as funcións
+SHOW FUNCTION STATUS;
+
+-- Filtrar as funcións dunha base de datos
+SHOW FUNCTION STATUS
+WHERE Db = 'centro';</code></pre>
+
+        <h3>7.4. Consultar a definición dunha función</h3>
+
+        <p>
+            A instrución <code>SHOW CREATE FUNCTION</code> permite consultar
+            a definición dunha función almacenada.
+        </p>
+
+        <pre><code>SHOW CREATE FUNCTION factorial;</code></pre>
+
+        <h3>7.5. Modificar un procedemento ou unha función</h3>
+
+        <p>
+            En MariaDB, a instrución <code>ALTER PROCEDURE</code> permite
+            modificar determinadas características dun procedemento,
+            pero non o seu corpo ou a súa lista de parámetros.
+        </p>
+
+        <p>
+            Para cambiar a lóxica dun procedemento, o método habitual é
+            eliminalo e crealo de novo coa definición actualizada.
+        </p>
+
+        <pre><code>DROP PROCEDURE IF EXISTS listar_alumnos;
+
+DELIMITER //
+
+CREATE PROCEDURE listar_alumnos()
+BEGIN
+    SELECT id, nome, curso
+    FROM alumnos
+    ORDER BY nome;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            O mesmo criterio se aplica ás funcións: para modificar o seu
+            corpo ou os seus parámetros, elimínanse e créanse de novo.
+            <code>ALTER FUNCTION</code> permite modificar determinadas
+            características, pero non substitúe a definición completa.
+        </p>
+
+        <h3>7.6. Eliminar procedementos</h3>
+
+        <p>
+            A instrución <code>DROP PROCEDURE</code> elimina un procedemento
+            almacenado.
+        </p>
+
+        <pre><code>DROP PROCEDURE listar_alumnos;</code></pre>
+
+        <p>
+            Para evitar erros cando o procedemento non existe, pódese
+            utilizar <code>IF EXISTS</code>.
+        </p>
+
+        <pre><code>DROP PROCEDURE IF EXISTS listar_alumnos;</code></pre>
+
+        <h3>7.7. Eliminar funcións</h3>
+
+        <p>
+            A instrución <code>DROP FUNCTION</code> elimina unha función
+            almacenada.
+        </p>
+
+        <pre><code>DROP FUNCTION factorial;</code></pre>
+
+        <p>
+            Tamén se pode utilizar <code>IF EXISTS</code>:
+        </p>
+
+        <pre><code>DROP FUNCTION IF EXISTS factorial;</code></pre>
+
+        <div class="callout">
+            <strong>Precaución ao eliminar programas almacenados</strong>
+            <p>
+                Antes de eliminar un procedemento ou unha función, convén
+                comprobar se outras aplicacións, procedementos, funcións
+                ou eventos dependen del. A eliminación pode provocar
+                que esas chamadas deixen de funcionar.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>8. Boas prácticas</h2>
+
+        <ul>
+            <li>
+                Utilizar nomes descritivos para os procedementos, funcións
+                e parámetros.
+            </li>
+            <li>
+                Definir parámetros de entrada, saída e entrada/saída
+                segundo a finalidade de cada operación.
+            </li>
+            <li>
+                Declarar as variables locais ao comezo dos bloques.
+            </li>
+            <li>
+                Utilizar <code>SELECT ... INTO</code> cando se necesite
+                almacenar o resultado dunha consulta nunha variable.
+            </li>
+            <li>
+                Separar as operacións complexas en procedementos ou
+                funcións máis pequenos cando resulte conveniente.
+            </li>
+            <li>
+                Validar os parámetros antes de realizar modificacións
+                sobre as táboas.
+            </li>
+            <li>
+                Utilizar funcións para cálculos que deban devolver un
+                único valor e procedementos para executar procesos.
+            </li>
+            <li>
+                Documentar a finalidade dos programas e dos seus parámetros.
+            </li>
+            <li>
+                Consultar a definición almacenada antes de modificar
+                ou eliminar un programa.
+            </li>
+            <li>
+                Probar os procedementos e funcións con valores normais,
+                valores límite e datos non válidos.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>9. Exercicios prácticos</h2>
+
+        <p>
+            Os seguintes exercicios permiten practicar a creación,
+            execución e mantemento de procedementos almacenados e funcións
+            definidas polo usuario en MariaDB.
+        </p>
+
+        <div class="ejercicio">
+            <h3>Exercicio 1. Creación de procedementos</h3>
+            <ol>
+                <li>Crea un procedemento que mostre todos os rexistros dunha táboa.</li>
+                <li>Define un procedemento que consulte os alumnos dun curso determinado.</li>
+                <li>Crea un procedemento que reciba o identificador dun alumno e mostre os seus datos.</li>
+                <li>Executa os procedementos mediante <code>CALL</code>.</li>
+                <li>Consulta as definicións dos procedementos creados.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 2. Parámetros IN, OUT e INOUT</h3>
+            <ol>
+                <li>Crea un procedemento que reciba un identificador mediante IN e consulte os datos correspondentes.</li>
+                <li>Define un procedemento que devolva mediante OUT o número total de alumnos.</li>
+                <li>Crea un procedemento que devolva a media das notas dunha táboa mediante OUT.</li>
+                <li>Define un procedemento que reciba un número mediante INOUT e o modifique.</li>
+                <li>Realiza as chamadas utilizando variables de usuario e comproba os resultados.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 3. Variables locais e SELECT ... INTO</h3>
+            <ol>
+                <li>Crea un procedemento que almacene nunha variable o número de rexistros dunha táboa.</li>
+                <li>Obtén mediante SELECT ... INTO o prezo dun produto a partir do seu identificador.</li>
+                <li>Almacena varias estatísticas dunha táboa en diferentes variables locais.</li>
+                <li>Realiza operacións matemáticas cos valores obtidos.</li>
+                <li>Mostra os resultados mediante unha consulta SELECT.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 4. Procedementos con lóxica de programación</h3>
+            <ol>
+                <li>Crea un procedemento que valide unha nota e devolva a súa cualificación.</li>
+                <li>Define un procedemento que calcule unha suma acumulada utilizando un bucle.</li>
+                <li>Desenvolve un procedemento que actualice o prezo dun produto segundo unha porcentaxe recibida.</li>
+                <li>Incorpora condicións para evitar operacións con parámetros non válidos.</li>
+                <li>Utiliza parámetros OUT para devolver información sobre os resultados.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 5. Creación de funcións</h3>
+            <ol>
+                <li>Crea unha función que calcule o dobre dun número.</li>
+                <li>Define unha función que calcule o prezo dun produto aplicando un desconto.</li>
+                <li>Crea unha función que clasifique unha nota e devolva a cualificación correspondente.</li>
+                <li>Implementa unha función que calcule o factorial dun número.</li>
+                <li>Utiliza as funcións creadas dentro de consultas SELECT.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 6. Mantemento de procedementos e funcións</h3>
+            <ol>
+                <li>Consulta os procedementos e funcións existentes na base de datos.</li>
+                <li>Utiliza SHOW CREATE PROCEDURE para consultar unha definición.</li>
+                <li>Utiliza SHOW CREATE FUNCTION para consultar unha función.</li>
+                <li>Modifica a lóxica dun procedemento mediante a súa eliminación e creación de novo.</li>
+                <li>Realiza a mesma operación cunha función.</li>
+                <li>Elimina os programas almacenados de proba utilizando IF EXISTS.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 7. Práctica integradora</h3>
+            <p>
+                Desenvolve un conxunto de procedementos e funcións que
+                permitan automatizar operacións sobre unha base de datos
+                utilizada nas prácticas.
+            </p>
+            <p>O desenvolvemento deberá incluír:</p>
+            <ul>
+                <li>Polo menos dous procedementos almacenados.</li>
+                <li>Un procedemento con parámetros IN e outro con parámetros OUT ou INOUT.</li>
+                <li>Uso de variables locais e consultas SELECT ... INTO.</li>
+                <li>Estruturas condicionais e repetitivas.</li>
+                <li>Polo menos dúas funcións definidas polo usuario.</li>
+                <li>Chamadas e consultas que permitan comprobar o funcionamento.</li>
+                <li>Consulta das definicións e eliminación dos elementos de proba.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>10. Resumo do bloque</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Elemento</th>
+                    <th>Finalidade</th>
+                    <th>Instrucións principais</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Procedemento almacenado</td>
+                    <td>Executar un conxunto de instrucións SQL.</td>
+                    <td><code>CREATE PROCEDURE</code>, <code>CALL</code></td>
+                </tr>
+                <tr>
+                    <td>Parámetro IN</td>
+                    <td>Recibir datos.</td>
+                    <td><code>IN</code></td>
+                </tr>
+                <tr>
+                    <td>Parámetro OUT</td>
+                    <td>Devolver datos.</td>
+                    <td><code>OUT</code></td>
+                </tr>
+                <tr>
+                    <td>Parámetro INOUT</td>
+                    <td>Recibir e devolver un valor modificado.</td>
+                    <td><code>INOUT</code></td>
+                </tr>
+                <tr>
+                    <td>Variables locais</td>
+                    <td>Almacenar valores temporais dentro dun bloque.</td>
+                    <td><code>DECLARE</code>, <code>SET</code></td>
+                </tr>
+                <tr>
+                    <td>Consulta con asignación</td>
+                    <td>Gardar resultados dunha consulta en variables.</td>
+                    <td><code>SELECT ... INTO</code></td>
+                </tr>
+                <tr>
+                    <td>Función de usuario</td>
+                    <td>Realizar un cálculo e devolver un valor.</td>
+                    <td><code>CREATE FUNCTION</code>, <code>RETURNS</code>, <code>RETURN</code></td>
+                </tr>
+                <tr>
+                    <td>Consultar definición</td>
+                    <td>Inspeccionar o código almacenado.</td>
+                    <td><code>SHOW CREATE PROCEDURE</code>, <code>SHOW CREATE FUNCTION</code></td>
+                </tr>
+                <tr>
+                    <td>Eliminar programas</td>
+                    <td>Eliminar procedementos ou funcións.</td>
+                    <td><code>DROP PROCEDURE</code>, <code>DROP FUNCTION</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Obxectivo alcanzado</strong>
+            <p>
+                Ao rematar este bloque, o alumnado debe ser capaz de crear
+                e executar procedementos almacenados e funcións de usuario
+                en MariaDB, utilizar parámetros e variables locais,
+                incorporar estruturas de control de fluxo e realizar
+                operacións de consulta, cálculo e modificación de datos
+                desde programas almacenados no servidor.
+            </p>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>

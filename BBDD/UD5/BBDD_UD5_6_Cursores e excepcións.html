@@ -1,0 +1,800 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD5 - Bloque 6. Cursores e excepcións</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+<main>
+
+    <h1 class="document-title">Bloque 6. Cursores e excepcións</h1>
+    
+    <section>
+        <h2>1. Procesamento avanzado de datos en MariaDB</h2>
+
+        <p>Nas unidades anteriores vimos como crear procedementos, funcións, eventos e disparadores para automatizar tarefas nunha base de datos. En moitas situacións, estas instrucións permiten operar directamente sobre conxuntos completos de rexistros mediante sentenzas SQL.</p>
+
+        <p>Porén, existen operacións nas que necesitamos procesar os resultados dunha consulta fila a fila. Para iso utilízanse os <strong>cursores</strong>.</p>
+
+        <p>Ademais, durante a execución dun programa almacenado poden producirse erros ou situacións especiais, como tentar obter unha fila que xa non existe. MariaDB ofrece mecanismos para controlar estas situacións mediante <strong>controladores de condicións e excepcións</strong>.</p>
+
+        <ul>
+            <li><strong>Cursores:</strong> permiten percorrer os resultados dunha consulta e procesar cada fila individualmente.</li>
+            <li><strong>Controladores (HANDLER):</strong> permiten definir como debe reaccionar un programa cando se produce un erro ou unha condición determinada.</li>
+            <li><strong>SIGNAL e RESIGNAL:</strong> permiten xerar erros personalizados ou volver lanzar unha condición.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>2. Cursores en MariaDB</h2>
+
+        <h3>2.1. Concepto de cursor</h3>
+
+        <p>Un cursor é un mecanismo que permite acceder de maneira secuencial ás filas devolvidas por unha consulta SQL. En lugar de traballar con todos os resultados á vez, o cursor permite obter unha fila, procesala e continuar coa seguinte.</p>
+
+        <p>O seu funcionamento é similar ao percorrido dunha lista de elementos:</p>
+
+        <ol>
+            <li>Defínese a consulta que proporcionará os rexistros.</li>
+            <li>Declárase o cursor asociado a esa consulta.</li>
+            <li>Ábrese o cursor para executar a consulta.</li>
+            <li>Recupéranse as filas unha a unha.</li>
+            <li>Procésase cada fila mediante instrucións SQL.</li>
+            <li>Péchase o cursor cando remata o percorrido.</li>
+        </ol>
+
+        <div class="callout">
+            <strong>Importante:</strong> os cursores en MariaDB utilízanse normalmente dentro de procedementos almacenados, funcións ou bloques de código que permiten declarar variables e controlar o fluxo de execución.
+        </div>
+
+        <h3>2.2. Declaración dun cursor: DECLARE CURSOR</h3>
+
+        <p>Para crear un cursor utilizamos <code>DECLARE CURSOR</code>, indicando a consulta SQL que devolverá os rexistros que queremos percorrer.</p>
+
+        <pre><code>DECLARE nome_cursor CURSOR FOR
+    SELECT columnas
+    FROM nome_taboa
+    WHERE condicion;</code></pre>
+
+        <p>Por exemplo, podemos declarar un cursor para percorrer os alumnos dun curso:</p>
+
+        <pre><code>DECLARE cursor_alumnos CURSOR FOR
+    SELECT id, nome
+    FROM alumnos
+    WHERE curso_id = 1;</code></pre>
+
+        <p>A declaración non executa aínda a consulta nin recupera os datos. Só define o cursor e a consulta asociada.</p>
+
+        <h3>2.3. Apertura do cursor: OPEN</h3>
+
+        <p>Para executar a consulta e preparar os resultados utilizamos <code>OPEN</code>.</p>
+
+        <pre><code>OPEN cursor_alumnos;</code></pre>
+
+        <p>Unha vez aberto, o cursor queda preparado para recuperar as filas devolvidas pola consulta.</p>
+
+        <h3>2.4. Lectura dunha fila: FETCH</h3>
+
+        <p>A instrución <code>FETCH</code> permite recuperar a seguinte fila do cursor e almacenar os valores nas variables indicadas.</p>
+
+        <pre><code>FETCH cursor_alumnos INTO v_id, v_nome;</code></pre>
+
+        <p>As variables deben declararse previamente e ser compatibles cos tipos de datos das columnas recuperadas.</p>
+
+        <p>Cada execución de <code>FETCH</code> avanza o cursor ata a seguinte fila. Cando non quedan máis filas, MariaDB produce a condición <code>NOT FOUND</code>.</p>
+
+        <h3>2.5. Peche do cursor: CLOSE</h3>
+
+        <p>Cando remata o procesamento dos resultados debemos pechar o cursor.</p>
+
+        <pre><code>CLOSE cursor_alumnos;</code></pre>
+
+        <p>O peche libera os recursos asociados ao cursor. Un cursor aberto debe pecharse cando xa non sexa necesario utilizalo.</p>
+
+        <h3>2.6. Resumo das operacións</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Instrución</th>
+                    <th>Función</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>DECLARE CURSOR</code></td>
+                    <td>Define o cursor e a consulta que vai executar.</td>
+                </tr>
+                <tr>
+                    <td><code>OPEN</code></td>
+                    <td>Abre o cursor e prepara os resultados.</td>
+                </tr>
+                <tr>
+                    <td><code>FETCH</code></td>
+                    <td>Recupera a seguinte fila do resultado.</td>
+                </tr>
+                <tr>
+                    <td><code>CLOSE</code></td>
+                    <td>Pech a o cursor e libera os recursos.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>3. Procesamento fila a fila</h2>
+
+        <h3>3.1. Necesidade de estruturas repetitivas</h3>
+
+        <p>Como <code>FETCH</code> recupera unha fila cada vez, necesitamos unha estrutura repetitiva para percorrer todos os resultados do cursor.</p>
+
+        <p>Podemos utilizar estruturas como:</p>
+
+        <ul>
+            <li><code>LOOP</code>: repite un bloque de instrucións ata que se executa unha saída explícita.</li>
+            <li><code>WHILE</code>: repite mentres se cumpra unha condición.</li>
+            <li><code>REPEAT</code>: executa o bloque polo menos unha vez e repíteo ata que se cumpra unha condición.</li>
+        </ul>
+
+        <p>Un patrón habitual consiste en utilizar un bucle <code>LOOP</code> e un controlador para detectar cando o cursor xa non ten máis filas.</p>
+
+        <h3>3.2. Variables locais</h3>
+
+        <p>As variables locais permiten almacenar temporalmente os valores recuperados polo cursor e realizar operacións con eles.</p>
+
+        <p>Decláranse mediante <code>DECLARE</code> ao comezo do bloque no que se utilizan.</p>
+
+        <pre><code>DECLARE v_id INT;
+DECLARE v_nome VARCHAR(100);
+DECLARE v_total INT DEFAULT 0;</code></pre>
+
+        <p>Podemos utilizar estas variables para calcular totais, comprobar condicións ou inserir información noutras táboas.</p>
+
+        <h3>3.3. Exemplo completo: percorrer alumnos</h3>
+
+        <p>O seguinte procedemento percorre os alumnos dun curso e mostra os seus identificadores e nomes mediante mensaxes de saída.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE percorrer_alumnos()
+BEGIN
+    DECLARE fin BOOLEAN DEFAULT FALSE;
+    DECLARE v_id INT;
+    DECLARE v_nome VARCHAR(100);
+
+    DECLARE cursor_alumnos CURSOR FOR
+        SELECT id, nome
+        FROM alumnos;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+        SET fin = TRUE;
+
+    OPEN cursor_alumnos;
+
+    bucle: LOOP
+
+        FETCH cursor_alumnos INTO v_id, v_nome;
+
+        IF fin THEN
+            LEAVE bucle;
+        END IF;
+
+        SELECT v_id AS id_alumno,
+               v_nome AS nome_alumno;
+
+    END LOOP;
+
+    CLOSE cursor_alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Para executar o procedemento:</p>
+
+        <pre><code>CALL percorrer_alumnos();</code></pre>
+
+        <p>O procedemento realiza as seguintes operacións:</p>
+
+        <ol>
+            <li>Declara unha variable de control chamada <code>fin</code>.</li>
+            <li>Declara as variables que almacenarán os datos de cada alumno.</li>
+            <li>Define o cursor coa consulta que selecciona os alumnos.</li>
+            <li>Declara un controlador para detectar o final dos resultados.</li>
+            <li>Abre o cursor.</li>
+            <li>Recupera unha fila en cada iteración mediante <code>FETCH</code>.</li>
+            <li>Se non quedan filas, abandona o bucle mediante <code>LEAVE</code>.</li>
+            <li>Procesa os datos recuperados.</li>
+            <li>Péchase o cursor ao finalizar.</li>
+        </ol>
+
+        <h3>3.4. Exemplo: calcular un total mediante un cursor</h3>
+
+        <p>Un cursor tamén pode utilizarse para realizar cálculos que dependan do procesamento individual de cada rexistro.</p>
+
+        <p>O seguinte procedemento percorre os produtos e calcula a suma dos seus stocks.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE calcular_stock_total(
+    OUT p_total INT
+)
+BEGIN
+    DECLARE fin BOOLEAN DEFAULT FALSE;
+    DECLARE v_stock INT;
+
+    DECLARE cursor_stock CURSOR FOR
+        SELECT stock
+        FROM produtos;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+        SET fin = TRUE;
+
+    SET p_total = 0;
+
+    OPEN cursor_stock;
+
+    bucle: LOOP
+
+        FETCH cursor_stock INTO v_stock;
+
+        IF fin THEN
+            LEAVE bucle;
+        END IF;
+
+        SET p_total = p_total + v_stock;
+
+    END LOOP;
+
+    CLOSE cursor_stock;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Para executar o procedemento e consultar o resultado:</p>
+
+        <pre><code>CALL calcular_stock_total(@total);
+
+SELECT @total AS stock_total;</code></pre>
+
+        <p>Neste exemplo, o cursor recupera o stock de cada produto e acumula os valores na variable de saída <code>p_total</code>.</p>
+
+        <div class="callout">
+            <strong>Boas prácticas:</strong> cando unha operación pode resolverse cunha única instrución SQL, normalmente é preferible utilizala en lugar dun cursor. As operacións fila a fila adoitan ser menos eficientes que as operacións sobre conxuntos completos de rexistros.
+        </div>
+    </section>
+
+    <section>
+        <h2>4. Declaracións dentro dun bloque almacenado</h2>
+
+        <p>En MariaDB é importante respectar a orde das declaracións dentro dun bloque <code>BEGIN ... END</code>.</p>
+
+        <p>As variables, cursores e controladores deben declararse antes de executar as instrucións do bloque.</p>
+
+        <p>A orde correcta é:</p>
+
+        <ol>
+            <li>Variables locais e condicións declaradas mediante <code>DECLARE</code>.</li>
+            <li>Cursores declarados mediante <code>DECLARE ... CURSOR</code>.</li>
+            <li>Controladores declarados mediante <code>DECLARE ... HANDLER</code>.</li>
+            <li>Instrucións executables: <code>SET</code>, <code>OPEN</code>, <code>FETCH</code>, bucles, condicións, etc.</li>
+        </ol>
+
+        <pre><code>BEGIN
+    -- 1. Variables
+    DECLARE fin BOOLEAN DEFAULT FALSE;
+    DECLARE v_id INT;
+
+    -- 2. Cursor
+    DECLARE cursor_datos CURSOR FOR
+        SELECT id FROM produtos;
+
+    -- 3. Controlador
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+        SET fin = TRUE;
+
+    -- 4. Instrucións executables
+    OPEN cursor_datos;
+
+    -- Procesamento...
+
+    CLOSE cursor_datos;
+END</code></pre>
+
+        <div class="callout">
+            <strong>Importante:</strong> non se poden declarar variables, cursores ou controladores despois de comezar a executar as instrucións do bloque. Unha declaración situada nunha posición incorrecta provocará un erro de sintaxe.
+        </div>
+    </section>
+
+    <section>
+        <h2>5. Tratamento de excepcións e condicións</h2>
+
+        <h3>5.1. Concepto de excepción</h3>
+
+        <p>Durante a execución dun procedemento ou función poden producirse situacións que impidan continuar normalmente coa operación.</p>
+
+        <p>Algúns exemplos son:</p>
+
+        <ul>
+            <li>Intentar inserir un valor duplicado nunha columna cunha restrición <code>UNIQUE</code>.</li>
+            <li>Inserir un valor que incumpre unha chave allea.</li>
+            <li>Recuperar un rexistro que non existe.</li>
+            <li>Dividir un valor entre cero.</li>
+            <li>Executar unha operación que non cumpre as condicións definidas polo programa.</li>
+        </ul>
+
+        <p>O tratamento de excepcións permite controlar estas situacións e decidir que debe facer o programa cando se produce un erro ou unha condición especial.</p>
+
+        <h3>5.2. Controladores mediante DECLARE HANDLER</h3>
+
+        <p>MariaDB utiliza a instrución <code>DECLARE HANDLER</code> para definir como debe reaccionar un bloque cando se produce unha condición determinada.</p>
+
+        <p>A súa sintaxe xeral é:</p>
+
+        <pre><code>DECLARE tipo_handler HANDLER
+FOR condicion
+instrucion;</code></pre>
+
+        <p>Os elementos principais son:</p>
+
+        <ul>
+            <li><strong>Tipo de controlador:</strong> indica se o programa continúa ou sae do bloque.</li>
+            <li><strong>Condición:</strong> identifica o erro ou situación que activa o controlador.</li>
+            <li><strong>Instrución:</strong> acción que se executará cando se produza a condición.</li>
+        </ul>
+
+        <h3>5.3. Tipos de controladores: CONTINUE e EXIT</h3>
+
+        <p>MariaDB ofrece dous tipos principais de controladores:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Funcionamento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>CONTINUE</code></td>
+                    <td>Executa a instrución do controlador e continúa coa execución desde o punto posterior ao que provocou a condición.</td>
+                </tr>
+                <tr>
+                    <td><code>EXIT</code></td>
+                    <td>Executa a instrución do controlador e abandona o bloque <code>BEGIN ... END</code> no que foi declarado.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>5.4. Exemplo de CONTINUE</h3>
+
+        <p>O seguinte exemplo controla unha condición de división entre cero. Cando se produce o erro, o controlador asigna un valor alternativo á variable e permite continuar.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_continue()
+BEGIN
+    DECLARE resultado DECIMAL(10,2);
+    DECLARE CONTINUE HANDLER FOR SQLSTATE '22012'
+        SET resultado = NULL;
+
+    SET resultado = 10 / 0;
+
+    SELECT resultado AS resultado;
+    SELECT 'O procedemento continúa' AS mensaxe;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>O controlador captura a condición de división entre cero e permite que o procedemento continúe coas instrucións posteriores.</p>
+
+        <h3>5.5. Exemplo de EXIT</h3>
+
+        <p>O controlador <code>EXIT</code> permite abandonar o bloque no que foi declarado cando se produce unha condición.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_exit()
+BEGIN
+    DECLARE resultado INT DEFAULT 0;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT 'Produciuse un erro na operación' AS mensaxe;
+    END;
+
+    INSERT INTO produtos(id, nome, prezo, stock)
+    VALUES (1, 'Produto duplicado', 10.00, 5);
+
+    SET resultado = 1;
+
+    SELECT resultado;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Se a inserción provoca unha excepción SQL, execútase o controlador e abandónase o bloque. As instrucións posteriores á operación que provocou o erro non se executan.</p>
+    </section>
+
+    <section>
+        <h2>6. Tipos de condicións e erros</h2>
+
+        <h3>6.1. Condicións xerais</h3>
+
+        <p>Os controladores poden asociarse a diferentes tipos de condicións.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Condición</th>
+                    <th>Significado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>SQLEXCEPTION</code></td>
+                    <td>Captura erros SQL, agás as condicións de clase SQLWARNING e NOT FOUND.</td>
+                </tr>
+                <tr>
+                    <td><code>SQLWARNING</code></td>
+                    <td>Captura condicións de advertencia.</td>
+                </tr>
+                <tr>
+                    <td><code>NOT FOUND</code></td>
+                    <td>Indica que non se atopou unha fila ou que non quedan máis filas nun cursor.</td>
+                </tr>
+                <tr>
+                    <td>Código de erro</td>
+                    <td>Permite identificar un erro concreto mediante o seu código numérico.</td>
+                </tr>
+                <tr>
+                    <td>SQLSTATE</td>
+                    <td>Identifica unha condición mediante un código normalizado de cinco caracteres.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>6.2. Condición NOT FOUND</h3>
+
+        <p>A condición <code>NOT FOUND</code> é especialmente importante cando traballamos con cursores.</p>
+
+        <p>Ao executar <code>FETCH</code>, se non quedan máis filas que recuperar, MariaDB activa esta condición. Se non existe un controlador para tratala, o programa pode finalizar cun erro ou non realizar o percorrido esperado.</p>
+
+        <p>Unha solución habitual é declarar unha variable de control e un controlador <code>CONTINUE</code>:</p>
+
+        <pre><code>DECLARE fin BOOLEAN DEFAULT FALSE;
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND
+    SET fin = TRUE;</code></pre>
+
+        <p>Cando o cursor chega ao final, a variable <code>fin</code> pasa a valer <code>TRUE</code>. O bucle pode consultar esa variable para abandonar o percorrido.</p>
+
+        <h3>6.3. Control de erros mediante SQLSTATE</h3>
+
+        <p>SQLSTATE é un código de cinco caracteres que identifica unha condición producida durante a execución dunha instrución SQL.</p>
+
+        <p>Podemos declarar un controlador para unha condición concreta:</p>
+
+        <pre><code>DECLARE CONTINUE HANDLER FOR SQLSTATE '23000'
+    SET @erro_integridade = TRUE;</code></pre>
+
+        <p>O código <code>23000</code> corresponde á clase de erros relacionados coa integridade das restricións, como determinadas violacións de claves ou restricións de unicidade.</p>
+
+        <h3>6.4. Control de erros mediante códigos numéricos</h3>
+
+        <p>Algúns erros de MariaDB poden identificarse mediante o seu código numérico.</p>
+
+        <pre><code>DECLARE CONTINUE HANDLER FOR 1062
+    SET @erro_duplicado = TRUE;</code></pre>
+
+        <p>Neste exemplo, o controlador captura o erro 1062, asociado á duplicación dun valor nunha chave única ou primaria.</p>
+
+        <h3>6.5. Declaración de condicións con DECLARE CONDITION</h3>
+
+        <p>Podemos asignar un nome a unha condición para facer máis lexible o código.</p>
+
+        <pre><code>DECLARE duplicado CONDITION FOR 1062;
+
+DECLARE CONTINUE HANDLER FOR duplicado
+    SET @erro_duplicado = TRUE;</code></pre>
+
+        <p>O nome <code>duplicado</code> representa a condición identificada polo código de erro 1062.</p>
+    </section>
+
+    <section>
+        <h2>7. Xeración de erros personalizados: SIGNAL</h2>
+
+        <h3>7.1. Concepto de SIGNAL</h3>
+
+        <p>A instrución <code>SIGNAL</code> permite provocar intencionadamente unha condición de erro durante a execución dun procedemento, función ou disparador.</p>
+
+        <p>É útil cando queremos establecer regras propias e impedir que unha operación continúe se non cumpre determinadas condicións.</p>
+
+        <p>A sintaxe básica é:</p>
+
+        <pre><code>SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Descrición do erro';</code></pre>
+
+        <p>O código <code>45000</code> utilízase habitualmente para representar unha excepción definida polo usuario.</p>
+
+        <h3>7.2. Exemplo de validación mediante SIGNAL</h3>
+
+        <p>O seguinte procedemento comproba que a cantidade dun pedido sexa maior que cero.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE crear_pedido(
+    IN p_id_produto INT,
+    IN p_cantidade INT
+)
+BEGIN
+    IF p_cantidade &lt;= 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'A cantidade debe ser maior que cero';
+    END IF;
+
+    INSERT INTO pedidos(id_produto, cantidade)
+    VALUES (p_id_produto, p_cantidade);
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Se se chama ao procedemento cunha cantidade igual ou inferior a cero, MariaDB xera o erro personalizado e non executa a inserción.</p>
+
+        <pre><code>CALL crear_pedido(1, -5);</code></pre>
+
+        <h3>7.3. Utilidade de SIGNAL</h3>
+
+        <p>Esta instrución permite:</p>
+
+        <ul>
+            <li>Impedir operacións que incumpren regras de negocio.</li>
+            <li>Devolver mensaxes de erro comprensibles.</li>
+            <li>Validar parámetros recibidos por procedementos.</li>
+            <li>Controlar situacións que non están representadas por un erro SQL estándar.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>8. Relanzamento de excepcións: RESIGNAL</h2>
+
+        <h3>8.1. Concepto de RESIGNAL</h3>
+
+        <p>A instrución <code>RESIGNAL</code> permite volver lanzar unha condición que xa foi capturada por un controlador.</p>
+
+        <p>É útil cando queremos executar algunha acción antes de que o erro se comunique ao programa que chamou ao procedemento.</p>
+
+        <p>Por exemplo, podemos capturar un erro, rexistrar unha mensaxe e volver lanzar a excepción.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE inserir_produto(
+    IN p_id INT,
+    IN p_nome VARCHAR(100)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        INSERT INTO rexistro_erro(mensaxe, data_erro)
+        VALUES ('Erro ao inserir un produto', NOW());
+
+        RESIGNAL;
+    END;
+
+    INSERT INTO produtos(id, nome)
+    VALUES (p_id, p_nome);
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Neste exemplo, se a inserción falla:</p>
+
+        <ol>
+            <li>Actívase o controlador <code>EXIT</code>.</li>
+            <li>Insírese unha mensaxe na táboa de rexistro de erros.</li>
+            <li><code>RESIGNAL</code> volve lanzar a excepción orixinal.</li>
+            <li>O programa que chamou ao procedemento recibe o erro.</li>
+        </ol>
+
+        <div class="callout">
+            <strong>Diferenza entre SIGNAL e RESIGNAL:</strong>
+            <ul>
+                <li><code>SIGNAL</code> crea unha nova condición ou erro.</li>
+                <li><code>RESIGNAL</code> volve lanzar unha condición que xa foi capturada por un controlador.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>9. Integración de cursores e controladores</h2>
+
+        <p>Os cursores e os controladores utilízanse con frecuencia de maneira conxunta. O cursor permite percorrer os resultados dunha consulta e o controlador permite detectar cando remata o percorrido.</p>
+
+        <h3>9.1. Exemplo completo</h3>
+
+        <p>O seguinte procedemento percorre os produtos dunha táboa, calcula o valor total do stock e almacena o resultado nunha variable de saída.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE calcular_valor_inventario(
+    OUT p_total DECIMAL(12,2)
+)
+BEGIN
+    DECLARE fin BOOLEAN DEFAULT FALSE;
+    DECLARE v_prezo DECIMAL(10,2);
+    DECLARE v_stock INT;
+
+    DECLARE cursor_produtos CURSOR FOR
+        SELECT prezo, stock
+        FROM produtos;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND
+        SET fin = TRUE;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        CLOSE cursor_produtos;
+        RESIGNAL;
+    END;
+
+    SET p_total = 0;
+
+    OPEN cursor_produtos;
+
+    bucle: LOOP
+
+        FETCH cursor_produtos INTO v_prezo, v_stock;
+
+        IF fin THEN
+            LEAVE bucle;
+        END IF;
+
+        SET p_total = p_total + (v_prezo * v_stock);
+
+    END LOOP;
+
+    CLOSE cursor_produtos;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Para executar o procedemento:</p>
+
+        <pre><code>CALL calcular_valor_inventario(@valor);
+
+SELECT @valor AS valor_total_inventario;</code></pre>
+
+        <p>O procedemento combina varios elementos:</p>
+
+        <ul>
+            <li>Un cursor para recuperar o prezo e o stock de cada produto.</li>
+            <li>Variables locais para almacenar os valores recuperados.</li>
+            <li>Un controlador <code>NOT FOUND</code> para detectar o final do cursor.</li>
+            <li>Un bucle para procesar todos os produtos.</li>
+            <li>Un controlador de excepcións para tratar erros SQL.</li>
+            <li>Unha variable de saída para devolver o resultado.</li>
+        </ul>
+
+        <div class="callout">
+            <strong>Nota técnica:</strong> nun procedemento real, o peche do cursor dentro dun controlador debe deseñarse tendo en conta se o cursor chegou a abrirse. Tamén é importante evitar que un segundo erro producido durante a xestión do erro oculte a excepción orixinal. O exemplo ilustra a combinación dos mecanismos, pero a xestión de recursos debe adaptarse ao fluxo concreto do programa.
+        </div>
+    </section>
+
+    <section>
+        <h2>10. Boas prácticas no uso de cursores e excepcións</h2>
+
+        <ul>
+            <li>Utilizar cursores unicamente cando sexa necesario procesar os rexistros individualmente.</li>
+            <li>Priorizar as operacións SQL sobre conxuntos de datos cando permitan resolver o problema de maneira máis eficiente.</li>
+            <li>Declarar as variables, cursores e controladores antes das instrucións executables.</li>
+            <li>Pechar os cursores unha vez finalizado o seu uso.</li>
+            <li>Controlar sempre a condición <code>NOT FOUND</code> nos percorridos de cursores.</li>
+            <li>Escoller entre <code>CONTINUE</code> e <code>EXIT</code> segundo o comportamento que deba ter o programa.</li>
+            <li>Utilizar controladores específicos cando se coñecen os erros que poden producirse.</li>
+            <li>Evitar ocultar os erros con controladores demasiado xenéricos.</li>
+            <li>Utilizar <code>SIGNAL</code> para comunicar erros relacionados coas regras de negocio.</li>
+            <li>Utilizar <code>RESIGNAL</code> cando sexa necesario propagar unha excepción despois de realizar tarefas adicionais.</li>
+            <li>Probar os procedementos con datos válidos e con situacións que provoquen erros.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>11. Exercicios prácticos</h2>
+
+        <div class="example">
+            <h3>Exercicio 1. Percorrido de rexistros mediante un cursor</h3>
+
+            <p>Traballa cunha táboa de alumnos que conteña, como mínimo, identificador, nome e curso.</p>
+
+            <ol>
+                <li>Crea un procedemento que percorra os alumnos mediante un cursor.</li>
+                <li>Recupera o identificador e o nome de cada alumno.</li>
+                <li>Mostra os datos de cada rexistro durante o percorrido.</li>
+                <li>Controla o final dos resultados mediante unha condición <code>NOT FOUND</code>.</li>
+                <li>Comproba o funcionamento con táboas que teñan varios rexistros e tamén sen rexistros.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 2. Cálculos mediante cursores</h3>
+
+            <p>Utiliza unha táboa de produtos que conteña nome, prezo e stock.</p>
+
+            <ol>
+                <li>Crea un procedemento que percorra todos os produtos.</li>
+                <li>Calcula o valor total do inventario.</li>
+                <li>Obtén o número de produtos procesados.</li>
+                <li>Devolve os resultados mediante parámetros de saída.</li>
+                <li>Compara o resultado co obtido mediante unha consulta SQL que utilice funcións de agregación.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 3. Control de erros mediante HANDLER</h3>
+
+            <p>Deseña varios procedementos que realicen operacións sobre unha táboa de produtos.</p>
+
+            <ol>
+                <li>Define un controlador <code>CONTINUE</code> para unha condición de erro concreta.</li>
+                <li>Define outro controlador <code>EXIT</code> para capturar erros SQL.</li>
+                <li>Realiza operacións que provoquen os erros controlados.</li>
+                <li>Comproba que a execución continúa ou finaliza segundo o tipo de controlador utilizado.</li>
+                <li>Rexistra información sobre os erros producidos.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 4. Validación con SIGNAL</h3>
+
+            <p>Desenvolve un procedemento para rexistrar pedidos nunha base de datos.</p>
+
+            <ol>
+                <li>Define os parámetros necesarios para identificar o produto e a cantidade solicitada.</li>
+                <li>Comproba que a cantidade sexa válida.</li>
+                <li>Impide rexistrar pedidos que incumpran as regras establecidas.</li>
+                <li>Utiliza <code>SIGNAL</code> para devolver mensaxes de erro personalizadas.</li>
+                <li>Proba o procedemento con diferentes valores.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 5. Integración de cursores e excepcións</h3>
+
+            <p>Desenvolve un procedemento que percorra os produtos dunha base de datos e realice unha operación sobre cada un deles.</p>
+
+            <ol>
+                <li>Declara un cursor para seleccionar os produtos que se deben procesar.</li>
+                <li>Utiliza variables locais para almacenar os datos recuperados.</li>
+                <li>Procesa os rexistros mediante un bucle.</li>
+                <li>Controla o final do cursor mediante <code>NOT FOUND</code>.</li>
+                <li>Define un controlador para os erros SQL.</li>
+                <li>Comproba que o cursor se pecha correctamente ao finalizar o procedemento.</li>
+                <li>Realiza probas con diferentes conxuntos de datos e situacións de erro.</li>
+            </ol>
+        </div>
+    </section>
+
+    <section>
+        <h2>12. Resumo do bloque</h2>
+
+        <ul>
+            <li>Os <strong>cursores</strong> permiten percorrer fila a fila os resultados dunha consulta SQL.</li>
+            <li><code>DECLARE CURSOR</code> define o cursor e a consulta asociada.</li>
+            <li><code>OPEN</code> abre o cursor, <code>FETCH</code> recupera unha fila e <code>CLOSE</code> péchao.</li>
+            <li>Os cursores adoitan combinarse con variables locais e estruturas repetitivas.</li>
+            <li>Os controladores <code>DECLARE HANDLER</code> permiten xestionar erros e condicións especiais.</li>
+            <li><code>CONTINUE</code> permite continuar a execución despois de tratar unha condición.</li>
+            <li><code>EXIT</code> permite abandonar o bloque no que foi declarado o controlador.</li>
+            <li><code>NOT FOUND</code> permite detectar que non quedan máis filas nun cursor.</li>
+            <li><code>SQLEXCEPTION</code> e <code>SQLWARNING</code> permiten capturar categorías de condicións SQL.</li>
+            <li><code>SIGNAL</code> permite xerar erros personalizados.</li>
+            <li><code>RESIGNAL</code> permite volver lanzar unha excepción capturada.</li>
+            <li>A combinación de cursores e controladores permite desenvolver procedementos almacenados máis robustos e controlados.</li>
+        </ul>
+    </section>
+
+</main>
+</body>
+</html>

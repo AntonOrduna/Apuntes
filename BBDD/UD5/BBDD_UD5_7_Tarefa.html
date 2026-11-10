@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD5 - Práctica: Programación en bases de datos</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+<main>
+
+    <h1 class="document-title">Práctica: Programación en bases de datos</h1>
+
+    <p><strong>Unidade didáctica:</strong> UD5 – Programación en bases de datos</p>
+
+    <p><strong>Contorno de traballo:</strong> MariaDB e MySQL Workbench</p>
+
+    <section>
+        <h2>1. Obxectivo da práctica</h2>
+
+        <p>Nesta práctica desenvolverás diferentes elementos de programación almacenada en MariaDB para automatizar tarefas, procesar información e controlar situacións de erro.</p>
+
+        <p>Traballarás con variables, funcións, procedementos, estruturas de control, eventos, disparadores, cursores e mecanismos de tratamento de excepcións.</p>
+
+        <p>O obxectivo é construír unha pequena solución de programación integrada nunha base de datos, demostrando o funcionamento dos elementos implementados.</p>
+    </section>
+
+    <section>
+        <h2>2. Preparación do contorno</h2>
+
+        <p>Crea unha base de datos denominada <code>xestion_comercial</code> que permita xestionar unha pequena actividade comercial.</p>
+
+        <p>A base de datos deberá incluír, como mínimo, as seguintes entidades:</p>
+
+        <ul>
+            <li><strong>Produtos:</strong> identificador, nome, prezo e stock.</li>
+            <li><strong>Clientes:</strong> identificador, nome e correo electrónico.</li>
+            <li><strong>Pedidos:</strong> identificador, cliente, data e estado.</li>
+            <li><strong>Liñas de pedido:</strong> pedido, produto, cantidade e prezo aplicado.</li>
+        </ul>
+
+        <p>Podes engadir outras táboas cando sexan necesarias para implementar os mecanismos de programación solicitados.</p>
+    </section>
+
+    <section>
+        <h2>3. Variables e funcións</h2>
+
+        <ol>
+            <li>Utiliza variables de usuario e variables locais en diferentes operacións SQL.</li>
+            <li>Emprega funcións incorporadas de MariaDB para realizar operacións con cadeas, datas, valores numéricos e condicións.</li>
+            <li>Crea unha función almacenada que realice un cálculo relacionado coa actividade comercial, por exemplo, calcular o importe dunha liña de pedido ou aplicar un desconto.</li>
+            <li>Utiliza a función creada en consultas SQL e comproba os resultados obtidos.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>4. Procedementos e estruturas de control</h2>
+
+        <ol>
+            <li>Crea un procedemento almacenado para realizar unha operación habitual de xestión, como rexistrar un pedido ou consultar información dun cliente.</li>
+            <li>Utiliza parámetros de entrada e, cando sexa necesario, parámetros de saída.</li>
+            <li>Incorpora variables locais para almacenar e manipular información.</li>
+            <li>Utiliza estruturas condicionais para controlar diferentes situacións.</li>
+            <li>Inclúe polo menos unha estrutura repetitiva para realizar unha operación varias veces.</li>
+            <li>Executa os procedementos e comproba os resultados obtidos.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>5. Eventos programados</h2>
+
+        <ol>
+            <li>Comproba o estado do planificador de eventos de MariaDB e configura o necesario para permitir a súa execución.</li>
+            <li>Crea un evento de execución única asociado a unha data e hora determinadas.</li>
+            <li>Crea un evento periódico que realice unha tarefa automática de mantemento ou actualización da información.</li>
+            <li>Modifica a programación dun dos eventos.</li>
+            <li>Desactiva e volve activar un evento.</li>
+            <li>Consulta os eventos existentes e elimina os que xa non sexan necesarios.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>6. Disparadores (triggers)</h2>
+
+        <ol>
+            <li>Crea un disparador que valide os datos dun produto antes da súa inserción ou modificación.</li>
+            <li>Define un disparador que actúe despois dunha operación de actualización.</li>
+            <li>Crea unha táboa auxiliar para almacenar información de auditoría.</li>
+            <li>Utiliza <code>OLD</code> e <code>NEW</code> para rexistrar os valores anteriores e posteriores dunha modificación.</li>
+            <li>Implementa un disparador que rexistre a eliminación dun rexistro.</li>
+            <li>Realiza operacións de inserción, modificación e eliminación para comprobar o funcionamento dos disparadores.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>7. Cursores</h2>
+
+        <ol>
+            <li>Crea un procedemento que utilice un cursor para percorrer os produtos ou os pedidos da base de datos.</li>
+            <li>Declara o cursor mediante <code>DECLARE CURSOR</code> e utiliza <code>OPEN</code>, <code>FETCH</code> e <code>CLOSE</code>.</li>
+            <li>Emprega variables locais para almacenar os datos de cada fila.</li>
+            <li>Procesa os rexistros mediante unha estrutura repetitiva.</li>
+            <li>Realiza unha operación ou cálculo sobre cada rexistro recuperado.</li>
+            <li>Controla correctamente o final do percorrido.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>8. Tratamento de excepcións e erros</h2>
+
+        <ol>
+            <li>Incorpora controladores de condicións mediante <code>DECLARE HANDLER</code> nun procedemento almacenado.</li>
+            <li>Utiliza un controlador <code>CONTINUE</code> e outro <code>EXIT</code>, comprobando as diferenzas no comportamento.</li>
+            <li>Controla a condición <code>NOT FOUND</code> no procedemento que utiliza o cursor.</li>
+            <li>Implementa o tratamento dun erro SQL específico mediante un código de erro ou un código <code>SQLSTATE</code>.</li>
+            <li>Utiliza <code>SIGNAL</code> para xerar unha mensaxe de erro personalizada cando non se cumpra unha regra de negocio.</li>
+            <li>Utiliza <code>RESIGNAL</code> para propagar unha excepción despois de realizar unha operación adicional de rexistro ou control.</li>
+            <li>Realiza probas que permitan comprobar o comportamento dos diferentes controladores.</li>
+        </ol>
+    </section>
+
+    <section>
+        <h2>9. Integración da solución</h2>
+
+        <p>Unha vez implementados os elementos anteriores, realiza unha proba global da base de datos.</p>
+
+        <ul>
+            <li>Executa os procedementos e funcións creados.</li>
+            <li>Comproba a execución dos eventos programados.</li>
+            <li>Realiza operacións que activen os disparadores.</li>
+            <li>Verifica os rexistros almacenados nas táboas de auditoría.</li>
+            <li>Executa o procedemento que utiliza o cursor.</li>
+            <li>Proba situacións que provoquen erros e comproba o tratamento das excepcións.</li>
+        </ul>
+
+        <p>Comproba que os diferentes mecanismos funcionan correctamente e que non se producen modificacións inconsistentes nos datos.</p>
+    </section>
+
+    <section>
+        <h2>10. Entrega da práctica</h2>
+
+        <p>A entrega será exclusivamente un <strong>documento PDF</strong> que recolla o traballo realizado.</p>
+
+        <p>O documento deberá incluír:</p>
+
+        <ul>
+            <li>Unha breve presentación da base de datos e da solución desenvolvida.</li>
+            <li>Capturas de pantalla das instrucións SQL executadas e dos elementos creados.</li>
+            <li>Explicación dos pasos seguidos para implementar cada apartado.</li>
+            <li>Descrición do funcionamento dos procedementos, funcións, eventos e disparadores.</li>
+            <li>Explicación do uso dos cursores e dos mecanismos de tratamento de excepcións.</li>
+            <li>Capturas das probas realizadas, incluíndo resultados correctos e situacións de erro.</li>
+            <li>Unha conclusión breve sobre o traballo desenvolvido e as dificultades atopadas.</li>
+        </ul>
+
+        <div class="callout">
+            <strong>Importante:</strong> as capturas deben permitir identificar as instrucións executadas e os resultados obtidos. Non abonda con incluír imaxes do código: é necesario explicar que fai cada elemento e como se comprobou o seu funcionamento.
+        </div>
+    </section>
+
+    <section>
+        <h2>11. Criterios xerais de realización</h2>
+
+        <ul>
+            <li>A base de datos debe estar correctamente estruturada e conter datos suficientes para realizar as probas.</li>
+            <li>Os procedementos, funcións, eventos e disparadores deben estar correctamente definidos e funcionar.</li>
+            <li>Os cursores deben percorrer os resultados e finalizar correctamente.</li>
+            <li>Os erros e condicións especiais deben tratarse de maneira controlada.</li>
+            <li>As probas deben demostrar o funcionamento real das solucións implementadas.</li>
+            <li>O PDF debe estar organizado, ser lexible e incluír explicacións claras e capturas relevantes.</li>
+        </ul>
+    </section>
+
+</main>
+</body>
+</html>

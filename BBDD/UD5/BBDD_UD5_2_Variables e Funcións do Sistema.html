@@ -1,0 +1,921 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD5 - Variables e funcións do sistema</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+    <h1 class="document-title">UD5. Programación de bases de datos</h1>
+    <h2>Bloque 2. Variables e funcións do sistema</h2>
+
+    <p>
+        Neste bloque estudarase como utilizar variables e funcións incorporadas
+        de MariaDB para construír consultas SQL máis flexibles e adaptar o
+        comportamento do servidor ás necesidades de cada aplicación.
+    </p>
+
+    <section>
+        <h2>1. Variables do sistema en MariaDB</h2>
+
+        <h3>1.1. Que son as variables do sistema?</h3>
+
+        <p>
+            MariaDB utiliza variables do sistema para almacenar valores que
+            determinan o comportamento e a configuración do servidor. Estas
+            variables permiten consultar características do sistema e, nalgúns
+            casos, modificar a súa configuración.
+        </p>
+
+        <p>
+            Entre outros aspectos, as variables do sistema permiten controlar:
+        </p>
+
+        <ul>
+            <li>O número máximo de conexións simultáneas.</li>
+            <li>O tempo máximo de espera dunha conexión inactiva.</li>
+            <li>O porto no que escoita o servidor.</li>
+            <li>O motor de almacenamento predeterminado.</li>
+            <li>A configuración de caracteres e comparación de textos.</li>
+        </ul>
+
+        <div class="ejemplo">
+            <h3>Exemplo de variables do sistema</h3>
+            <p>
+                A variable <code>max_connections</code> indica o número máximo
+                de conexións simultáneas que pode aceptar o servidor.
+            </p>
+            <pre><code>SHOW VARIABLES LIKE 'max_connections';</code></pre>
+
+            <p>
+                Tamén se pode consultar o tempo de espera dunha conexión
+                interactiva:
+            </p>
+            <pre><code>SHOW VARIABLES LIKE 'interactive_timeout';</code></pre>
+        </div>
+
+        <h3>1.2. Consultar variables do sistema</h3>
+
+        <p>
+            A instrución <code>SHOW VARIABLES</code> permite consultar as
+            variables de configuración de MariaDB.
+        </p>
+
+        <pre><code>-- Consultar todas as variables
+SHOW VARIABLES;
+
+-- Consultar variables que coincidan cun patrón
+SHOW VARIABLES LIKE 'character_set%';
+
+-- Consultar unha variable concreta
+SHOW VARIABLES LIKE 'max_connections';</code></pre>
+
+        <p>
+            O operador <code>LIKE</code> permite filtrar os resultados
+            utilizando patróns. O carácter <code>%</code> representa calquera
+            secuencia de caracteres.
+        </p>
+
+        <h3>1.3. Modificar variables do sistema</h3>
+
+        <p>
+            Algunhas variables poden modificarse durante a execución do
+            servidor mediante a instrución <code>SET</code>. O alcance da
+            modificación depende de se se utiliza <code>GLOBAL</code> ou
+            <code>SESSION</code>.
+        </p>
+
+        <div class="callout">
+            <strong>Variables GLOBAL e SESSION</strong>
+            <ul>
+                <li>
+                    <strong>GLOBAL:</strong> establece o valor global dunha
+                    variable para o servidor. Afecta ás novas conexións,
+                    agás que a variable teña un comportamento específico
+                    diferente.
+                </li>
+                <li>
+                    <strong>SESSION:</strong> modifica o valor para a conexión
+                    actual. Non altera o valor global nin o doutras conexións.
+                </li>
+            </ul>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: modificar unha variable GLOBAL</h3>
+            <pre><code>-- Consultar o valor global
+SHOW GLOBAL VARIABLES LIKE 'max_connections';
+
+-- Modificar o número máximo de conexións
+SET GLOBAL max_connections = 200;
+
+-- Comprobar o novo valor
+SHOW GLOBAL VARIABLES LIKE 'max_connections';</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: modificar unha variable SESSION</h3>
+            <pre><code>-- Consultar o valor da sesión actual
+SHOW SESSION VARIABLES LIKE 'wait_timeout';
+
+-- Modificar o tempo de espera da conexión actual
+SET SESSION wait_timeout = 600;
+
+-- Comprobar o cambio
+SHOW SESSION VARIABLES LIKE 'wait_timeout';</code></pre>
+        </div>
+
+        <p>
+            Non todas as variables permiten modificar os seus valores. Ademais,
+            algunhas modificacións requiren privilexios de administración.
+            Un cambio realizado mediante <code>SET GLOBAL</code> normalmente
+            non se conserva despois de reiniciar o servidor, salvo que tamén
+            se modifique a configuración persistente correspondente.
+        </p>
+
+        <p>
+            Para coñecer as variables dispoñibles e as súas características
+            pódese consultar a documentación oficial de MariaDB.
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Variables de usuario</h2>
+
+        <h3>2.1. Concepto</h3>
+
+        <p>
+            As variables de usuario permiten almacenar valores temporais
+            durante a execución dunha conexión. A diferenza das variables
+            do sistema, non configuran o servidor: utilízanse para gardar
+            datos intermedios e reutilizalos en diferentes instrucións SQL.
+        </p>
+
+        <p>
+            As variables de usuario:
+        </p>
+
+        <ul>
+            <li>Comezan co carácter <code>@</code>.</li>
+            <li>Non necesitan unha declaración previa.</li>
+            <li>Créanse cando se lles asigna un valor.</li>
+            <li>Están dispoñibles na conexión actual.</li>
+            <li>Desaparecen ao finalizar a conexión.</li>
+        </ul>
+
+        <h3>2.2. Asignación de valores</h3>
+
+        <p>
+            A instrución <code>SET</code> permite asignar valores ás variables
+            de usuario.
+        </p>
+
+        <pre><code>-- Asignar un valor numérico
+SET @idade = 25;
+
+-- Asignar unha cadea de texto
+SET @nome = 'Ana';
+
+-- Asignar unha data
+SET @data_actual = CURDATE();
+
+-- Consultar o contido das variables
+SELECT @idade, @nome, @data_actual;</code></pre>
+
+        <p>
+            Tamén se pode utilizar o operador de asignación
+            <code>:=</code> en determinados contextos SQL.
+        </p>
+
+        <pre><code>SET @contador := 10;
+
+SELECT @contador;</code></pre>
+
+        <h3>2.3. Utilización en consultas SQL</h3>
+
+        <p>
+            As variables de usuario poden empregarse en expresións,
+            condicións, operacións matemáticas e consultas.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: utilizar unha variable nunha condición</h3>
+            <pre><code>-- Establecer o curso que queremos consultar
+SET @curso = 'DAW1';
+
+-- Consultar os alumnos dese curso
+SELECT *
+FROM alumnos
+WHERE curso = @curso;</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: realizar operacións matemáticas</h3>
+            <pre><code>SET @prezo = 100;
+SET @desconto = 15;
+
+SELECT
+    @prezo AS prezo_inicial,
+    @desconto AS porcentaxe_desconto,
+    @prezo - (@prezo * @desconto / 100) AS prezo_final;</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: almacenar o resultado dunha consulta</h3>
+            <pre><code>-- Gardar o número de alumnos
+SET @total_alumnos = (
+    SELECT COUNT(*)
+    FROM alumnos
+);
+
+-- Mostrar o resultado
+SELECT @total_alumnos AS total_alumnos;</code></pre>
+        </div>
+
+        <div class="callout">
+            <strong>Importante: variables de usuario e variables locais</strong>
+            <p>
+                As variables de usuario, como <code>@total</code>, pertencen
+                á conexión e poden utilizarse en distintas instrucións SQL.
+                As variables locais, que se estudarán máis adiante,
+                decláranse con <code>DECLARE</code> dentro de procedementos
+                ou bloques de programación e só existen no ámbito
+                correspondente.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>3. Funcións incorporadas de MariaDB</h2>
+
+        <h3>3.1. Que son as funcións incorporadas?</h3>
+
+        <p>
+            MariaDB proporciona un conxunto de funcións que permiten realizar
+            operacións habituais directamente nas consultas SQL. Estas
+            funcións reciben un ou varios argumentos e devolven un resultado.
+        </p>
+
+        <p>
+            Poden utilizarse en instrucións <code>SELECT</code>, condicións
+            <code>WHERE</code>, expresións, agrupacións e ordenacións.
+        </p>
+
+        <pre><code>SELECT UPPER('mariadb');
+SELECT ROUND(15.678, 2);
+SELECT CURDATE();</code></pre>
+
+        <h3>3.2. Funcións de cadeas de caracteres</h3>
+
+        <p>
+            Permiten manipular textos, obter partes dunha cadea, cambiar
+            maiúsculas e minúsculas ou coñecer a súa lonxitude.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Función</th>
+                    <th>Descrición</th>
+                    <th>Exemplo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>UPPER()</code></td>
+                    <td>Converte o texto a maiúsculas.</td>
+                    <td><code>UPPER('ana')</code> → ANA</td>
+                </tr>
+                <tr>
+                    <td><code>LOWER()</code></td>
+                    <td>Converte o texto a minúsculas.</td>
+                    <td><code>LOWER('ANA')</code> → ana</td>
+                </tr>
+                <tr>
+                    <td><code>LENGTH()</code></td>
+                    <td>Devolve a lonxitude en bytes.</td>
+                    <td><code>LENGTH('SQL')</code> → 3</td>
+                </tr>
+                <tr>
+                    <td><code>CHAR_LENGTH()</code></td>
+                    <td>Devolve o número de caracteres.</td>
+                    <td><code>CHAR_LENGTH('María')</code> → 5</td>
+                </tr>
+                <tr>
+                    <td><code>CONCAT()</code></td>
+                    <td>Une varias cadeas.</td>
+                    <td><code>CONCAT('Ana', ' López')</code></td>
+                </tr>
+                <tr>
+                    <td><code>SUBSTRING()</code></td>
+                    <td>Extrae unha parte dunha cadea.</td>
+                    <td><code>SUBSTRING('MariaDB', 1, 5)</code></td>
+                </tr>
+                <tr>
+                    <td><code>TRIM()</code></td>
+                    <td>Elimina espazos ao principio e ao final.</td>
+                    <td><code>TRIM(' texto ')</code></td>
+                </tr>
+                <tr>
+                    <td><code>REPLACE()</code></td>
+                    <td>Substitúe unha parte do texto.</td>
+                    <td><code>REPLACE('ola mundo', 'mundo', 'SQL')</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo: transformar datos de texto</h3>
+            <pre><code>SELECT
+    nome,
+    UPPER(nome) AS nome_maiusculas,
+    LOWER(nome) AS nome_minusculas,
+    CHAR_LENGTH(nome) AS lonxitude
+FROM alumnos;</code></pre>
+        </div>
+
+        <h3>3.3. Funcións de datas e horas</h3>
+
+        <p>
+            MariaDB incorpora funcións para obter a data e hora actuais,
+            extraer partes dunha data e realizar operacións temporais.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Función</th>
+                    <th>Descrición</th>
+                    <th>Exemplo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>CURDATE()</code></td>
+                    <td>Devolve a data actual.</td>
+                    <td><code>CURDATE()</code></td>
+                </tr>
+                <tr>
+                    <td><code>NOW()</code></td>
+                    <td>Devolve a data e hora actuais.</td>
+                    <td><code>NOW()</code></td>
+                </tr>
+                <tr>
+                    <td><code>CURTIME()</code></td>
+                    <td>Devolve a hora actual.</td>
+                    <td><code>CURTIME()</code></td>
+                </tr>
+                <tr>
+                    <td><code>YEAR()</code></td>
+                    <td>Extrae o ano dunha data.</td>
+                    <td><code>YEAR('2026-05-20')</code></td>
+                </tr>
+                <tr>
+                    <td><code>MONTH()</code></td>
+                    <td>Extrae o mes dunha data.</td>
+                    <td><code>MONTH('2026-05-20')</code></td>
+                </tr>
+                <tr>
+                    <td><code>DAY()</code></td>
+                    <td>Extrae o día do mes.</td>
+                    <td><code>DAY('2026-05-20')</code></td>
+                </tr>
+                <tr>
+                    <td><code>DATEDIFF()</code></td>
+                    <td>Calcula a diferenza en días entre dúas datas.</td>
+                    <td><code>DATEDIFF('2026-06-01', '2026-05-20')</code></td>
+                </tr>
+                <tr>
+                    <td><code>DATE_ADD()</code></td>
+                    <td>Engade un intervalo a unha data.</td>
+                    <td><code>DATE_ADD(CURDATE(), INTERVAL 7 DAY)</code></td>
+                </tr>
+                <tr>
+                    <td><code>DATE_FORMAT()</code></td>
+                    <td>Formata unha data.</td>
+                    <td><code>DATE_FORMAT(NOW(), '%d/%m/%Y')</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo: consultar datas e calcular intervalos</h3>
+            <pre><code>SELECT
+    CURDATE() AS data_actual,
+    NOW() AS data_hora,
+    YEAR(CURDATE()) AS ano,
+    DATE_ADD(CURDATE(), INTERVAL 30 DAY) AS data_futura;</code></pre>
+        </div>
+
+        <h3>3.4. Funcións numéricas</h3>
+
+        <p>
+            As funcións numéricas permiten realizar cálculos e operacións
+            matemáticas sobre valores.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Función</th>
+                    <th>Descrición</th>
+                    <th>Exemplo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ROUND()</code></td>
+                    <td>Redondea un número.</td>
+                    <td><code>ROUND(15.678, 2)</code> → 15.68</td>
+                </tr>
+                <tr>
+                    <td><code>CEIL()</code></td>
+                    <td>Redondea cara arriba.</td>
+                    <td><code>CEIL(15.2)</code> → 16</td>
+                </tr>
+                <tr>
+                    <td><code>FLOOR()</code></td>
+                    <td>Redondea cara abaixo.</td>
+                    <td><code>FLOOR(15.8)</code> → 15</td>
+                </tr>
+                <tr>
+                    <td><code>ABS()</code></td>
+                    <td>Devolve o valor absoluto.</td>
+                    <td><code>ABS(-25)</code> → 25</td>
+                </tr>
+                <tr>
+                    <td><code>MOD()</code></td>
+                    <td>Devolve o resto dunha división.</td>
+                    <td><code>MOD(10, 3)</code> → 1</td>
+                </tr>
+                <tr>
+                    <td><code>POWER()</code></td>
+                    <td>Calcula unha potencia.</td>
+                    <td><code>POWER(2, 3)</code> → 8</td>
+                </tr>
+                <tr>
+                    <td><code>SQRT()</code></td>
+                    <td>Calcula a raíz cadrada.</td>
+                    <td><code>SQRT(81)</code> → 9</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo: calcular prezos con desconto</h3>
+            <pre><code>SELECT
+    produto,
+    prezo,
+    ROUND(prezo * 0.90, 2) AS prezo_desconto
+FROM produtos;</code></pre>
+            <p>
+                A consulta calcula un desconto do 10 % e redondea o resultado
+                a dous decimais.
+            </p>
+        </div>
+
+        <h3>3.5. Funcións de conversión</h3>
+
+        <p>
+            As funcións de conversión permiten transformar valores dun tipo
+            de dato noutro. Son especialmente útiles cando se traballa con
+            datos que deben interpretarse ou presentarse cun formato
+            determinado.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Función</th>
+                    <th>Descrición</th>
+                    <th>Exemplo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>CAST()</code></td>
+                    <td>Converte unha expresión a un tipo determinado.</td>
+                    <td><code>CAST('123' AS UNSIGNED)</code></td>
+                </tr>
+                <tr>
+                    <td><code>CONVERT()</code></td>
+                    <td>Realiza unha conversión de tipo.</td>
+                    <td><code>CONVERT('2026-05-20', DATE)</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo: conversión de tipos</h3>
+            <pre><code>SELECT
+    CAST('150' AS UNSIGNED) AS valor_numerico,
+    CAST('2026-05-20' AS DATE) AS data_convertida,
+    CAST(25.75 AS CHAR) AS valor_texto;</code></pre>
+        </div>
+
+        <h3>3.6. Funcións condicionais</h3>
+
+        <p>
+            As funcións condicionais permiten devolver resultados diferentes
+            en función de determinadas condicións. Son útiles para clasificar
+            datos, substituír valores nulos ou crear expresións condicionais
+            dentro dunha consulta.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Función</th>
+                    <th>Descrición</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IF()</code></td>
+                    <td>Devolve un valor se a condición é verdadeira e outro se é falsa.</td>
+                </tr>
+                <tr>
+                    <td><code>IFNULL()</code></td>
+                    <td>Substitúe un valor NULL por outro valor.</td>
+                </tr>
+                <tr>
+                    <td><code>NULLIF()</code></td>
+                    <td>Devolve NULL se dous valores son iguais.</td>
+                </tr>
+                <tr>
+                    <td><code>COALESCE()</code></td>
+                    <td>Devolve o primeiro argumento que non sexa NULL.</td>
+                </tr>
+                <tr>
+                    <td><code>CASE</code></td>
+                    <td>Permite avaliar varias condicións e devolver un resultado.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo: función IF()</h3>
+            <pre><code>SELECT
+    nome,
+    nota,
+    IF(nota >= 5, 'Aprobado', 'Suspenso') AS resultado
+FROM alumnos;</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: función IFNULL()</h3>
+            <pre><code>SELECT
+    nome,
+    IFNULL(telefono, 'Non dispoñible') AS telefono
+FROM alumnos;</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: función COALESCE()</h3>
+            <pre><code>SELECT
+    nome,
+    COALESCE(telefono, email, 'Sen contacto') AS contacto
+FROM alumnos;</code></pre>
+            <p>
+                A función devolve o primeiro valor que non sexa NULL:
+                o teléfono, o correo electrónico ou o texto alternativo.
+            </p>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: expresión CASE</h3>
+            <pre><code>SELECT
+    nome,
+    nota,
+    CASE
+        WHEN nota >= 9 THEN 'Sobresaliente'
+        WHEN nota >= 7 THEN 'Notable'
+        WHEN nota >= 5 THEN 'Aprobado'
+        ELSE 'Suspenso'
+    END AS cualificacion
+FROM alumnos;</code></pre>
+        </div>
+
+        <h3>3.7. Funcións de información</h3>
+
+        <p>
+            MariaDB incorpora funcións que permiten obter información sobre
+            a conexión actual, o usuario, a base de datos seleccionada ou
+            o estado da última operación executada.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Función</th>
+                    <th>Descrición</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>DATABASE()</code></td>
+                    <td>Devolve o nome da base de datos seleccionada.</td>
+                </tr>
+                <tr>
+                    <td><code>USER()</code></td>
+                    <td>Devolve o usuario e o host utilizados para establecer a conexión.</td>
+                </tr>
+                <tr>
+                    <td><code>CURRENT_USER()</code></td>
+                    <td>Devolve a conta de MariaDB que se utiliza para comprobar os privilexios.</td>
+                </tr>
+                <tr>
+                    <td><code>VERSION()</code></td>
+                    <td>Devolve a versión do servidor MariaDB.</td>
+                </tr>
+                <tr>
+                    <td><code>CONNECTION_ID()</code></td>
+                    <td>Devolve o identificador da conexión actual.</td>
+                </tr>
+                <tr>
+                    <td><code>ROW_COUNT()</code></td>
+                    <td>Devolve o número de filas afectadas pola instrución anterior.</td>
+                </tr>
+                <tr>
+                    <td><code>LAST_INSERT_ID()</code></td>
+                    <td>Devolve o último valor AUTO_INCREMENT xerado na conexión.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="ejemplo">
+            <h3>Exemplo: consultar información do servidor</h3>
+            <pre><code>SELECT
+    DATABASE() AS base_datos,
+    USER() AS usuario_conexion,
+    CURRENT_USER() AS usuario_privilexios,
+    VERSION() AS version_servidor,
+    CONNECTION_ID() AS id_conexion;</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: obter o último identificador xerado</h3>
+            <pre><code>INSERT INTO alumnos (nome)
+VALUES ('María');
+
+SELECT LAST_INSERT_ID() AS ultimo_id;</code></pre>
+            <p>
+                Se a columna <code>id</code> está definida como
+                <code>AUTO_INCREMENT</code>, a función permite recuperar
+                o identificador xerado pola inserción na conexión actual.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>4. Utilización combinada de variables e funcións</h2>
+
+        <p>
+            As variables de usuario e as funcións incorporadas poden combinarse
+            para construír consultas máis flexibles. Unha variable pode
+            almacenar un valor calculado mediante unha función e utilizarse
+            posteriormente noutras instrucións.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: consulta de alumnos dunha promoción</h3>
+            <pre><code>-- Gardar o ano que queremos consultar
+SET @ano = YEAR(CURDATE());
+
+-- Consultar alumnos matriculados nese ano
+SELECT
+    nome,
+    data_matricula,
+    YEAR(data_matricula) AS ano_matricula
+FROM alumnos
+WHERE YEAR(data_matricula) = @ano;</code></pre>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: clasificación de produtos</h3>
+            <pre><code>SET @limite = 50;
+
+SELECT
+    nome,
+    prezo,
+    IF(prezo >= @limite, 'Prezo alto', 'Prezo baixo') AS categoria
+FROM produtos
+ORDER BY prezo DESC;</code></pre>
+        </div>
+
+        <p>
+            Este tipo de combinación facilita a reutilización de valores
+            e permite adaptar unha consulta sen ter que modificar todas
+            as expresións nas que se utiliza un mesmo dato.
+        </p>
+    </section>
+
+    <section>
+        <h2>5. Boas prácticas</h2>
+
+        <ul>
+            <li>
+                Utilizar <code>SHOW VARIABLES</code> para consultar a
+                configuración antes de modificar variables do sistema.
+            </li>
+            <li>
+                Diferenciar claramente as variables <code>GLOBAL</code>,
+                <code>SESSION</code> e as variables de usuario.
+            </li>
+            <li>
+                Comprobar os privilexios necesarios antes de modificar
+                variables globais.
+            </li>
+            <li>
+                Utilizar nomes de variables de usuario que indiquen
+                claramente o seu contido.
+            </li>
+            <li>
+                Escoller a función incorporada máis adecuada para cada
+                operación.
+            </li>
+            <li>
+                Ter en conta os valores NULL cando se realizan operacións
+                e comparacións.
+            </li>
+            <li>
+                Comprobar os tipos de datos e realizar conversións explícitas
+                cando sexa necesario.
+            </li>
+            <li>
+                Consultar a documentación da versión de MariaDB instalada
+                cando se utilicen funcións ou variables específicas.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>6. Exercicios prácticos</h2>
+
+        <p>
+            Os seguintes exercicios permiten practicar a consulta de
+            variables do sistema, o uso de variables de usuario e as
+            funcións incorporadas de MariaDB.
+        </p>
+
+        <div class="ejercicio">
+            <h3>Exercicio 1. Variables do sistema</h3>
+            <ol>
+                <li>Consulta todas as variables do sistema de MariaDB.</li>
+                <li>Localiza as variables relacionadas co número máximo de conexións.</li>
+                <li>Consulta as variables relacionadas cos xogos de caracteres e as colacións.</li>
+                <li>Consulta o valor global de <code>max_connections</code>.</li>
+                <li>Consulta o valor de <code>wait_timeout</code> na sesión actual.</li>
+                <li>Modifica unha variable de sesión e comproba o resultado.</li>
+                <li>Compara o valor dunha variable GLOBAL co seu valor SESSION.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 2. Variables de usuario</h3>
+            <ol>
+                <li>Crea unha variable para almacenar o nome dun alumno.</li>
+                <li>Crea variables para almacenar unha nota e o número de faltas.</li>
+                <li>Realiza unha consulta que mostre os valores almacenados.</li>
+                <li>Calcula o resultado dunha operación matemática utilizando variables.</li>
+                <li>Utiliza unha variable nunha condición WHERE.</li>
+                <li>Garda nunha variable o resultado dunha consulta que conte os rexistros dunha táboa.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 3. Funcións de cadeas e números</h3>
+            <ol>
+                <li>Consulta os nomes dos alumnos en maiúsculas e minúsculas.</li>
+                <li>Mostra a lonxitude dos nomes almacenados.</li>
+                <li>Une o nome e os apelidos de cada alumno nunha única columna.</li>
+                <li>Calcula o prezo final dos produtos aplicando un desconto.</li>
+                <li>Redondea os resultados a dous decimais.</li>
+                <li>Utiliza funcións numéricas para calcular o resto dunha división e o valor absoluto dun número.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 4. Funcións de datas e conversións</h3>
+            <ol>
+                <li>Consulta a data e hora actuais do servidor.</li>
+                <li>Mostra por separado o ano, mes e día da data actual.</li>
+                <li>Calcula cantos días transcorreron entre dúas datas.</li>
+                <li>Obtén unha data futura engadindo un intervalo de días.</li>
+                <li>Mostra unha data utilizando o formato día/mes/ano.</li>
+                <li>Realiza conversións entre cadeas de texto, números e datas.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 5. Funcións condicionais e de información</h3>
+            <ol>
+                <li>Clasifica os alumnos como aprobados ou suspensos mediante <code>IF()</code>.</li>
+                <li>Substitúe os valores NULL dunha columna por un texto alternativo.</li>
+                <li>Utiliza <code>COALESCE()</code> para seleccionar o primeiro dato de contacto dispoñible.</li>
+                <li>Clasifica as notas en diferentes categorías mediante <code>CASE</code>.</li>
+                <li>Consulta o nome da base de datos seleccionada e a versión do servidor.</li>
+                <li>Consulta o usuario da conexión e o usuario empregado para comprobar os privilexios.</li>
+                <li>Realiza unha inserción nunha táboa con identificador AUTO_INCREMENT e consulta o último identificador xerado.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 6. Consulta integradora</h3>
+            <p>
+                Elabora unha consulta que combine variables de usuario e
+                funcións incorporadas para analizar os datos dunha táboa
+                da base de datos utilizada nas prácticas.
+            </p>
+            <p>A consulta deberá:</p>
+            <ul>
+                <li>Utilizar polo menos dúas variables de usuario.</li>
+                <li>Incorporar funcións de cadeas e funcións numéricas.</li>
+                <li>Utilizar polo menos unha función de datas.</li>
+                <li>Aplicar unha función condicional.</li>
+                <li>Mostrar información da conexión ou do servidor.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>7. Resumo do bloque</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Elemento</th>
+                    <th>Utilidade</th>
+                    <th>Exemplos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Variables do sistema</td>
+                    <td>Consultar e modificar a configuración do servidor.</td>
+                    <td><code>SHOW VARIABLES</code>, <code>SET GLOBAL</code></td>
+                </tr>
+                <tr>
+                    <td>Variables de sesión</td>
+                    <td>Modificar valores para a conexión actual.</td>
+                    <td><code>SET SESSION</code></td>
+                </tr>
+                <tr>
+                    <td>Variables de usuario</td>
+                    <td>Almacenar e reutilizar valores nunha conexión.</td>
+                    <td><code>@nome</code>, <code>SET @total = 10</code></td>
+                </tr>
+                <tr>
+                    <td>Funcións de cadeas</td>
+                    <td>Manipular textos.</td>
+                    <td><code>UPPER()</code>, <code>CONCAT()</code></td>
+                </tr>
+                <tr>
+                    <td>Funcións de datas</td>
+                    <td>Consultar e operar con datas e horas.</td>
+                    <td><code>NOW()</code>, <code>DATE_ADD()</code></td>
+                </tr>
+                <tr>
+                    <td>Funcións numéricas</td>
+                    <td>Realizar cálculos matemáticos.</td>
+                    <td><code>ROUND()</code>, <code>ABS()</code></td>
+                </tr>
+                <tr>
+                    <td>Funcións de conversión</td>
+                    <td>Transformar valores entre tipos de datos.</td>
+                    <td><code>CAST()</code>, <code>CONVERT()</code></td>
+                </tr>
+                <tr>
+                    <td>Funcións condicionais</td>
+                    <td>Devolver resultados segundo condicións.</td>
+                    <td><code>IF()</code>, <code>COALESCE()</code>, <code>CASE</code></td>
+                </tr>
+                <tr>
+                    <td>Funcións de información</td>
+                    <td>Obter datos do servidor e da conexión.</td>
+                    <td><code>DATABASE()</code>, <code>VERSION()</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Obxectivo alcanzado</strong>
+            <p>
+                Ao rematar este bloque, o alumnado debe ser capaz de consultar
+                e modificar variables do sistema cando sexa necesario,
+                utilizar variables de usuario para almacenar valores
+                temporais e incorporar funcións de MariaDB nas consultas
+                para realizar operacións con textos, datas, números e
+                condicións.
+            </p>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>

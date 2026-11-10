@@ -1,0 +1,730 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD5 - Bloque 5. Eventos e disparadores</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+<main>
+
+    <h1 class="document-title">Bloque 5. Eventos e disparadores</h1>
+
+    <section>
+        <h2>1. Automatización de tarefas nunha base de datos</h2>
+
+        <p>Os sistemas xestores de bases de datos permiten automatizar operacións que se executan sen necesidade de que un usuario teña que iniciar manualmente cada acción. En MariaDB existen dous mecanismos especialmente útiles para este propósito: os <strong>eventos programados</strong> e os <strong>disparadores ou triggers</strong>.</p>
+
+        <p>Aínda que ambos permiten executar instrucións SQL de forma automática, funcionan de maneira diferente:</p>
+
+        <ul>
+            <li><strong>Eventos:</strong> executan instrucións nun momento determinado ou de forma periódica.</li>
+            <li><strong>Disparadores:</strong> executan instrucións automaticamente cando se produce unha operación sobre unha táboa.</li>
+        </ul>
+
+        <div class="example">
+            <h3>Exemplos de automatización</h3>
+            <ul>
+                <li>Eliminar rexistros temporais que teñan máis de 30 días cada noite.</li>
+                <li>Actualizar diariamente unha táboa coas estatísticas da base de datos.</li>
+                <li>Rexistrar nunha táboa de auditoría cada modificación realizada sobre un produto.</li>
+                <li>Impedir que se introduza unha cantidade negativa no stock dun artigo.</li>
+                <li>Gardar automaticamente o valor anterior e o novo dunha columna cando se modifica un rexistro.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>2. Eventos programados en MariaDB</h2>
+
+        <h3>2.1. Concepto de evento</h3>
+
+        <p>Un evento é un obxecto da base de datos que permite programar a execución automática dunha ou varias instrucións SQL. A súa execución depende dunha planificación temporal e non dunha operación realizada sobre unha táboa.</p>
+
+        <p>Os eventos poden executarse:</p>
+
+        <ul>
+            <li>Unha única vez nunha data e hora determinadas.</li>
+            <li>De maneira periódica, cada certo intervalo de tempo.</li>
+            <li>Durante un período delimitado por unha data de inicio e outra de finalización.</li>
+        </ul>
+
+        <p>Por exemplo, podemos crear un evento para eliminar os rexistros antigos dunha táboa todos os días ás dúas da madrugada.</p>
+
+        <h3>2.2. O planificador de eventos: event_scheduler</h3>
+
+        <p>Para que MariaDB execute os eventos programados, debe estar activo o planificador de eventos, identificado pola variable <code>event_scheduler</code>.</p>
+
+        <p>Podemos consultar o seu estado mediante:</p>
+
+        <pre><code>SHOW VARIABLES LIKE 'event_scheduler';</code></pre>
+
+        <p>O resultado pode indicar os seguintes valores:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Valor</th>
+                    <th>Significado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ON</td>
+                    <td>O planificador está activado e executa os eventos.</td>
+                </tr>
+                <tr>
+                    <td>OFF</td>
+                    <td>O planificador está desactivado e non executa os eventos.</td>
+                </tr>
+                <tr>
+                    <td>DISABLED</td>
+                    <td>O planificador está deshabilitado na configuración do servidor.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Para activalo temporalmente, se temos os permisos necesarios, podemos executar:</p>
+
+        <pre><code>SET GLOBAL event_scheduler = ON;</code></pre>
+
+        <p>Esta modificación afecta á execución actual do servidor. Para conservar a configuración despois dun reinicio, é necesario establecer a opción correspondente na configuración de MariaDB.</p>
+
+        <div class="callout">
+            <strong>Importante:</strong> se o planificador está desactivado, os eventos poden existir na base de datos, pero non se executarán automaticamente.
+        </div>
+
+        <h3>2.3. Permisos necesarios</h3>
+
+        <p>A creación e administración de eventos require os permisos correspondentes. O privilexio <code>EVENT</code> permite xestionar eventos nunha base de datos.</p>
+
+        <pre><code>GRANT EVENT ON empresa.* TO 'administrador'@'localhost';</code></pre>
+
+        <p>Podemos consultar os permisos dun usuario mediante:</p>
+
+        <pre><code>SHOW GRANTS FOR 'administrador'@'localhost';</code></pre>
+    </section>
+
+    <section>
+        <h2>3. Creación de eventos: CREATE EVENT</h2>
+
+        <h3>3.1. Sintaxe xeral</h3>
+
+        <p>A instrución <code>CREATE EVENT</code> permite crear un evento programado.</p>
+
+        <pre><code>CREATE EVENT nome_evento
+ON SCHEDULE programacion
+DO
+    instrucions_sql;</code></pre>
+
+        <p>A programación temporal defínese mediante <code>ON SCHEDULE</code>. Os dous mecanismos principais son:</p>
+
+        <ul>
+            <li><code>AT</code>: programa unha execución nunha data e hora concretas.</li>
+            <li><code>EVERY</code>: programa execucións periódicas cun intervalo determinado.</li>
+        </ul>
+
+        <h3>3.2. Eventos de execución única con AT</h3>
+
+        <p>Un evento de execución única realízase nun momento determinado. Para iso utilízase <code>AT</code>.</p>
+
+        <pre><code>CREATE EVENT evento_unico
+ON SCHEDULE AT '2026-12-01 02:00:00'
+DO
+    DELETE FROM rexistros_temporais
+    WHERE data_creacion &lt; '2026-01-01';</code></pre>
+
+        <p>Neste exemplo, o evento executará a instrución de eliminación o día 1 de decembro de 2026 ás 02:00 horas.</p>
+
+        <p>Por defecto, os eventos de execución única elimínanse unha vez completada a súa execución. Se queremos conservalos, podemos utilizar <code>ON COMPLETION PRESERVE</code>.</p>
+
+        <pre><code>CREATE EVENT evento_conservado
+ON SCHEDULE AT '2026-12-01 02:00:00'
+ON COMPLETION PRESERVE
+DO
+    INSERT INTO rexistro_tarefas(descricion, data_execucion)
+    VALUES ('Execución do evento', NOW());</code></pre>
+
+        <h3>3.3. Eventos periódicos con EVERY</h3>
+
+        <p>Se queremos executar unha tarefa repetidamente, utilizamos <code>EVERY</code>, indicando o intervalo de tempo.</p>
+
+        <pre><code>CREATE EVENT evento_diario
+ON SCHEDULE EVERY 1 DAY
+DO
+    DELETE FROM rexistros_temporais
+    WHERE data_creacion &lt; DATE_SUB(NOW(), INTERVAL 30 DAY);</code></pre>
+
+        <p>Este evento elimina diariamente os rexistros temporais que teñan máis de 30 días.</p>
+
+        <p>Os intervalos poden expresarse en diferentes unidades:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Unidade</th>
+                    <th>Exemplo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SECOND</td>
+                    <td><code>EVERY 30 SECOND</code></td>
+                </tr>
+                <tr>
+                    <td>MINUTE</td>
+                    <td><code>EVERY 15 MINUTE</code></td>
+                </tr>
+                <tr>
+                    <td>HOUR</td>
+                    <td><code>EVERY 2 HOUR</code></td>
+                </tr>
+                <tr>
+                    <td>DAY</td>
+                    <td><code>EVERY 1 DAY</code></td>
+                </tr>
+                <tr>
+                    <td>WEEK</td>
+                    <td><code>EVERY 1 WEEK</code></td>
+                </tr>
+                <tr>
+                    <td>MONTH</td>
+                    <td><code>EVERY 1 MONTH</code></td>
+                </tr>
+                <tr>
+                    <td>YEAR</td>
+                    <td><code>EVERY 1 YEAR</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3.4. Establecer inicio e finalización</h3>
+
+        <p>Podemos indicar cando debe comezar a execución periódica mediante <code>STARTS</code> e cando debe rematar mediante <code>ENDS</code>.</p>
+
+        <pre><code>CREATE EVENT evento_temporal
+ON SCHEDULE EVERY 1 DAY
+STARTS '2026-12-01 01:00:00'
+ENDS '2026-12-31 01:00:00'
+DO
+    INSERT INTO rexistro_tarefas(descricion, data_execucion)
+    VALUES ('Tarefa periódica', NOW());</code></pre>
+
+        <p>Neste caso, o evento executarase diariamente a partir do 1 de decembro e deixará de facelo despois da data de finalización establecida.</p>
+
+        <div class="callout">
+            <strong>Recorda:</strong> <code>AT</code> utilízase para unha execución puntual, mentres que <code>EVERY</code> permite establecer unha programación recorrente.
+        </div>
+    </section>
+
+    <section>
+        <h2>4. Administración dos eventos</h2>
+
+        <h3>4.1. Consultar os eventos existentes</h3>
+
+        <p>Podemos consultar os eventos dunha base de datos mediante:</p>
+
+        <pre><code>SHOW EVENTS;</code></pre>
+
+        <p>Para consultar a definición completa dun evento concreto:</p>
+
+        <pre><code>SHOW CREATE EVENT evento_diario;</code></pre>
+
+        <p>Estas instrucións permiten comprobar a programación, o estado e as instrucións SQL asociadas a cada evento.</p>
+
+        <h3>4.2. Modificar un evento</h3>
+
+        <p>A instrución <code>ALTER EVENT</code> permite modificar a configuración dun evento existente.</p>
+
+        <pre><code>ALTER EVENT evento_diario
+ON SCHEDULE EVERY 12 HOUR;</code></pre>
+
+        <p>Neste exemplo, modifícase a frecuencia de execución para que se realice cada doce horas.</p>
+
+        <h3>4.3. Activar e desactivar eventos</h3>
+
+        <p>Podemos activar ou desactivar temporalmente un evento sen necesidade de eliminalo.</p>
+
+        <pre><code>ALTER EVENT evento_diario DISABLE;</code></pre>
+
+        <p>Para volver activalo:</p>
+
+        <pre><code>ALTER EVENT evento_diario ENABLE;</code></pre>
+
+        <p>Un evento desactivado continúa existindo, pero non se executa mentres permaneza nese estado.</p>
+
+        <h3>4.4. Eliminar eventos</h3>
+
+        <p>Para eliminar definitivamente un evento utilízase <code>DROP EVENT</code>.</p>
+
+        <pre><code>DROP EVENT evento_diario;</code></pre>
+
+        <p>Se queremos evitar un erro cando o evento non existe, podemos utilizar <code>IF EXISTS</code>.</p>
+
+        <pre><code>DROP EVENT IF EXISTS evento_diario;</code></pre>
+    </section>
+
+    <section>
+        <h2>5. Disparadores ou triggers</h2>
+
+        <h3>5.1. Concepto de disparador</h3>
+
+        <p>Un disparador, ou <em>trigger</em>, é un obxecto da base de datos que contén instrucións SQL que se executan automaticamente cando se produce unha operación determinada sobre unha táboa.</p>
+
+        <p>A diferenza dos eventos, os disparadores non dependen dunha programación temporal, senón dunha modificación ou inserción de datos.</p>
+
+        <p>As operacións que poden activar un disparador son:</p>
+
+        <ul>
+            <li><code>INSERT</code>: cando se insire un rexistro.</li>
+            <li><code>UPDATE</code>: cando se modifica un rexistro.</li>
+            <li><code>DELETE</code>: cando se elimina un rexistro.</li>
+        </ul>
+
+        <h3>5.2. Momentos de execución: BEFORE e AFTER</h3>
+
+        <p>Un disparador pode executarse antes ou despois da operación que o activa.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Funcionamento</th>
+                    <th>Aplicación habitual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>BEFORE</code></td>
+                    <td>Execútase antes de realizar a operación.</td>
+                    <td>Validar ou modificar os datos antes de gardalos.</td>
+                </tr>
+                <tr>
+                    <td><code>AFTER</code></td>
+                    <td>Execútase despois de realizar a operación.</td>
+                    <td>Rexistrar cambios ou actualizar información relacionada.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Por exemplo:</p>
+
+        <ul>
+            <li><code>BEFORE INSERT</code>: comprobar que os datos dun novo produto son correctos.</li>
+            <li><code>AFTER INSERT</code>: rexistrar a alta dun produto nunha táboa de auditoría.</li>
+            <li><code>BEFORE UPDATE</code>: comprobar que o novo prezo non é negativo.</li>
+            <li><code>AFTER DELETE</code>: gardar información do rexistro eliminado.</li>
+        </ul>
+
+        <h3>5.3. Disparadores por fila</h3>
+
+        <p>En MariaDB, os triggers execútanse por cada fila afectada pola operación. Para indicalo, a súa definición inclúe obrigatoriamente <code>FOR EACH ROW</code>.</p>
+
+        <p>Por exemplo, se unha instrución <code>UPDATE</code> modifica dez rexistros, o disparador correspondente executarase dez veces, unha por cada fila modificada.</p>
+    </section>
+
+    <section>
+        <h2>6. Creación de disparadores: CREATE TRIGGER</h2>
+
+        <h3>6.1. Sintaxe xeral</h3>
+
+        <p>A instrución <code>CREATE TRIGGER</code> permite crear un disparador asociado a unha táboa.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE TRIGGER nome_trigger
+BEFORE INSERT ON nome_taboa
+FOR EACH ROW
+BEGIN
+    -- Instrucións SQL
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Na definición debemos indicar:</p>
+
+        <ul>
+            <li>O nome do disparador.</li>
+            <li>O momento de execución: <code>BEFORE</code> ou <code>AFTER</code>.</li>
+            <li>A operación que o activa: <code>INSERT</code>, <code>UPDATE</code> ou <code>DELETE</code>.</li>
+            <li>A táboa sobre a que actúa.</li>
+            <li>As instrucións que se executarán automaticamente.</li>
+        </ul>
+
+        <p>O uso de <code>DELIMITER</code> permite que o cliente SQL interprete correctamente os bloques que conteñen varias instrucións. É unha directiva do cliente, non unha instrución SQL executada polo servidor.</p>
+
+        <h3>6.2. Combinacións posibles</h3>
+
+        <p>Podemos crear disparadores para as seguintes combinacións:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operación</th>
+                    <th>Antes</th>
+                    <th>Despois</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>INSERT</td>
+                    <td>BEFORE INSERT</td>
+                    <td>AFTER INSERT</td>
+                </tr>
+                <tr>
+                    <td>UPDATE</td>
+                    <td>BEFORE UPDATE</td>
+                    <td>AFTER UPDATE</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>BEFORE DELETE</td>
+                    <td>AFTER DELETE</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Por exemplo, un disparador que se execute despois dunha eliminación:</p>
+
+        <pre><code>DELIMITER //
+
+CREATE TRIGGER rexistrar_borrado
+AFTER DELETE ON produtos
+FOR EACH ROW
+BEGIN
+    INSERT INTO auditoria_produtos
+        (id_produto, nome, data_operacion)
+    VALUES
+        (OLD.id, OLD.nome, NOW());
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Cando se elimina un produto, o disparador garda automaticamente o identificador, o nome e a data da operación na táboa de auditoría.</p>
+    </section>
+
+    <section>
+        <h2>7. Uso de OLD e NEW</h2>
+
+        <h3>7.1. Concepto</h3>
+
+        <p>Dentro dun disparador podemos acceder aos valores dos rexistros afectados mediante as palabras clave <code>OLD</code> e <code>NEW</code>.</p>
+
+        <ul>
+            <li><code>OLD</code>: representa os valores que tiña a fila antes da operación.</li>
+            <li><code>NEW</code>: representa os valores que terá a fila despois da operación.</li>
+        </ul>
+
+        <p>A súa dispoñibilidade depende da operación que active o disparador.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operación</th>
+                    <th>OLD</th>
+                    <th>NEW</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>INSERT</td>
+                    <td>Non dispoñible</td>
+                    <td>Si</td>
+                </tr>
+                <tr>
+                    <td>UPDATE</td>
+                    <td>Si</td>
+                    <td>Si</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>Si</td>
+                    <td>Non dispoñible</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>7.2. Acceso aos valores con NEW</h3>
+
+        <p>Nun disparador asociado a unha inserción podemos consultar os valores do novo rexistro mediante <code>NEW</code>.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE TRIGGER validar_stock
+BEFORE INSERT ON produtos
+FOR EACH ROW
+BEGIN
+    IF NEW.stock &lt; 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O stock non pode ser negativo';
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>O disparador comproba o valor do stock antes de inserir o produto. Se é negativo, xera un erro e impide que a operación continúe.</p>
+
+        <h3>7.3. Modificación de valores con NEW</h3>
+
+        <p>Nos disparadores <code>BEFORE INSERT</code> e <code>BEFORE UPDATE</code> podemos modificar os valores de <code>NEW</code>.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE TRIGGER normalizar_nome
+BEFORE INSERT ON produtos
+FOR EACH ROW
+BEGIN
+    SET NEW.nome = UPPER(NEW.nome);
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Neste caso, o nome do produto gárdase en maiúsculas, independentemente de como o introducise o usuario.</p>
+
+        <div class="callout">
+            <strong>Importante:</strong> non se pode modificar <code>NEW</code> nun disparador <code>AFTER</code>. A modificación dos valores novos debe realizarse antes de que se complete a operación.
+        </div>
+
+        <h3>7.4. Comparación de valores con OLD e NEW</h3>
+
+        <p>Nunha operación <code>UPDATE</code> podemos comparar os valores anteriores e posteriores á modificación.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE TRIGGER rexistrar_cambio_prezo
+AFTER UPDATE ON produtos
+FOR EACH ROW
+BEGIN
+    IF OLD.prezo &lt;&gt; NEW.prezo THEN
+        INSERT INTO auditoria_prezos
+            (id_produto, prezo_anterior, prezo_novo, data_cambio)
+        VALUES
+            (OLD.id, OLD.prezo, NEW.prezo, NOW());
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>Este disparador comproba se o prezo cambiou. Se é así, almacena o prezo anterior e o novo nunha táboa de auditoría.</p>
+    </section>
+
+    <section>
+        <h2>8. Aplicacións dos disparadores</h2>
+
+        <h3>8.1. Validación de datos</h3>
+
+        <p>Os disparadores permiten establecer regras adicionais antes de inserir ou modificar información.</p>
+
+        <p>Podemos utilizar <code>BEFORE INSERT</code> ou <code>BEFORE UPDATE</code> para comprobar condicións e impedir operacións incorrectas.</p>
+
+        <pre><code>DELIMITER //
+
+CREATE TRIGGER validar_prezo
+BEFORE UPDATE ON produtos
+FOR EACH ROW
+BEGIN
+    IF NEW.prezo &lt;= 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'O prezo debe ser maior que cero';
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+        <h3>8.2. Rexistro de cambios e auditoría</h3>
+
+        <p>Outra aplicación habitual é gardar un historial das modificacións realizadas sobre unha táboa.</p>
+
+        <p>Para iso créase unha táboa auxiliar que almacena información como:</p>
+
+        <ul>
+            <li>Identificador do rexistro modificado.</li>
+            <li>Valores anteriores e posteriores.</li>
+            <li>Tipo de operación realizada.</li>
+            <li>Data e hora do cambio.</li>
+        </ul>
+
+        <p>Por exemplo, podemos crear unha táboa para almacenar os cambios de prezo:</p>
+
+        <pre><code>CREATE TABLE auditoria_prezos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_produto INT,
+    prezo_anterior DECIMAL(10,2),
+    prezo_novo DECIMAL(10,2),
+    data_cambio DATETIME
+);</code></pre>
+
+        <p>O disparador <code>AFTER UPDATE</code> presentado anteriormente encargarase de inserir os cambios nesta táboa.</p>
+
+        <h3>8.3. Actualización automática de información relacionada</h3>
+
+        <p>Os disparadores tamén poden utilizarse para actualizar información auxiliar cando se modifica unha táboa.</p>
+
+        <p>Por exemplo, cando se insire unha nova liña nunha táboa de vendas, un disparador pode actualizar o stock do produto correspondente. Este tipo de automatización debe deseñarse con coidado para evitar actualizacións duplicadas ou inconsistencias.</p>
+    </section>
+
+    <section>
+        <h2>9. Administración e eliminación de disparadores</h2>
+
+        <h3>9.1. Consultar os disparadores existentes</h3>
+
+        <p>Para consultar os disparadores dunha base de datos:</p>
+
+        <pre><code>SHOW TRIGGERS;</code></pre>
+
+        <p>Para consultar a definición dun disparador concreto:</p>
+
+        <pre><code>SHOW CREATE TRIGGER rexistrar_cambio_prezo;</code></pre>
+
+        <h3>9.2. Eliminar un disparador</h3>
+
+        <p>Para eliminar un disparador utilizamos <code>DROP TRIGGER</code>.</p>
+
+        <pre><code>DROP TRIGGER rexistrar_cambio_prezo;</code></pre>
+
+        <p>Podemos evitar erros se o disparador non existe utilizando:</p>
+
+        <pre><code>DROP TRIGGER IF EXISTS rexistrar_cambio_prezo;</code></pre>
+
+        <div class="callout">
+            <strong>Diferenza importante:</strong> os eventos poden activarse ou desactivarse mediante <code>ALTER EVENT</code>. Os disparadores non dispoñen dun mecanismo equivalente de activación e desactivación: para deixar de utilizalos é necesario eliminalos ou modificar a súa definición.
+        </div>
+    </section>
+
+    <section>
+        <h2>10. Diferenzas entre eventos e disparadores</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Característica</th>
+                    <th>Eventos</th>
+                    <th>Disparadores</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Activación</td>
+                    <td>Por tempo ou calendario.</td>
+                    <td>Por operación sobre unha táboa.</td>
+                </tr>
+                <tr>
+                    <td>Operacións</td>
+                    <td>Execución de instrucións SQL programadas.</td>
+                    <td>INSERT, UPDATE e DELETE.</td>
+                </tr>
+                <tr>
+                    <td>Execución</td>
+                    <td>Nunha data ou de forma periódica.</td>
+                    <td>Por cada fila afectada.</td>
+                </tr>
+                <tr>
+                    <td>Activación xeral</td>
+                    <td>Depende de event_scheduler.</td>
+                    <td>Non depende do planificador de eventos.</td>
+                </tr>
+                <tr>
+                    <td>Uso habitual</td>
+                    <td>Limpeza e mantemento automático.</td>
+                    <td>Validación, auditoría e actualización de datos.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>11. Boas prácticas e consideracións</h2>
+
+        <ul>
+            <li>Utilizar nomes descritivos para identificar eventos e disparadores.</li>
+            <li>Comprobar que o planificador de eventos está activo antes de probar unha programación.</li>
+            <li>Definir correctamente as datas e os intervalos dos eventos.</li>
+            <li>Evitar executar operacións innecesarias en eventos demasiado frecuentes.</li>
+            <li>Manter os disparadores sinxelos e realizar neles unicamente as operacións necesarias.</li>
+            <li>Ter en conta que un disparador pode executarse varias veces se unha operación afecta a varias filas.</li>
+            <li>Comprobar os efectos dos triggers sobre a integridade e o rendemento da base de datos.</li>
+            <li>Documentar as tarefas automatizadas para facilitar o mantemento.</li>
+            <li>Ter en conta os permisos do usuario que define e executa os eventos e disparadores.</li>
+        </ul>
+
+        <div class="callout">
+            <strong>Precaución:</strong> os disparadores forman parte da execución da operación que os activa. Non se debe introducir neles lóxica que realice operacións incompatibles co contexto do trigger, como confirmar ou desfacer transaccións mediante <code>COMMIT</code> ou <code>ROLLBACK</code>.
+        </div>
+    </section>
+
+    <section>
+        <h2>12. Exercicios prácticos</h2>
+
+        <p>Os seguintes exercicios permiten practicar a creación e administración de eventos e disparadores nunha base de datos MariaDB.</p>
+
+        <div class="example">
+            <h3>Exercicio 1. Eventos programados</h3>
+            <ol>
+                <li>Consulta o estado da variable <code>event_scheduler</code>.</li>
+                <li>Activa o planificador de eventos se está desactivado.</li>
+                <li>Crea un evento que insira un rexistro nunha táboa de rexistro nunha data e hora determinadas.</li>
+                <li>Crea outro evento que se execute diariamente e realice unha tarefa de mantemento.</li>
+                <li>Consulta os eventos creados e comproba as súas definicións.</li>
+                <li>Modifica a programación dun dos eventos.</li>
+                <li>Desactiva o evento, volve activalo e, finalmente, elimínao.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 2. Validación mediante triggers</h3>
+            <ol>
+                <li>Crea unha táboa de produtos con identificador, nome, prezo e stock.</li>
+                <li>Define un disparador que impida inserir produtos cun prezo ou stock negativo.</li>
+                <li>Define outro disparador que normalice os nomes dos produtos antes de gardalos.</li>
+                <li>Realiza insercións válidas e non válidas para comprobar o funcionamento dos disparadores.</li>
+                <li>Comproba os resultados almacenados na táboa.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 3. Auditoría de modificacións</h3>
+            <ol>
+                <li>Crea unha táboa auxiliar para almacenar o historial de cambios dos produtos.</li>
+                <li>Define un disparador que rexistre os cambios de prezo realizados mediante <code>UPDATE</code>.</li>
+                <li>Realiza varias modificacións sobre os produtos.</li>
+                <li>Consulta o historial e comproba que se gardan os valores anteriores e posteriores.</li>
+                <li>Define un disparador que rexistre a eliminación dun produto.</li>
+                <li>Comproba que os datos eliminados quedan almacenados na táboa de auditoría.</li>
+            </ol>
+        </div>
+
+        <div class="example">
+            <h3>Exercicio 4. Automatización integrada</h3>
+            <p>Deseña unha solución que combine eventos e disparadores para automatizar o mantemento dunha base de datos.</p>
+            <ol>
+                <li>Utiliza disparadores para validar as modificacións dunha táboa.</li>
+                <li>Garda un historial das operacións relevantes.</li>
+                <li>Programa un evento periódico para realizar unha tarefa de mantemento sobre os rexistros antigos.</li>
+                <li>Comproba o funcionamento dos mecanismos de automatización.</li>
+                <li>Documenta as solucións implementadas e os resultados obtidos.</li>
+            </ol>
+        </div>
+    </section>
+
+    <section>
+        <h2>13. Resumo do bloque</h2>
+
+        <ul>
+            <li>Os <strong>eventos</strong> permiten executar instrucións SQL nun momento determinado ou de maneira periódica.</li>
+            <li>O planificador <code>event_scheduler</code> debe estar activo para que MariaDB execute os eventos.</li>
+            <li><code>CREATE EVENT</code> crea eventos e <code>ON SCHEDULE</code> define a súa programación.</li>
+            <li><code>AT</code> programa unha execución puntual e <code>EVERY</code> establece unha execución recorrente.</li>
+            <li><code>ALTER EVENT</code> permite modificar, activar e desactivar eventos.</li>
+            <li>Os <strong>disparadores</strong> executan instrucións automaticamente cando se produce un INSERT, UPDATE ou DELETE.</li>
+            <li><code>BEFORE</code> executa o trigger antes da operación e <code>AFTER</code> despois.</li>
+            <li><code>OLD</code> permite consultar os valores anteriores e <code>NEW</code> os valores novos.</li>
+            <li>Os disparadores poden utilizarse para validar datos, rexistrar cambios e automatizar operacións relacionadas.</li>
+            <li><code>SHOW EVENTS</code> e <code>SHOW TRIGGERS</code> permiten consultar os elementos de automatización existentes.</li>
+        </ul>
+    </section>
+
+</main>
+</body>
+</html>

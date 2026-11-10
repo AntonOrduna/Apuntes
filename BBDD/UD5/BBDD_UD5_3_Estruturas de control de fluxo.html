@@ -1,0 +1,1048 @@
+
+<!DOCTYPE html>
+<html lang="gl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD5 - Estruturas de control de fluxo</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+    <h1 class="document-title">UD5. Programación de bases de datos</h1>
+    <h2>Bloque 3. Estruturas de control de fluxo</h2>
+
+    <p>
+        Neste bloque estudarase como incorporar lóxica de programación aos
+        guións SQL mediante estruturas condicionais e repetitivas. Estas
+        estruturas permiten que os procedementos e funcións de MariaDB
+        tomen decisións, executen instrucións diferentes segundo determinadas
+        condicións e repitan operacións automaticamente.
+    </p>
+
+    <section>
+        <h2>1. Introdución ao SQL procedemental</h2>
+
+        <h3>1.1. SQL declarativo e SQL procedemental</h3>
+
+        <p>
+            SQL é unha linguaxe principalmente declarativa: indicamos que
+            información queremos consultar ou modificar, pero non describimos
+            paso a paso como debe realizarse a operación.
+        </p>
+
+        <p>
+            O SQL procedemental incorpora elementos propios das linguaxes
+            de programación, como variables, condicións, bucles e bloques
+            de instrucións. Isto permite definir unha secuencia de operacións
+            que o servidor executará seguindo unha lóxica determinada.
+        </p>
+
+        <p>
+            En MariaDB, estas estruturas utilízanse principalmente dentro
+            de procedementos almacenados, funcións, disparadores e eventos.
+        </p>
+
+        <h3>1.2. Bloques BEGIN ... END</h3>
+
+        <p>
+            A estrutura <code>BEGIN ... END</code> permite agrupar varias
+            instrucións nun único bloque. As instrucións execútanse
+            secuencialmente, na orde na que aparecen.
+        </p>
+
+        <pre><code>BEGIN
+    -- Primeira instrución
+    SET @numero = 10;
+
+    -- Segunda instrución
+    SET @resultado = @numero * 2;
+
+    -- Terceira instrución
+    SELECT @resultado;
+END</code></pre>
+
+        <p>
+            Os bloques poden conter variables locais, instrucións
+            condicionais, bucles e outros bloques. Son a base da programación
+            almacenada en MariaDB.
+        </p>
+
+        <div class="callout">
+            <strong>Importante: BEGIN ... END e os delimitadores</strong>
+            <p>
+                Cando se crea un procedemento ou unha función que contén
+                varias instrucións, é necesario modificar temporalmente o
+                delimitador utilizado polo cliente SQL. Deste xeito, o punto
+                e coma pode seguir utilizándose para separar instrucións
+                dentro do bloque.
+            </p>
+            <p>
+                En MySQL Workbench e na consola <code>mariadb</code> pódese
+                utilizar <code>DELIMITER</code>. Esta instrución é unha
+                directiva do cliente, non unha instrución SQL executada
+                polo servidor.
+            </p>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: primeiro procedemento</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE exemplo_bloque()
+BEGIN
+    DECLARE numero INT DEFAULT 10;
+    DECLARE resultado INT;
+
+    SET resultado = numero * 2;
+
+    SELECT resultado AS resultado_calculado;
+END //
+
+DELIMITER ;
+
+-- Executar o procedemento
+CALL exemplo_bloque();</code></pre>
+
+            <p>
+                O procedemento declara dúas variables locais, realiza unha
+                operación matemática e mostra o resultado mediante unha
+                consulta.
+            </p>
+        </div>
+
+        <h3>1.3. Declaración de variables locais</h3>
+
+        <p>
+            As variables locais permiten almacenar valores temporais dentro
+            dun bloque de programación. Decláranse mediante
+            <code>DECLARE</code> e só están dispoñibles dentro do bloque
+            no que se definiron.
+        </p>
+
+        <pre><code>DECLARE nome VARCHAR(50);
+DECLARE idade INT DEFAULT 18;
+DECLARE total DECIMAL(10,2) DEFAULT 0;</code></pre>
+
+        <p>
+            As declaracións deben aparecer ao principio do bloque
+            <code>BEGIN ... END</code>, antes das instrucións executables.
+        </p>
+
+        <p>
+            Para asignar valores utilízase a instrución <code>SET</code>.
+        </p>
+
+        <pre><code>SET nome = 'Ana';
+SET idade = 25;
+SET total = 150.50;</code></pre>
+
+        <div class="callout">
+            <strong>Variables locais e variables de usuario</strong>
+            <p>
+                Non se deben confundir as variables locais declaradas con
+                <code>DECLARE</code> coas variables de usuario que comezan
+                por <code>@</code>. As primeiras pertencen ao bloque
+                procedemental; as segundas pertencen á conexión actual.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>2. Estruturas condicionais IF</h2>
+
+        <h3>2.1. Concepto</h3>
+
+        <p>
+            As estruturas condicionais permiten executar diferentes
+            instrucións en función de que se cumpra ou non unha condición.
+            Son fundamentais para incorporar capacidade de decisión aos
+            procedementos almacenados.
+        </p>
+
+        <p>
+            En MariaDB, a estrutura <code>IF ... THEN</code> permite avaliar
+            unha expresión lóxica. Se a condición é verdadeira, execútase
+            o bloque asociado.
+        </p>
+
+        <h3>2.2. Estrutura IF ... THEN ... END IF</h3>
+
+        <p>
+            É a forma máis sinxela dunha estrutura condicional.
+        </p>
+
+        <pre><code>IF condicion THEN
+    instrucions;
+END IF;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: comprobar unha nota</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE comprobar_nota(IN p_nota DECIMAL(4,2))
+BEGIN
+    IF p_nota >= 5 THEN
+        SELECT 'Aprobado' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL comprobar_nota(7.5);</code></pre>
+
+            <p>
+                Se a nota recibida é igual ou superior a 5, o procedemento
+                mostra a mensaxe «Aprobado». Se non se cumpre a condición,
+                non executa ningunha instrución dentro do bloque.
+            </p>
+        </div>
+
+        <h3>2.3. Estrutura IF ... THEN ... ELSE ... END IF</h3>
+
+        <p>
+            A cláusula <code>ELSE</code> permite definir un bloque alternativo
+            que se executará cando a condición principal sexa falsa.
+        </p>
+
+        <pre><code>IF condicion THEN
+    instrucions_se_verdadeiro;
+ELSE
+    instrucions_se_falso;
+END IF;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: aprobado ou suspenso</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE resultado_alumno(IN p_nota DECIMAL(4,2))
+BEGIN
+    IF p_nota >= 5 THEN
+        SELECT 'Aprobado' AS resultado;
+    ELSE
+        SELECT 'Suspenso' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL resultado_alumno(4.5);</code></pre>
+        </div>
+
+        <h3>2.4. Estrutura IF ... ELSEIF ... ELSE</h3>
+
+        <p>
+            Cando é necesario comprobar varias condicións, pódese utilizar
+            <code>ELSEIF</code>. As condicións avalíanse na orde na que
+            aparecen e execútase o primeiro bloque cuxa condición sexa
+            verdadeira.
+        </p>
+
+        <pre><code>IF condicion1 THEN
+    instrucions1;
+ELSEIF condicion2 THEN
+    instrucions2;
+ELSEIF condicion3 THEN
+    instrucions3;
+ELSE
+    instrucions_por_defecto;
+END IF;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: cualificación dunha nota</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE cualificar_nota(IN p_nota DECIMAL(4,2))
+BEGIN
+    IF p_nota >= 9 THEN
+        SELECT 'Sobresaliente' AS cualificacion;
+    ELSEIF p_nota >= 7 THEN
+        SELECT 'Notable' AS cualificacion;
+    ELSEIF p_nota >= 5 THEN
+        SELECT 'Aprobado' AS cualificacion;
+    ELSE
+        SELECT 'Suspenso' AS cualificacion;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL cualificar_nota(8.25);</code></pre>
+        </div>
+
+        <h3>2.5. Condicións compostas</h3>
+
+        <p>
+            As condicións poden combinarse mediante operadores lóxicos para
+            avaliar máis dun requisito.
+        </p>
+
+        <ul>
+            <li><code>AND</code>: todas as condicións deben ser verdadeiras.</li>
+            <li><code>OR</code>: polo menos unha condición debe ser verdadeira.</li>
+            <li><code>NOT</code>: inverte o resultado dunha condición.</li>
+        </ul>
+
+        <div class="ejemplo">
+            <h3>Exemplo: comprobar varios requisitos</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE comprobar_acceso(
+    IN p_idade INT,
+    IN p_activo BOOLEAN
+)
+BEGIN
+    IF p_idade >= 18 AND p_activo = TRUE THEN
+        SELECT 'Acceso permitido' AS resultado;
+    ELSE
+        SELECT 'Acceso denegado' AS resultado;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL comprobar_acceso(20, TRUE);</code></pre>
+        </div>
+    </section>
+
+    <section>
+        <h2>3. Estrutura de selección múltiple CASE</h2>
+
+        <h3>3.1. Concepto</h3>
+
+        <p>
+            A estrutura <code>CASE</code> permite seleccionar unha opción
+            entre varias alternativas. É especialmente útil cando existen
+            múltiples valores ou condicións que producen resultados diferentes.
+        </p>
+
+        <p>
+            Dentro dun procedemento ou función, <code>CASE</code> pode
+            utilizarse como instrución procedemental. Non debe confundirse
+            coa expresión <code>CASE</code> que tamén se pode empregar
+            directamente nunha consulta SQL.
+        </p>
+
+        <h3>3.2. CASE simple</h3>
+
+        <p>
+            A modalidade simple compara unha expresión cunha serie de valores.
+            Cando se produce unha coincidencia, execútase o bloque
+            correspondente.
+        </p>
+
+        <pre><code>CASE expresion
+    WHEN valor1 THEN
+        instrucions1;
+    WHEN valor2 THEN
+        instrucions2;
+    WHEN valor3 THEN
+        instrucions3;
+    ELSE
+        instrucions_por_defecto;
+END CASE;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: identificar un día da semana</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE nome_dia(IN p_dia INT)
+BEGIN
+    CASE p_dia
+        WHEN 1 THEN
+            SELECT 'Luns' AS dia;
+        WHEN 2 THEN
+            SELECT 'Martes' AS dia;
+        WHEN 3 THEN
+            SELECT 'Mércores' AS dia;
+        WHEN 4 THEN
+            SELECT 'Xoves' AS dia;
+        WHEN 5 THEN
+            SELECT 'Venres' AS dia;
+        WHEN 6 THEN
+            SELECT 'Sábado' AS dia;
+        WHEN 7 THEN
+            SELECT 'Domingo' AS dia;
+        ELSE
+            SELECT 'Día non válido' AS dia;
+    END CASE;
+END //
+
+DELIMITER ;
+
+CALL nome_dia(3);</code></pre>
+        </div>
+
+        <h3>3.3. CASE buscado</h3>
+
+        <p>
+            A modalidade buscada avalía unha serie de condicións lóxicas.
+            Execútase o primeiro bloque cuxa condición sexa verdadeira.
+        </p>
+
+        <pre><code>CASE
+    WHEN condicion1 THEN
+        instrucions1;
+    WHEN condicion2 THEN
+        instrucions2;
+    ELSE
+        instrucions_por_defecto;
+END CASE;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: clasificar un produto polo prezo</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE clasificar_produto(IN p_prezo DECIMAL(10,2))
+BEGIN
+    CASE
+        WHEN p_prezo < 10 THEN
+            SELECT 'Barato' AS categoria;
+        WHEN p_prezo < 50 THEN
+            SELECT 'Prezo medio' AS categoria;
+        WHEN p_prezo < 100 THEN
+            SELECT 'Caro' AS categoria;
+        ELSE
+            SELECT 'Moi caro' AS categoria;
+    END CASE;
+END //
+
+DELIMITER ;
+
+CALL clasificar_produto(65);</code></pre>
+        </div>
+
+        <h3>3.4. Diferenzas entre IF e CASE</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Estrutura</th>
+                    <th>Uso habitual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>IF</code></td>
+                    <td>Comprobar unha condición ou varias condicións alternativas.</td>
+                </tr>
+                <tr>
+                    <td><code>CASE</code> simple</td>
+                    <td>Comparar unha expresión con distintos valores posibles.</td>
+                </tr>
+                <tr>
+                    <td><code>CASE</code> buscado</td>
+                    <td>Avaliar varias condicións lóxicas.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Importante: instrución CASE e expresión CASE</strong>
+            <p>
+                A instrución <code>CASE ... END CASE</code> permite executar
+                bloques de instrucións dentro dun programa almacenado.
+                A expresión <code>CASE ... END</code> devolve un valor e pode
+                utilizarse directamente en consultas SQL.
+            </p>
+            <p>
+                Non se debe engadir <code>END CASE</code> cando se utiliza
+                a expresión CASE dentro dun <code>SELECT</code>.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>4. Estruturas repetitivas</h2>
+
+        <h3>4.1. Concepto</h3>
+
+        <p>
+            As estruturas repetitivas, tamén chamadas bucles, permiten
+            executar varias veces un conxunto de instrucións. A repetición
+            pode depender dunha condición ou dun criterio de finalización.
+        </p>
+
+        <p>
+            MariaDB dispón de tres estruturas principais:
+        </p>
+
+        <ul>
+            <li><code>WHILE</code>.</li>
+            <li><code>REPEAT ... UNTIL</code>.</li>
+            <li><code>LOOP</code>.</li>
+        </ul>
+
+        <h3>4.2. Bucle WHILE</h3>
+
+        <p>
+            O bucle <code>WHILE</code> executa as instrucións mentres se
+            cumpra unha condición. A condición compróbase antes de cada
+            iteración.
+        </p>
+
+        <pre><code>WHILE condicion DO
+    instrucions;
+END WHILE;</code></pre>
+
+        <p>
+            Se a condición é falsa desde o principio, o bloque non se
+            executa ningunha vez.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: contar do 1 ao 5</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE contar_while()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    WHILE contador <= 5 DO
+        SELECT contador;
+        SET contador = contador + 1;
+    END WHILE;
+END //
+
+DELIMITER ;
+
+CALL contar_while();</code></pre>
+
+            <p>
+                O procedemento inicializa un contador en 1. En cada iteración
+                mostra o seu valor e increméntao. O bucle remata cando o
+                contador supera o valor 5.
+            </p>
+        </div>
+
+        <h3>4.3. Bucle REPEAT ... UNTIL</h3>
+
+        <p>
+            O bucle <code>REPEAT</code> executa as instrucións e comproba
+            a condición ao final de cada iteración. Repítese ata que a
+            condición indicada en <code>UNTIL</code> sexa verdadeira.
+        </p>
+
+        <pre><code>REPEAT
+    instrucions;
+UNTIL condicion
+END REPEAT;</code></pre>
+
+        <p>
+            A diferenza de <code>WHILE</code>, o bloque execútase polo menos
+            unha vez, xa que a condición se comproba ao final.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: contar do 1 ao 5</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE contar_repeat()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    REPEAT
+        SELECT contador;
+        SET contador = contador + 1;
+    UNTIL contador > 5
+    END REPEAT;
+END //
+
+DELIMITER ;
+
+CALL contar_repeat();</code></pre>
+        </div>
+
+        <h3>4.4. Bucle LOOP</h3>
+
+        <p>
+            O bucle <code>LOOP</code> permite repetir un bloque de instrucións
+            sen establecer unha condición directamente na súa cabeceira.
+            A saída debe controlarse mediante instrucións como
+            <code>LEAVE</code>.
+        </p>
+
+        <pre><code>nome_bucle: LOOP
+    instrucions;
+
+    IF condicion_saida THEN
+        LEAVE nome_bucle;
+    END IF;
+END LOOP nome_bucle;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: contar do 1 ao 5 con LOOP</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE contar_loop()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    bucle: LOOP
+        SELECT contador;
+
+        SET contador = contador + 1;
+
+        IF contador > 5 THEN
+            LEAVE bucle;
+        END IF;
+    END LOOP bucle;
+END //
+
+DELIMITER ;
+
+CALL contar_loop();</code></pre>
+        </div>
+
+        <h3>4.5. Comparación das estruturas repetitivas</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Estrutura</th>
+                    <th>Momento de avaliación</th>
+                    <th>Execución mínima</th>
+                    <th>Finalización</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>WHILE</code></td>
+                    <td>Antes de cada iteración.</td>
+                    <td>Zero veces.</td>
+                    <td>Cando a condición deixa de cumprirse.</td>
+                </tr>
+                <tr>
+                    <td><code>REPEAT</code></td>
+                    <td>Ao final de cada iteración.</td>
+                    <td>Unha vez.</td>
+                    <td>Cando a condición de UNTIL é verdadeira.</td>
+                </tr>
+                <tr>
+                    <td><code>LOOP</code></td>
+                    <td>Non ten condición propia.</td>
+                    <td>Depende da saída.</td>
+                    <td>Mediante LEAVE ou outra saída do bloque.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Evitar os bucles infinitos</strong>
+            <p>
+                É fundamental que un bucle teña unha condición de saída
+                alcanzable. Se a variable utilizada na condición non cambia
+                correctamente, o programa pode quedar executándose
+                indefinidamente.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>5. Control das iteracións: LEAVE e ITERATE</h2>
+
+        <h3>5.1. Instrución LEAVE</h3>
+
+        <p>
+            A instrución <code>LEAVE</code> permite abandonar inmediatamente
+            un bucle ou un bloque etiquetado. Utilízase cando se cumpre unha
+            condición que fai innecesario continuar executando as iteracións.
+        </p>
+
+        <pre><code>nome_bucle: LOOP
+    instrucions;
+
+    IF condicion_saida THEN
+        LEAVE nome_bucle;
+    END IF;
+END LOOP nome_bucle;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: finalizar un bucle ao chegar a 10</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE finalizar_contador()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    bucle: LOOP
+        SELECT contador;
+
+        IF contador = 10 THEN
+            LEAVE bucle;
+        END IF;
+
+        SET contador = contador + 1;
+    END LOOP bucle;
+END //
+
+DELIMITER ;
+
+CALL finalizar_contador();</code></pre>
+        </div>
+
+        <h3>5.2. Instrución ITERATE</h3>
+
+        <p>
+            A instrución <code>ITERATE</code> permite saltar directamente
+            á seguinte iteración dun bucle, sen executar as instrucións
+            restantes da iteración actual.
+        </p>
+
+        <pre><code>nome_bucle: LOOP
+    instrucions;
+
+    IF condicion_saltar THEN
+        ITERATE nome_bucle;
+    END IF;
+
+    outras_instrucions;
+END LOOP nome_bucle;</code></pre>
+
+        <div class="ejemplo">
+            <h3>Exemplo: mostrar só os números impares</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE mostrar_impares()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    bucle: WHILE contador <= 10 DO
+
+        IF MOD(contador, 2) = 0 THEN
+            SET contador = contador + 1;
+            ITERATE bucle;
+        END IF;
+
+        SELECT contador AS numero_impar;
+
+        SET contador = contador + 1;
+
+    END WHILE bucle;
+END //
+
+DELIMITER ;
+
+CALL mostrar_impares();</code></pre>
+
+            <p>
+                Cando o contador é par, increméntase e execútase
+                <code>ITERATE</code>, polo que se salta a instrución
+                <code>SELECT</code>. Os números impares móstranse normalmente.
+            </p>
+        </div>
+
+        <h3>5.3. Diferenzas entre LEAVE e ITERATE</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Instrución</th>
+                    <th>Comportamento</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>LEAVE</code></td>
+                    <td>Abandona completamente o bucle ou bloque etiquetado.</td>
+                </tr>
+                <tr>
+                    <td><code>ITERATE</code></td>
+                    <td>Salta ao inicio da seguinte iteración do bucle.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>
+            Ambas as instrucións utilizan unha etiqueta para identificar
+            o bloque ao que fan referencia. Isto é especialmente útil cando
+            existen bucles aniñados.
+        </p>
+    </section>
+
+    <section>
+        <h2>6. Combinación de condicións e bucles</h2>
+
+        <p>
+            As estruturas condicionais e repetitivas poden combinarse
+            dentro dun mesmo procedemento. Deste xeito é posible realizar
+            tarefas máis complexas, como percorrer unha serie de valores,
+            comprobar condicións e executar operacións diferentes segundo
+            os resultados.
+        </p>
+
+        <div class="ejemplo">
+            <h3>Exemplo: sumar os números pares dunha serie</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE sumar_pares(IN p_limite INT)
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+    DECLARE total INT DEFAULT 0;
+
+    WHILE contador <= p_limite DO
+
+        IF MOD(contador, 2) = 0 THEN
+            SET total = total + contador;
+        END IF;
+
+        SET contador = contador + 1;
+
+    END WHILE;
+
+    SELECT total AS suma_numeros_pares;
+END //
+
+DELIMITER ;
+
+CALL sumar_pares(10);</code></pre>
+
+            <p>
+                O procedemento percorre os números desde 1 ata o límite
+                recibido como parámetro. En cada iteración comproba se o
+                número é par e, nese caso, engádeo ao acumulador.
+            </p>
+            <p>
+                Para o valor 10, o resultado será a suma de
+                2 + 4 + 6 + 8 + 10.
+            </p>
+        </div>
+
+        <div class="ejemplo">
+            <h3>Exemplo: calcular un factorial</h3>
+            <pre><code>DELIMITER //
+
+CREATE PROCEDURE calcular_factorial(IN p_numero INT)
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+    DECLARE resultado BIGINT DEFAULT 1;
+
+    IF p_numero < 0 THEN
+        SELECT 'Non se admiten números negativos' AS mensaxe;
+    ELSE
+        WHILE contador <= p_numero DO
+            SET resultado = resultado * contador;
+            SET contador = contador + 1;
+        END WHILE;
+
+        SELECT resultado AS factorial;
+    END IF;
+END //
+
+DELIMITER ;
+
+CALL calcular_factorial(5);</code></pre>
+
+            <p>
+                O procedemento comproba primeiro que o número non sexa
+                negativo. A continuación, utiliza un bucle para multiplicar
+                os números desde 1 ata o valor recibido.
+            </p>
+            <p>
+                O factorial de 5 é 120.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>7. Boas prácticas na programación procedemental</h2>
+
+        <ul>
+            <li>
+                Utilizar nomes de variables e etiquetas que describan
+                claramente a súa finalidade.
+            </li>
+            <li>
+                Declarar todas as variables locais ao comezo do bloque
+                correspondente.
+            </li>
+            <li>
+                Utilizar <code>IF</code> para condicións sinxelas e
+                <code>CASE</code> cando existan varias alternativas.
+            </li>
+            <li>
+                Escoller <code>WHILE</code> cando a condición de repetición
+                deba comprobarse antes de executar o bloque.
+            </li>
+            <li>
+                Utilizar <code>REPEAT</code> cando se necesite executar
+                o bloque polo menos unha vez.
+            </li>
+            <li>
+                Empregar <code>LOOP</code> cando se queira controlar
+                explicitamente o momento de saída.
+            </li>
+            <li>
+                Comprobar que todos os bucles teñen unha condición de saída.
+            </li>
+            <li>
+                Actualizar correctamente as variables que controlan as
+                iteracións.
+            </li>
+            <li>
+                Utilizar <code>LEAVE</code> e <code>ITERATE</code> cando
+                faciliten a comprensión do fluxo do programa.
+            </li>
+            <li>
+                Indentar o código e separar os bloques para facilitar
+                a súa lectura e mantemento.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>8. Exercicios prácticos</h2>
+
+        <p>
+            Os seguintes exercicios permiten practicar a creación de
+            procedementos almacenados que incorporan condicións, seleccións
+            e estruturas repetitivas.
+        </p>
+
+        <div class="ejercicio">
+            <h3>Exercicio 1. Condicionais IF</h3>
+            <ol>
+                <li>Crea un procedemento que reciba unha nota e indique se o alumno aprobou ou suspendeu.</li>
+                <li>Amplía o procedemento para clasificar as notas en varias categorías.</li>
+                <li>Crea un procedemento que reciba unha idade e determine se unha persoa é maior de idade.</li>
+                <li>Define un procedemento que reciba un prezo e indique se supera un límite establecido.</li>
+                <li>Utiliza condicións compostas con <code>AND</code> e <code>OR</code>.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 2. Estrutura CASE</h3>
+            <ol>
+                <li>Crea un procedemento que reciba un número do 1 ao 7 e devolva o día da semana correspondente.</li>
+                <li>Define un procedemento que reciba un código de estado e mostre unha descrición.</li>
+                <li>Utiliza un CASE buscado para clasificar produtos segundo o seu prezo.</li>
+                <li>Engade unha alternativa por defecto para os valores non recoñecidos.</li>
+                <li>Compara a solución mediante CASE coa solución equivalente mediante IF.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 3. Estruturas WHILE e REPEAT</h3>
+            <ol>
+                <li>Crea un procedemento que mostre os números comprendidos entre 1 e un límite recibido como parámetro.</li>
+                <li>Realiza unha versión utilizando WHILE e outra utilizando REPEAT.</li>
+                <li>Calcula a suma dos números comprendidos entre 1 e un límite.</li>
+                <li>Calcula a táboa de multiplicar dun número recibido como parámetro.</li>
+                <li>Comproba o comportamento dos dous bucles cando o límite inicial non permite realizar iteracións.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 4. Estrutura LOOP e control de iteracións</h3>
+            <ol>
+                <li>Implementa un contador utilizando LOOP.</li>
+                <li>Utiliza LEAVE para finalizar o bucle cando se alcance un límite.</li>
+                <li>Utiliza ITERATE para saltar determinadas iteracións.</li>
+                <li>Mostra os números impares comprendidos entre dous valores.</li>
+                <li>Realiza un procedemento que acumule valores ata alcanzar unha cantidade determinada.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 5. Combinación de estruturas</h3>
+            <ol>
+                <li>Crea un procedemento que calcule o factorial dun número.</li>
+                <li>Define un procedemento que sume os números pares ata un límite.</li>
+                <li>Elabora un procedemento que conte cantos números dunha serie son múltiplos dun valor recibido.</li>
+                <li>Utiliza condicións para validar os parámetros recibidos.</li>
+                <li>Combina IF, CASE e estruturas repetitivas nun mesmo procedemento.</li>
+            </ol>
+        </div>
+
+        <div class="ejercicio">
+            <h3>Exercicio 6. Pequeno guión procedemental</h3>
+            <p>
+                Desenvolve un procedemento almacenado que realice unha
+                operación de procesamento sobre unha táboa da base de datos
+                utilizada nas prácticas.
+            </p>
+            <p>O procedemento deberá:</p>
+            <ul>
+                <li>Recibir polo menos dous parámetros.</li>
+                <li>Declarar e utilizar variables locais.</li>
+                <li>Validar os datos recibidos mediante condicións.</li>
+                <li>Utilizar unha estrutura de selección.</li>
+                <li>Incorporar polo menos un bucle.</li>
+                <li>Utilizar <code>LEAVE</code> ou <code>ITERATE</code>.</li>
+                <li>Devolver información sobre o resultado da operación.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>9. Resumo do bloque</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Estrutura</th>
+                    <th>Finalidade</th>
+                    <th>Sintaxe principal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>BEGIN ... END</td>
+                    <td>Agrupar instrucións nun bloque.</td>
+                    <td><code>BEGIN ... END</code></td>
+                </tr>
+                <tr>
+                    <td>IF</td>
+                    <td>Executar instrucións segundo unha condición.</td>
+                    <td><code>IF ... THEN ... ELSE ... END IF</code></td>
+                </tr>
+                <tr>
+                    <td>CASE</td>
+                    <td>Seleccionar entre varias alternativas.</td>
+                    <td><code>CASE ... WHEN ... THEN ... END CASE</code></td>
+                </tr>
+                <tr>
+                    <td>WHILE</td>
+                    <td>Repetir mentres se cumpra unha condición.</td>
+                    <td><code>WHILE ... DO ... END WHILE</code></td>
+                </tr>
+                <tr>
+                    <td>REPEAT</td>
+                    <td>Repetir ata que se cumpra unha condición.</td>
+                    <td><code>REPEAT ... UNTIL ... END REPEAT</code></td>
+                </tr>
+                <tr>
+                    <td>LOOP</td>
+                    <td>Crear un bucle con saída controlada.</td>
+                    <td><code>LOOP ... END LOOP</code></td>
+                </tr>
+                <tr>
+                    <td>LEAVE</td>
+                    <td>Abandonar un bloque ou bucle.</td>
+                    <td><code>LEAVE etiqueta</code></td>
+                </tr>
+                <tr>
+                    <td>ITERATE</td>
+                    <td>Pasar á seguinte iteración.</td>
+                    <td><code>ITERATE etiqueta</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <strong>Obxectivo alcanzado</strong>
+            <p>
+                Ao rematar este bloque, o alumnado debe ser capaz de
+                construír pequenos programas procedementais en MariaDB,
+                agrupando instrucións en bloques, tomando decisións mediante
+                condicións e seleccións e repetindo operacións mediante
+                estruturas de control de fluxo.
+            </p>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>
