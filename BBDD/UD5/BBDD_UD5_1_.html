@@ -1,10 +1,10 @@
-```html
+
 <!DOCTYPE html>
 <html lang="gl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UD5 - Programación de bases de datos</title>
+    <title>UD5 - Introdución á programación de bases de datos</title>
     <link rel="stylesheet" href="../../css/estilos.css">
 </head>
 <body>
@@ -12,31 +12,6 @@
 <main>
 
     <h1>UD5. Programación de bases de datos</h1>
-
-    <h2>Bloque 1. Introdución á programación e guións SQL</h2>
-
-    <p>
-        A programación de bases de datos permite automatizar operacións,
-        organizar tarefas e incorporar lóxica de negocio directamente no
-        sistema xestor de bases de datos.
-    </p>
-
-    <p>
-        Nesta unidade utilizaremos <strong>MariaDB</strong>, instalado
-        nunha máquina virtual Debian, e <strong>MySQL Workbench</strong>
-        como ferramenta de administración e edición de instrucións SQL.
-    </p>
-
-    <div class="callout">
-        <strong>Obxectivos do bloque</strong>
-        <ul>
-            <li>Comprender que significa programar dentro dunha base de datos.</li>
-            <li>Diferenciar SQL declarativo e SQL procedemental.</li>
-            <li>Identificar tarefas que poden automatizarse mediante guións.</li>
-            <li>Coñecer as ferramentas para editar e executar ficheiros SQL.</li>
-            <li>Crear e executar os primeiros guións SQL en MariaDB.</li>
-        </ul>
-    </div>
 
     <h2>1. Introdución á programación de bases de datos</h2>
 
@@ -49,135 +24,171 @@
     </p>
 
     <p>
-        Nunha base de datos non só podemos almacenar información e
-        recuperala mediante consultas. Tamén podemos definir operacións
-        que realicen cálculos, comproben condicións, repitan tarefas
-        ou respondan automaticamente a determinados acontecementos.
+        Ademais de almacenar información e permitir consultas, os sistemas
+        xestores como MariaDB ofrecen mecanismos para executar código,
+        automatizar operacións e implementar regras de negocio directamente
+        no servidor.
     </p>
 
-    <p>
-        Por exemplo, nunha base de datos dunha academia podemos necesitar:
-    </p>
+    <p>Entre as súas principais aplicacións destacan:</p>
 
     <ul>
-        <li>Calcular automaticamente o número de alumnos matriculados.</li>
-        <li>Comprobar se existen prazas dispoñibles nun curso.</li>
-        <li>Actualizar o estado dunha matrícula.</li>
-        <li>Rexistrar os cambios realizados sobre determinadas táboas.</li>
-        <li>Xerar información estatística de maneira periódica.</li>
+        <li>Automatizar operacións habituais sobre as táboas.</li>
+        <li>Validar os datos antes de almacenalos.</li>
+        <li>Aplicar regras de negocio.</li>
+        <li>Realizar cálculos e transformacións de información.</li>
+        <li>Controlar operacións que afectan a varias táboas.</li>
+        <li>Executar tarefas de mantemento de maneira automática.</li>
     </ul>
 
-    <p>
-        Estas operacións poden realizarse mediante instrucións SQL
-        individuais, pero tamén podemos agrupalas en programas que se
-        executen cando sexa necesario.
-    </p>
+    <div class="callout">
+        <strong>Idea clave:</strong>
+        A programación de bases de datos permite trasladar parte da lóxica
+        dunha aplicación ao propio servidor, reducindo a repetición de
+        código e centralizando determinadas operacións.
+    </div>
 
     <h3>1.2. SQL declarativo e SQL procedemental</h3>
 
     <p>
-        SQL é unha linguaxe principalmente declarativa. Isto significa
-        que indicamos ao sistema xestor que resultado queremos obter
-        ou que modificación queremos realizar, sen especificar todos
-        os pasos internos necesarios para conseguilo.
-    </p>
-
-    <div class="ejemplo">
-        <h4>Exemplo de SQL declarativo</h4>
-
-        <p>Queremos consultar os alumnos matriculados nun curso:</p>
-
-        <pre><code>SELECT *
-FROM alumnos
-WHERE curso_id = 1;</code></pre>
-
-        <p>
-            Indicamos que información queremos recuperar. MariaDB
-            decide como executar internamente a consulta.
-        </p>
-    </div>
-
-    <p>
-        Pola contra, a programación procedemental permite especificar
-        unha secuencia de instrucións que se executan seguindo unha
-        lóxica determinada.
+        SQL é unha linguaxe que permite traballar coa información dunha
+        base de datos. Tradicionalmente, SQL é unha linguaxe declarativa:
+        o usuario indica que resultado quere obter, pero non describe
+        todos os pasos que debe seguir o sistema para conseguilo.
     </p>
 
     <p>
-        Neste tipo de programación podemos utilizar:
-    </p>
-
-    <ul>
-        <li>Variables para almacenar valores temporais.</li>
-        <li>Condicións para tomar decisións.</li>
-        <li>Bucles para repetir operacións.</li>
-        <li>Procedementos para agrupar instrucións.</li>
-        <li>Funcións para realizar cálculos e devolver resultados.</li>
-        <li>Controladores para xestionar situacións de erro.</li>
-    </ul>
-
-    <div class="ejemplo">
-        <h4>Exemplo de SQL procedemental</h4>
-
-        <p>
-            O seguinte exemplo mostra unha estrutura condicional
-            que poderemos utilizar posteriormente dentro dun
-            procedemento almacenado:
-        </p>
-
-        <pre><code>IF nota &gt;= 5 THEN
-    SET resultado = 'Aprobado';
-ELSE
-    SET resultado = 'Suspenso';
-END IF;</code></pre>
-
-        <p>
-            Neste caso, o programa comproba unha condición e
-            executa unha instrución diferente dependendo do resultado.
-        </p>
-    </div>
-
-    <h3>1.3. Programación no servidor de bases de datos</h3>
-
-    <p>
-        A programación pode realizarse no equipo cliente, mediante
-        unha aplicación externa, ou directamente no servidor de bases
-        de datos.
-    </p>
-
-    <p>
-        MariaDB incorpora mecanismos que permiten almacenar e executar
-        programas no propio servidor. Entre eles destacan:
+        A programación procedemental incorpora elementos propios das
+        linguaxes de programación, como variables, condicións, bucles
+        e procedementos.
     </p>
 
     <table>
         <thead>
-            <tr>
-                <th>Elemento</th>
-                <th>Descrición</th>
-            </tr>
+        <tr>
+            <th>SQL declarativo</th>
+            <th>SQL procedemental</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Guións SQL</td>
-                <td>Ficheiros que conteñen instrucións SQL que se executan de forma secuencial.</td>
-            </tr>
-            <tr>
-                <td>Procedementos almacenados</td>
-                <td>Conxuntos de instrucións gardados na base de datos e executados mediante unha chamada.</td>
-            </tr>
-            <tr>
-                <td>Funcións</td>
-                <td>Programas que realizan unha operación e devolven un valor.</td>
-            </tr>
-            <tr>
-                <td>Disparadores (triggers)</td>
-                <td>Programas que se executan automaticamente cando se producen determinadas operacións sobre unha táboa.</td>
-            </tr>
-            <tr>
-                <td>Eventos</td>
-                <td>Tarefas que o servidor executa automaticamente nun momento ou intervalo programado.</td>
-            </tr>
+        <tr>
+            <td>Describe que operación se quere realizar.</td>
+            <td>Define unha secuencia de operacións.</td>
+        </tr>
+        <tr>
+            <td>Utiliza instrucións como SELECT, INSERT ou UPDATE.</td>
+            <td>Engade variables e estruturas de control.</td>
+        </tr>
+        <tr>
+            <td>Non require especificar o algoritmo de execución.</td>
+            <td>Permite controlar a lóxica do programa.</td>
+        </tr>
+        <tr>
+            <td>É habitual nas consultas e manipulación de datos.</td>
+            <td>É habitual nos procedementos e funcións.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="exemplo">
+        <h4>Exemplo de SQL declarativo</h4>
+
+        <p>
+            A seguinte consulta solicita os alumnos que pertencen ao curso
+            DAW1:
+        </p>
+
+        <pre><code>SELECT *
+FROM alumnos
+WHERE curso = 'DAW1';</code></pre>
+
+        <p>
+            Indícase o resultado que se desexa obter, deixando que MariaDB
+            determine como executar a consulta.
+        </p>
+    </div>
+
+    <div class="exemplo">
+        <h4>Exemplo de SQL procedemental</h4>
+
+        <p>
+            Un programa pode comprobar unha condición e executar diferentes
+            instrucións segundo o resultado:
+        </p>
+
+        <pre><code>IF total_alumnos > 30 THEN
+    SET mensaje = 'Grupo completo';
+ELSE
+    SET mensaje = 'Hai prazas dispoñibles';
+END IF;</code></pre>
+
+        <p>
+            Neste caso, o código establece unha condición e determina que
+            instrución executar en función do seu resultado.
+        </p>
+    </div>
+
+    <h3>1.3. Programación no servidor MariaDB</h3>
+
+    <p>
+        MariaDB incorpora mecanismos que permiten almacenar e executar
+        código no propio servidor de bases de datos.
+    </p>
+
+    <p>Os principais elementos de programación son:</p>
+
+    <ul>
+        <li>
+            <strong>Procedementos almacenados:</strong>
+            bloques de instrucións SQL que se gardan na base de datos
+            e se executan cando se realiza unha chamada.
+        </li>
+        <li>
+            <strong>Funcións:</strong>
+            programas que reciben parámetros, realizan operacións e
+            devolven un valor.
+        </li>
+        <li>
+            <strong>Disparadores (triggers):</strong>
+            bloques de código que se executan automaticamente cando
+            se producen determinadas operacións nunha táboa.
+        </li>
+        <li>
+            <strong>Eventos:</strong>
+            tarefas programadas para executarse nun momento determinado
+            ou de maneira periódica.
+        </li>
+    </ul>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Elemento</th>
+            <th>Forma de execución</th>
+            <th>Finalidade</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Procedemento</td>
+            <td>Mediante CALL</td>
+            <td>Executar un conxunto de operacións.</td>
+        </tr>
+        <tr>
+            <td>Función</td>
+            <td>Dentro dunha expresión SQL</td>
+            <td>Obter un valor calculado.</td>
+        </tr>
+        <tr>
+            <td>Disparador</td>
+            <td>Automaticamente ante un cambio nunha táboa</td>
+            <td>Validar ou rexistrar modificacións.</td>
+        </tr>
+        <tr>
+            <td>Evento</td>
+            <td>Segundo unha planificación temporal</td>
+            <td>Automatizar tarefas periódicas.</td>
+        </tr>
         </tbody>
     </table>
 
@@ -185,662 +196,502 @@ END IF;</code></pre>
 
     <ul>
         <li>
-            <strong>Automatización:</strong> permite executar tarefas
-            sen que un usuario teña que repetir manualmente todas
-            as operacións.
+            <strong>Centralización:</strong>
+            a lóxica común almacénase no servidor e pode ser utilizada
+            por diferentes aplicacións.
         </li>
         <li>
-            <strong>Reutilización:</strong> unha mesma operación pode
-            definirse unha vez e utilizarse desde diferentes aplicacións.
+            <strong>Reutilización:</strong>
+            un procedemento pode executarse tantas veces como sexa necesario.
         </li>
         <li>
-            <strong>Centralización:</strong> a lóxica de determinadas
-            operacións permanece no servidor da base de datos.
+            <strong>Automatización:</strong>
+            determinadas operacións poden executarse sen intervención
+            directa do usuario.
         </li>
         <li>
-            <strong>Integridade:</strong> permite establecer comprobacións
-            e regras para controlar as modificacións da información.
+            <strong>Seguridade:</strong>
+            pódese permitir que un usuario execute un procedemento sen
+            concederlle acceso directo a todas as táboas implicadas.
         </li>
         <li>
-            <strong>Seguridade:</strong> é posible conceder permisos
-            para executar determinados procedementos sen proporcionar
-            acceso directo a todas as táboas.
+            <strong>Consistencia:</strong>
+            as regras de negocio poden centralizarse para evitar
+            implementacións diferentes en distintas aplicacións.
         </li>
     </ul>
-
-    <div class="advertencia">
-        <strong>Importante:</strong> non toda a lóxica dunha aplicación
-        debe trasladarse á base de datos. É necesario decidir que
-        operacións deben executarse no servidor e cales corresponden
-        á aplicación cliente.
-    </div>
 
     <h2>2. Automatización de tarefas mediante guións SQL</h2>
 
     <h3>2.1. Que é un guión SQL?</h3>
 
     <p>
-        Un guión SQL é un ficheiro de texto que contén unha ou varias
-        instrucións SQL. Estas instrucións poden executarse de maneira
-        secuencial para realizar unha tarefa ou un conxunto de operacións.
+        Un guión SQL (script) é un ficheiro de texto que contén unha
+        ou varias instrucións SQL organizadas para executarse nun
+        sistema xestor de bases de datos.
     </p>
 
     <p>
-        Normalmente, os guións SQL gárdanse en ficheiros coa extensión
-        <code>.sql</code>.
+        Os guións permiten agrupar operacións e executalas de maneira
+        ordenada, evitando ter que introducir manualmente cada instrución.
     </p>
 
-    <p>
-        A diferenza dunha consulta individual, un guión permite agrupar
-        varias operacións relacionadas e executalas conxuntamente.
-    </p>
-
-    <h3>2.2. Aplicacións dos guións SQL</h3>
-
-    <p>Podemos utilizar guións SQL para diferentes finalidades:</p>
+    <p>Poden utilizarse, por exemplo, para:</p>
 
     <ul>
-        <li>
-            <strong>Creación de bases de datos:</strong> crear unha
-            base de datos e todas as súas táboas.
-        </li>
-        <li>
-            <strong>Carga de información:</strong> inserir rexistros
-            iniciais mediante instrucións INSERT.
-        </li>
-        <li>
-            <strong>Configuración:</strong> establecer parámetros
-            ou preparar os elementos necesarios para unha aplicación.
-        </li>
-        <li>
-            <strong>Administración:</strong> crear usuarios, asignar
-            permisos e modificar estruturas.
-        </li>
-        <li>
-            <strong>Mantemento:</strong> executar operacións periódicas
-            ou tarefas de actualización.
-        </li>
-        <li>
-            <strong>Programación:</strong> crear procedementos,
-            funcións, eventos e disparadores.
-        </li>
+        <li>Crear bases de datos e táboas.</li>
+        <li>Inserir datos iniciais.</li>
+        <li>Crear usuarios e asignar privilexios.</li>
+        <li>Realizar operacións de mantemento.</li>
+        <li>Executar consultas e actualizacións.</li>
+        <li>Crear procedementos, funcións e disparadores.</li>
     </ul>
 
-    <h3>2.3. Estrutura dun ficheiro SQL</h3>
+    <h3>2.2. Estrutura dun ficheiro SQL</h3>
 
     <p>
-        Un ficheiro SQL pode conter instrucións de diferentes tipos.
-        O servidor execútaas seguindo a orde na que aparecen,
-        respectando as dependencias entre elas.
+        Os ficheiros SQL utilizan normalmente a extensión
+        <code>.sql</code>. Son ficheiros de texto que poden abrirse
+        con editores de código ou ferramentas específicas de bases
+        de datos.
     </p>
 
-    <div class="ejemplo">
-        <h4>Exemplo: creación e preparación dunha base de datos</h4>
+    <p>
+        Un guión pode conter comentarios, instrucións SQL e separacións
+        entre diferentes bloques de operacións.
+    </p>
 
-        <pre><code>-- Creación da base de datos
-CREATE DATABASE IF NOT EXISTS academia;
+    <div class="exemplo">
+        <h4>Exemplo: creación dunha base de datos</h4>
+
+        <pre><code>-- Creación dunha base de datos
+CREATE DATABASE empresa;
 
 -- Selección da base de datos
-USE academia;
+USE empresa;
 
 -- Creación dunha táboa
-CREATE TABLE IF NOT EXISTS cursos (
+CREATE TABLE departamentos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
-    horas INT NOT NULL
+    nome VARCHAR(100) NOT NULL
 );
 
 -- Inserción de datos
-INSERT INTO cursos (nombre, horas)
+INSERT INTO departamentos (nome)
 VALUES
-    ('DAW', 200),
-    ('DAM', 200),
-    ('ASIR', 180);
+    ('Administración'),
+    ('Informática'),
+    ('Comercial');
 
--- Consulta da información
-SELECT * FROM cursos;</code></pre>
+-- Consulta dos datos
+SELECT * FROM departamentos;</code></pre>
+
+        <p>
+            Ao executar o ficheiro, MariaDB procesa as instrucións
+            na orde na que aparecen.
+        </p>
     </div>
 
-    <p>
-        Neste exemplo, o ficheiro realiza varias tarefas consecutivas:
-    </p>
-
-    <ol>
-        <li>Crea a base de datos se non existe.</li>
-        <li>Selecciona a base de datos de traballo.</li>
-        <li>Crea unha táboa.</li>
-        <li>Insire varios rexistros.</li>
-        <li>Consulta os datos introducidos.</li>
-    </ol>
-
-    <h3>2.4. Comentarios nos guións SQL</h3>
+    <h3>2.3. Comentarios nos guións SQL</h3>
 
     <p>
-        Os comentarios permiten documentar o código e explicar
-        a finalidade das instrucións. O servidor non os interpreta
-        como operacións SQL.
+        Os comentarios permiten documentar o código, explicar a
+        finalidade das operacións e facilitar o mantemento dos
+        ficheiros.
     </p>
 
-    <p>MariaDB admite diferentes formas de introducir comentarios:</p>
+    <p>MariaDB admite diferentes formas de escribir comentarios:</p>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Tipo</th>
-                <th>Sintaxe</th>
-                <th>Descrición</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Unha liña</td>
-                <td><code>-- Comentario</code></td>
-                <td>O comentario comeza con dous guións seguidos dun espazo.</td>
-            </tr>
-            <tr>
-                <td>Unha liña</td>
-                <td><code># Comentario</code></td>
-                <td>Outra forma de introducir comentarios nunha liña.</td>
-            </tr>
-            <tr>
-                <td>Varias liñas</td>
-                <td><code>/* Comentario */</code></td>
-                <td>Permite escribir comentarios que ocupen varias liñas.</td>
-            </tr>
-        </tbody>
-    </table>
+    <h4>Comentario dunha liña con dous guións</h4>
 
-    <div class="ejemplo">
-        <h4>Exemplo de documentación dun guión</h4>
+    <pre><code>-- Este é un comentario</code></pre>
 
-        <pre><code>/*
-    Base de datos: academia
-    Finalidade: almacenar información dos cursos
-    Autor: Departamento de informática
-*/
+    <h4>Comentario dunha liña con #</h4>
 
--- Crear a base de datos
-CREATE DATABASE academia;
+    <pre><code># Este tamén é un comentario</code></pre>
 
--- Seleccionar a base de datos
-USE academia;</code></pre>
-    </div>
+    <h4>Comentario de varias liñas</h4>
 
-    <h3>2.5. O punto e coma como delimitador</h3>
-
-    <p>
-        En SQL, o punto e coma (<code>;</code>) utilízase habitualmente
-        para indicar o final dunha instrución.
-    </p>
-
-    <pre><code>CREATE DATABASE academia;
-
-USE academia;
-
-SHOW DATABASES;</code></pre>
-
-    <p>
-        Cada unha destas instrucións remata cun punto e coma.
-        Isto permite ao servidor identificar onde termina unha
-        operación e comeza a seguinte.
-    </p>
+    <pre><code>/*
+    Este comentario ocupa
+    varias liñas.
+*/</code></pre>
 
     <div class="callout">
-        <strong>Relación co SQL procedemental:</strong> cando
-        posteriormente creemos procedementos e funcións, atoparemos
-        instrucións que conteñen varios puntos e coma internos.
-        Para iso utilizaremos o comando <code>DELIMITER</code>,
-        que permite cambiar temporalmente o delimitador utilizado
-        polo cliente SQL.
+        <strong>Boas prácticas:</strong>
+        os guións SQL deben estar organizados e documentados. É
+        recomendable incluír comentarios que identifiquen os bloques
+        principais e expliquen as operacións máis importantes.
     </div>
 
-    <h2>3. Ferramentas para editar guións SQL</h2>
+    <h3>2.4. Instrucións secuenciais</h3>
+
+    <p>
+        Nun guión SQL, as instrucións execútanse normalmente de forma
+        secuencial, seguindo a orde na que aparecen no ficheiro.
+    </p>
+
+    <p>
+        Cada instrución SQL remata habitualmente cun punto e coma
+        (<code>;</code>), que indica o final da instrución.
+    </p>
+
+    <pre><code>CREATE DATABASE biblioteca;
+
+USE biblioteca;
+
+CREATE TABLE libros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL
+);
+
+INSERT INTO libros (titulo)
+VALUES ('Bases de datos relacionais');
+
+SELECT * FROM libros;</code></pre>
+
+    <p>
+        Neste exemplo, primeiro créase a base de datos, despois
+        selecciónase, créase unha táboa, insírese un rexistro e
+        finalmente realízase unha consulta.
+    </p>
+
+    <h2>3. Ferramentas para editar e executar guións</h2>
 
     <h3>3.1. MySQL Workbench</h3>
 
     <p>
         MySQL Workbench é unha ferramenta gráfica que permite
         administrar bases de datos e traballar con instrucións SQL.
-        Aínda que o seu nome fai referencia a MySQL, tamén podemos
-        utilizala para conectarnos a un servidor MariaDB compatible.
-    </p>
-
-    <p>
-        No noso contorno, Workbench estará instalado no equipo
-        anfitrión e conectarase ao servidor MariaDB que se executa
-        na máquina virtual Debian.
+        Pode utilizarse para conectarse a un servidor MariaDB e
+        executar consultas e guións SQL.
     </p>
 
     <p>Entre as súas funcionalidades destacan:</p>
 
     <ul>
-        <li>Crear e editar consultas SQL.</li>
-        <li>Executar instrucións individuais ou varios comandos.</li>
+        <li>Crear e modificar bases de datos e táboas.</li>
+        <li>Escribir e editar instrucións SQL.</li>
+        <li>Executar consultas e scripts.</li>
         <li>Visualizar os resultados das consultas.</li>
-        <li>Gardar e abrir ficheiros SQL.</li>
-        <li>Administrar bases de datos e táboas.</li>
         <li>Consultar os erros producidos durante a execución.</li>
+        <li>Gardar e abrir ficheiros SQL.</li>
     </ul>
 
-    <h3>3.2. O editor SQL de Workbench</h3>
+    <h4>Traballar co editor SQL</h4>
 
     <p>
-        Cando establecemos unha conexión co servidor MariaDB,
-        podemos abrir unha pestana de consulta SQL.
+        Unha vez establecida a conexión co servidor MariaDB, pódese
+        abrir unha nova pestana de consulta SQL e introducir as
+        instrucións que se desexan executar.
     </p>
 
     <p>
-        Nesta pestana escribimos as instrucións que queremos executar.
-        Workbench permite executar:
+        Workbench permite executar unha instrución concreta ou un
+        conxunto de instrucións seleccionadas. Tamén permite gardar
+        o código nun ficheiro con extensión <code>.sql</code>.
     </p>
 
-    <ul>
-        <li>A instrución situada no cursor.</li>
-        <li>Unha selección de instrucións.</li>
-        <li>O conxunto de instrucións do editor.</li>
-    </ul>
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        aínda que Workbench está deseñado principalmente para MySQL,
+        pode conectarse a servidores MariaDB. Algunhas funcionalidades
+        específicas de administración poden presentar diferenzas
+        segundo a versión do servidor.
+    </div>
+
+    <h3>3.2. Editores de texto e código</h3>
 
     <p>
-        Os resultados aparecen na zona inferior do editor,
-        mentres que os erros e as mensaxes de execución
-        se mostran no panel de saída.
+        Os guións SQL tamén poden crearse utilizando editores de texto
+        ou editores de código independentes da ferramenta de
+        administración da base de datos.
     </p>
 
-    <h3>3.3. Gardar e abrir ficheiros SQL</h3>
-
-    <p>
-        Para conservar os guións podemos gardalos en ficheiros
-        coa extensión <code>.sql</code>.
-    </p>
-
-    <p>
-        Por exemplo, podemos organizar os ficheiros dunha práctica
-        do seguinte xeito:
-    </p>
-
-    <pre><code>practica_ud5/
-|
-|-- 01_creacion_bd.sql
-|-- 02_insercion_datos.sql
-|-- 03_consultas.sql
-|-- 04_procedementos.sql
-|-- 05_funcions.sql
-|-- 06_triggers.sql
-|
-|-- README.txt</code></pre>
-
-    <p>
-        Esta organización permite separar as diferentes tarefas
-        e facilita a reutilización e o mantemento dos guións.
-    </p>
-
-    <h3>3.4. Outros editores de texto</h3>
-
-    <p>
-        Os ficheiros SQL son ficheiros de texto plano, polo que
-        tamén podemos editalos mediante outros programas:
-    </p>
+    <p>Algúns exemplos son:</p>
 
     <ul>
         <li>Visual Studio Code.</li>
-        <li>Notepad++.</li>
-        <li>Gedit ou outros editores de Linux.</li>
+        <li>Geany.</li>
         <li>Kate.</li>
-        <li>Vim ou Nano desde o terminal.</li>
+        <li>Gedit.</li>
+        <li>Notepad++.</li>
     </ul>
 
     <p>
-        Estes editores permiten escribir e organizar o código
-        sen necesidade de manter unha conexión activa co servidor.
-        A execución deberá realizarse posteriormente mediante
-        unha ferramenta cliente.
+        Estes editores permiten crear ficheiros SQL, aplicar
+        resaltado de sintaxe, organizar o código e gardar os
+        scripts para executalos posteriormente.
     </p>
 
-    <h2>4. Métodos de execución de guións SQL</h2>
-
-    <p>
-        Unha vez creado un ficheiro SQL, necesitamos envialo ao
-        servidor MariaDB para que execute as instrucións que contén.
-        Existen diferentes métodos para facelo.
-    </p>
-
-    <h3>4.1. Execución desde MySQL Workbench</h3>
-
-    <p>
-        Podemos executar un guión directamente desde o editor SQL
-        de Workbench.
-    </p>
-
-    <ol>
-        <li>Establecer a conexión co servidor MariaDB da máquina virtual Debian.</li>
-        <li>Abrir un novo editor SQL.</li>
-        <li>Abrir un ficheiro existente ou escribir as instrucións.</li>
-        <li>Seleccionar as instrucións que queremos executar ou executar o guión completo.</li>
-        <li>Comprobar os resultados e as posibles mensaxes de erro.</li>
-    </ol>
-
-    <div class="callout">
-        <strong>Importante:</strong> Workbench actúa como cliente.
-        As instrucións SQL envíanse ao servidor MariaDB, que é
-        o encargado de procesalas e executar as operacións.
-    </div>
-
-    <h3>4.2. Execución desde a consola de Debian</h3>
+    <h3>3.3. Execución desde a consola de MariaDB</h3>
 
     <p>
         MariaDB proporciona unha ferramenta de liña de comandos
-        chamada <code>mariadb</code>. Mediante ela podemos conectarnos
-        ao servidor e executar instrucións SQL directamente.
+        denominada <code>mariadb</code>, que permite conectarse ao
+        servidor e executar instrucións SQL directamente.
     </p>
 
-    <p>Para iniciar unha sesión interactiva podemos utilizar:</p>
+    <p>
+        Desde a máquina virtual Debian pódese acceder á consola
+        mediante:
+    </p>
 
     <pre><code>mariadb -u usuario -p</code></pre>
 
     <p>
-        O parámetro <code>-u</code> indica o usuario co que queremos
-        conectarnos e <code>-p</code> solicita o contrasinal.
+        O parámetro <code>-u</code> indica o nome do usuario e
+        <code>-p</code> solicita o contrasinal.
     </p>
 
     <p>
-        Tamén podemos indicar directamente a base de datos que
-        queremos utilizar:
+        Tamén se pode indicar directamente a base de datos á que
+        se quere acceder:
     </p>
 
-    <pre><code>mariadb -u usuario -p academia</code></pre>
+    <pre><code>mariadb -u usuario -p empresa</code></pre>
 
     <p>
-        Unha vez conectados, podemos introducir instrucións SQL
-        de forma interactiva:
+        Unha vez dentro da consola, pódense introducir instrucións
+        SQL e executalas.
     </p>
 
-    <pre><code>MariaDB [(none)]&gt; SHOW DATABASES;
-
-MariaDB [(none)]&gt; USE academia;
-
-MariaDB [academia]&gt; SHOW TABLES;
-
-MariaDB [academia]&gt; SELECT * FROM cursos;</code></pre>
-
-    <h3>4.3. Execución dun ficheiro desde a consola</h3>
+    <h3>3.4. Execución de ficheiros SQL desde a consola</h3>
 
     <p>
-        Ademais de introducir instrucións manualmente, podemos
-        executar directamente un ficheiro SQL.
+        Ademais de introducir instrucións manualmente, a consola
+        permite executar o contido dun ficheiro SQL.
     </p>
 
     <p>
-        Unha forma de facelo é utilizar a redirección da entrada
-        estándar desde o terminal:
+        Unha forma de facelo é mediante a redirección da entrada:
     </p>
 
-    <pre><code>mariadb -u usuario -p academia &lt; script.sql</code></pre>
+    <pre><code>mariadb -u usuario -p empresa &lt; script.sql</code></pre>
 
     <p>
-        Neste caso, o cliente MariaDB le o contido do ficheiro
-        e envía as instrucións ao servidor para a súa execución.
+        Neste caso, MariaDB executa as instrucións almacenadas
+        no ficheiro <code>script.sql</code> sobre a base de datos
+        indicada.
     </p>
 
     <p>
-        Tamén podemos conectarnos primeiro ao servidor e utilizar
-        a instrución <code>SOURCE</code>:
+        Outra posibilidade é conectarse primeiro á consola e
+        utilizar a instrución:
     </p>
 
-    <pre><code>SOURCE /home/usuario/scripts/script.sql;</code></pre>
+    <pre><code>SOURCE /ruta/ao/ficheiro/script.sql;</code></pre>
 
     <p>
-        Esta instrución permite executar un ficheiro SQL desde
-        unha sesión interactiva do cliente MariaDB.
+        Esta instrución permite cargar e executar un ficheiro
+        SQL desde unha sesión interactiva de MariaDB.
     </p>
 
-    <div class="ejemplo">
-        <h4>Exemplo completo de execución</h4>
-
-        <p>
-            Supoñamos que temos un ficheiro chamado
-            <code>crear_academia.sql</code> no directorio
-            <code>/home/usuario/scripts/</code>.
-        </p>
-
-        <p>Podemos executalo desde o terminal mediante:</p>
-
-        <pre><code>mariadb -u usuario -p &lt; /home/usuario/scripts/crear_academia.sql</code></pre>
-
-        <p>
-            O servidor recibirá as instrucións do ficheiro e
-            executaraas seguindo a orde na que aparecen.
-        </p>
-    </div>
-
-    <h3>4.4. Comparación dos métodos de execución</h3>
+    <h3>3.5. Comparación dos métodos de execución</h3>
 
     <table>
         <thead>
-            <tr>
-                <th>Método</th>
-                <th>Características</th>
-                <th>Uso habitual</th>
-            </tr>
+        <tr>
+            <th>Método</th>
+            <th>Características</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Workbench</td>
-                <td>Editor gráfico, resultados visuais e xestión das conexións.</td>
-                <td>Desenvolvemento e probas.</td>
-            </tr>
-            <tr>
-                <td>Consola interactiva</td>
-                <td>Permite introducir instrucións directamente.</td>
-                <td>Administración e comprobacións.</td>
-            </tr>
-            <tr>
-                <td>Execución dun ficheiro</td>
-                <td>Procesa automaticamente as instrucións dun ficheiro SQL.</td>
-                <td>Automatización e despregamento.</td>
-            </tr>
-            <tr>
-                <td>SOURCE</td>
-                <td>Executa un ficheiro desde unha sesión interactiva.</td>
-                <td>Execución de scripts xa preparados.</td>
-            </tr>
+        <tr>
+            <td>Workbench</td>
+            <td>
+                Entorno gráfico, edición de consultas e
+                visualización dos resultados.
+            </td>
+        </tr>
+        <tr>
+            <td>Consola interactiva</td>
+            <td>
+                Execución directa de instrucións mediante
+                comandos SQL.
+            </td>
+        </tr>
+        <tr>
+            <td>Ficheiro SQL</td>
+            <td>
+                Permite almacenar e reutilizar un conxunto
+                de instrucións.
+            </td>
+        </tr>
+        <tr>
+            <td>Execución mediante redirección</td>
+            <td>
+                Permite executar un script desde a terminal
+                sen entrar previamente na consola.
+            </td>
+        </tr>
         </tbody>
     </table>
 
-    <h2>5. Boas prácticas na elaboración de guións SQL</h2>
+    <h2>4. Organización e boas prácticas dos guións SQL</h2>
+
+    <h3>4.1. Organización dos ficheiros</h3>
 
     <p>
-        Un guión SQL debe estar organizado e documentado para
-        facilitar a súa comprensión, execución e mantemento.
+        Cando se traballa con varios guións SQL, é recomendable
+        organizar os ficheiros en directorios e utilizar nomes
+        descritivos.
     </p>
+
+    <div class="exemplo">
+        <h4>Exemplo de organización dun proxecto</h4>
+
+        <pre><code>proxecto_bbdd/
+│
+├── 01_creacion_bbdd.sql
+├── 02_creacion_taboas.sql
+├── 03_insercion_datos.sql
+├── 04_consultas.sql
+├── 05_procedementos.sql
+└── 06_disparadores.sql</code></pre>
+
+        <p>
+            Esta organización permite identificar facilmente
+            a finalidade de cada ficheiro e executar as operacións
+            nunha orde determinada.
+        </p>
+    </div>
+
+    <h3>4.2. Boas prácticas de programación SQL</h3>
 
     <ul>
-        <li>Utilizar nomes de ficheiros descritivos.</li>
-        <li>Organizar as instrucións por finalidade.</li>
-        <li>Incluír comentarios que expliquen as operacións importantes.</li>
-        <li>Respectar a orde de creación dos elementos da base de datos.</li>
-        <li>Utilizar indentación para facilitar a lectura.</li>
-        <li>Comprobar os resultados despois da execución.</li>
-        <li>Evitar incluír contrasinais ou información sensible nos ficheiros.</li>
-        <li>Manter copias dos guións e controlar os cambios realizados.</li>
+        <li>Utilizar nomes claros para os ficheiros e obxectos.</li>
+        <li>Documentar as operacións mediante comentarios.</li>
+        <li>Separar as diferentes tarefas en ficheiros cando sexa necesario.</li>
+        <li>Manter unha orde lóxica nas instrucións.</li>
+        <li>Comprobar os erros despois de executar os guións.</li>
+        <li>Evitar operacións destrutivas innecesarias.</li>
+        <li>Realizar copias de seguridade antes de modificar datos importantes.</li>
+        <li>Utilizar usuarios cos privilexios necesarios para cada tarefa.</li>
     </ul>
 
-    <div class="advertencia">
-        <strong>Precaución coa execución repetida:</strong>
-        non todas as instrucións SQL se poden executar varias veces
-        sen consecuencias. Por exemplo, un <code>INSERT</code>
-        pode introducir rexistros duplicados e un <code>DROP TABLE</code>
-        pode eliminar información existente.
-        É importante coñecer o efecto das instrucións antes
-        de executar un guión.
-    </div>
-
-    <h2>6. Exemplo práctico: creación dun guión SQL completo</h2>
-
-    <p>
-        Imos preparar un ficheiro SQL que permita crear e configurar
-        unha pequena base de datos para xestionar cursos dunha academia.
-    </p>
-
-    <p>
-        O ficheiro conterá a creación da base de datos, a creación
-        dunha táboa, a inserción de información e unha consulta
-        para comprobar o resultado.
-    </p>
+    <h2>5. Exercicios prácticos</h2>
 
     <div class="ejemplo">
-        <h3>Ficheiro: academia.sql</h3>
+        <h3>Exercicio 1. Creación dun guión SQL</h3>
 
-        <pre><code>/*
-    UD5 - Programación de bases de datos
-    Exemplo de guión SQL
-*/
+        <p>
+            Crear un ficheiro denominado
+            <code>01_creacion_empresa.sql</code> que conteña as
+            instrucións necesarias para:
+        </p>
 
--- Crear a base de datos
-CREATE DATABASE IF NOT EXISTS academia;
+        <ul>
+            <li>Crear unha base de datos chamada <code>empresa</code>.</li>
+            <li>Seleccionar a base de datos.</li>
+            <li>Crear unha táboa denominada <code>departamentos</code>.</li>
+            <li>Definir os campos necesarios para identificar cada departamento.</li>
+            <li>Inserir varios rexistros.</li>
+            <li>Consultar os datos almacenados.</li>
+        </ul>
 
--- Seleccionar a base de datos
-USE academia;
-
--- Crear a táboa cursos
-CREATE TABLE IF NOT EXISTS cursos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(50) NOT NULL,
-    horas INT NOT NULL
-);
-
--- Inserir información
-INSERT INTO cursos (nombre, horas)
-VALUES
-    ('DAW', 200),
-    ('DAM', 200),
-    ('ASIR', 180);
-
--- Consultar os cursos
-SELECT
-    id,
-    nombre,
-    horas
-FROM cursos
-ORDER BY nombre;</code></pre>
+        <p>
+            Incluír comentarios para identificar cada bloque
+            de instrucións.
+        </p>
     </div>
 
-    <p>
-        Este exemplo permite comprobar como podemos agrupar
-        diferentes operacións nun único ficheiro e executalas
-        desde Workbench ou desde a consola de MariaDB.
-    </p>
+    <div class="ejemplo">
+        <h3>Exercicio 2. Execución con MySQL Workbench</h3>
 
-    <div class="callout">
-        <strong>Resultado esperado:</strong> ao executar o guión
-        obteremos unha base de datos chamada <code>academia</code>,
-        cunha táboa <code>cursos</code> que conterá tres rexistros.
+        <p>
+            Abrir o ficheiro SQL anterior mediante MySQL Workbench
+            e executar as súas instrucións contra o servidor MariaDB
+            da máquina virtual Debian.
+        </p>
+
+        <p>
+            Comprobar os resultados obtidos e identificar posibles
+            erros de execución.
+        </p>
     </div>
 
-    <h2>7. Resumo dos conceptos principais</h2>
+    <div class="ejemplo">
+        <h3>Exercicio 3. Execución desde Debian</h3>
+
+        <p>
+            Utilizar a consola de Debian para conectarse ao servidor
+            MariaDB e executar un ficheiro SQL almacenado na máquina
+            virtual.
+        </p>
+
+        <p>
+            Comprobar o resultado da execución mediante consultas
+            SQL e comparar o procedemento coa execución realizada
+            desde Workbench.
+        </p>
+    </div>
+
+    <div class="ejemplo">
+        <h3>Exercicio 4. Organización de scripts</h3>
+
+        <p>
+            Crear unha estrutura de directorios para organizar
+            diferentes ficheiros SQL dun mesmo proxecto.
+        </p>
+
+        <p>
+            Separar as operacións de creación da base de datos,
+            creación de táboas, inserción de datos e consultas
+            en ficheiros independentes.
+        </p>
+    </div>
+
+    <h2>6. Resumo dos conceptos fundamentais</h2>
 
     <table>
         <thead>
-            <tr>
-                <th>Concepto</th>
-                <th>Idea principal</th>
-            </tr>
+        <tr>
+            <th>Concepto</th>
+            <th>Descrición</th>
+        </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>SQL declarativo</td>
-                <td>Indica que resultado queremos obter.</td>
-            </tr>
-            <tr>
-                <td>SQL procedemental</td>
-                <td>Permite definir unha secuencia de operacións e decisións.</td>
-            </tr>
-            <tr>
-                <td>Programación no servidor</td>
-                <td>Executa lóxica directamente no SXBD.</td>
-            </tr>
-            <tr>
-                <td>Guión SQL</td>
-                <td>Ficheiro de texto que agrupa instrucións SQL.</td>
-            </tr>
-            <tr>
-                <td>Extensión .sql</td>
-                <td>Extensión habitual dos ficheiros SQL.</td>
-            </tr>
-            <tr>
-                <td>DELIMITER</td>
-                <td>Permite cambiar o delimitador utilizado polo cliente SQL.</td>
-            </tr>
-            <tr>
-                <td>MySQL Workbench</td>
-                <td>Ferramenta gráfica para editar e executar SQL.</td>
-            </tr>
-            <tr>
-                <td>Cliente mariadb</td>
-                <td>Ferramenta de consola para conectarse ao servidor.</td>
-            </tr>
-            <tr>
-                <td>SOURCE</td>
-                <td>Executa un ficheiro SQL desde unha sesión interactiva.</td>
-            </tr>
+        <tr>
+            <td>SQL declarativo</td>
+            <td>Indica que operación se desexa realizar.</td>
+        </tr>
+        <tr>
+            <td>SQL procedemental</td>
+            <td>Permite definir a lóxica e a secuencia de execución.</td>
+        </tr>
+        <tr>
+            <td>Guión SQL</td>
+            <td>Ficheiro de texto que contén instrucións SQL.</td>
+        </tr>
+        <tr>
+            <td>MySQL Workbench</td>
+            <td>Ferramenta gráfica para administrar e executar SQL.</td>
+        </tr>
+        <tr>
+            <td>Consola MariaDB</td>
+            <td>Ferramenta para executar instrucións desde a terminal.</td>
+        </tr>
+        <tr>
+            <td>Procedemento</td>
+            <td>Bloque de código almacenado que se executa mediante unha chamada.</td>
+        </tr>
+        <tr>
+            <td>Función</td>
+            <td>Programa que devolve un valor.</td>
+        </tr>
+        <tr>
+            <td>Disparador</td>
+            <td>Código que se executa ante cambios nunha táboa.</td>
+        </tr>
+        <tr>
+            <td>Evento</td>
+            <td>Tarefa que se executa segundo unha planificación temporal.</td>
+        </tr>
         </tbody>
     </table>
-
-    <h2>8. Exercicios prácticos</h2>
-
-    <p>
-        Os seguintes exercicios permiten practicar os conceptos
-        explicados neste bloque utilizando a máquina virtual Debian
-        co servidor MariaDB e MySQL Workbench.
-    </p>
-
-    <h3>Exercicio 1. Creación dun ficheiro SQL</h3>
-
-    <ol>
-        <li>Crear un ficheiro SQL que conteña instrucións para crear unha base de datos chamada <code>empresa</code>.</li>
-        <li>Crear unha táboa chamada <code>departamentos</code> con campos para identificar o departamento, o seu nome e a súa localización.</li>
-        <li>Inserir varios rexistros na táboa.</li>
-        <li>Engadir comentarios para documentar as diferentes operacións.</li>
-        <li>Incluír unha consulta que permita visualizar toda a información almacenada.</li>
-    </ol>
-
-    <h3>Exercicio 2. Execución desde Workbench</h3>
-
-    <ol>
-        <li>Abrir o ficheiro creado no exercicio anterior desde MySQL Workbench.</li>
-        <li>Establecer a conexión co servidor MariaDB da máquina virtual Debian.</li>
-        <li>Executar o guión SQL completo.</li>
-        <li>Comprobar a creación da base de datos e da táboa.</li>
-        <li>Verificar que os rexistros se inseriron correctamente.</li>
-    </ol>
-
-    <h3>Exercicio 3. Execución desde a consola</h3>
-
-    <ol>
-        <li>Copiar o ficheiro SQL á máquina virtual Debian.</li>
-        <li>Executar o ficheiro desde o terminal utilizando o cliente <code>mariadb</code>.</li>
-        <li>Comprobar que as operacións se realizaron correctamente.</li>
-        <li>Executar novamente algunhas das instrucións e observar o comportamento do servidor.</li>
-    </ol>
-
-    <h3>Exercicio 4. Comparación de ferramentas</h3>
-
-    <p>
-        Executar un mesmo ficheiro SQL desde MySQL Workbench
-        e desde a consola de MariaDB. Comparar os dous métodos
-        de execución e identificar as diferenzas na presentación
-        dos resultados e das mensaxes de erro.
-    </p>
-
-    <hr>
-
-    <p>
-        <strong>Fin do bloque 1.</strong> Nos seguintes apartados
-        estudaremos como utilizar variables e funcións de MariaDB
-        para construír programas SQL máis flexibles e dinámicos.
-    </p>
 
 </main>
 
 </body>
 </html>
-```
