@@ -1,0 +1,1543 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloque 3. Integración, optimización y virtualización</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Bloque 3. Integración, optimización y virtualización</h1>
+
+    <p>
+        En este bloque se estudia cómo integrar Apache HTTP Server con Apache Tomcat
+        para construir una infraestructura web en la que cada servidor desempeña
+        una función específica. También se analizan los principales parámetros que
+        permiten adaptar el funcionamiento de Tomcat a las necesidades de una
+        aplicación, así como los procedimientos para comprobar su disponibilidad,
+        analizar su rendimiento y detectar posibles problemas.
+    </p>
+
+    <p>
+        Finalmente, se introduce la virtualización mediante máquinas virtuales y
+        contenedores, prestando especial atención a Docker como herramienta para
+        desplegar y distribuir aplicaciones web.
+    </p>
+
+    <h2>1. Integración de Apache HTTP Server con Tomcat</h2>
+
+    <h3>1.1. Arquitectura con servidor web y servidor de aplicaciones</h3>
+
+    <p>
+        Apache HTTP Server y Apache Tomcat son dos servidores que pueden trabajar
+        conjuntamente para ofrecer una infraestructura web más flexible y segura.
+        Aunque ambos pueden atender peticiones HTTP, sus funciones principales son
+        diferentes.
+    </p>
+
+    <ul>
+        <li>
+            <strong>Apache HTTP Server:</strong> recibe las peticiones de los
+            clientes, sirve contenidos estáticos, gestiona los dominios y puede
+            encargarse de la terminación HTTPS.
+        </li>
+        <li>
+            <strong>Apache Tomcat:</strong> ejecuta aplicaciones Java basadas en
+            tecnologías como Servlets y JSP.
+        </li>
+    </ul>
+
+    <p>
+        En una arquitectura integrada, Apache HTTP Server actúa como punto de
+        entrada y reenvía determinadas peticiones a Tomcat. Esta técnica se conoce
+        como <strong>proxy inverso</strong>.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de arquitectura</h4>
+
+        <pre><code>
+        Navegador del usuario
+                 |
+                 | HTTP / HTTPS
+                 v
+        +----------------------+
+        |  Apache HTTP Server  |
+        |      Puerto 80       |
+        |      Puerto 443      |
+        +----------------------+
+                 |
+                 | Proxy inverso
+                 v
+        +----------------------+
+        |     Apache Tomcat    |
+        |      Puerto 8080     |
+        +----------------------+
+                 |
+                 v
+        Aplicaciones Java
+        </code></pre>
+
+        <p>
+            El usuario accede al servidor Apache. Este recibe la petición y, si
+            corresponde a una aplicación Java, la reenvía a Tomcat. La respuesta
+            vuelve a Apache y posteriormente al navegador.
+        </p>
+    </div>
+
+    <h3>1.2. ¿Qué es un proxy inverso?</h3>
+
+    <p>
+        Un proxy inverso es un servidor que recibe las peticiones de los clientes
+        y las distribuye hacia uno o varios servidores internos. El cliente no
+        necesita conocer la dirección real del servidor que ejecuta la aplicación.
+    </p>
+
+    <p>
+        En una instalación con Apache y Tomcat, el proxy inverso permite que las
+        aplicaciones Java sean accesibles a través de Apache sin exponer
+        directamente el puerto de Tomcat.
+    </p>
+
+    <p>Entre sus ventajas destacan:</p>
+
+    <ul>
+        <li>Centralizar el acceso a diferentes aplicaciones web.</li>
+        <li>Gestionar las conexiones HTTPS desde Apache.</li>
+        <li>Ocultar los puertos internos de los servidores de aplicaciones.</li>
+        <li>Distribuir peticiones entre varios servidores.</li>
+        <li>Aplicar políticas de acceso y filtrado.</li>
+        <li>Servir contenidos estáticos directamente desde Apache.</li>
+    </ul>
+
+    <h3>1.3. Módulos proxy de Apache</h3>
+
+    <p>
+        Apache HTTP Server dispone de diferentes módulos que permiten implementar
+        un proxy inverso.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Módulo</th>
+                <th>Función</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>mod_proxy</code></td>
+                <td>Proporciona la funcionalidad básica de proxy.</td>
+            </tr>
+            <tr>
+                <td><code>mod_proxy_http</code></td>
+                <td>Permite reenviar peticiones mediante el protocolo HTTP.</td>
+            </tr>
+            <tr>
+                <td><code>mod_ssl</code></td>
+                <td>Permite configurar conexiones HTTPS.</td>
+            </tr>
+            <tr>
+                <td><code>mod_headers</code></td>
+                <td>Permite modificar y añadir cabeceras HTTP.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        En Debian, los módulos se pueden habilitar mediante el comando
+        <code>a2enmod</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Habilitar los módulos necesarios</h4>
+
+        <pre><code>sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo systemctl restart apache2</code></pre>
+
+        <p>
+            El primer módulo activa la funcionalidad general de proxy y el segundo
+            permite utilizar HTTP como protocolo de comunicación con Tomcat.
+        </p>
+    </div>
+
+    <h3>1.4. Configuración del proxy inverso</h3>
+
+    <p>
+        Apache permite definir reglas para indicar qué peticiones deben enviarse
+        a Tomcat. Para ello se utilizan principalmente las directivas
+        <code>ProxyPass</code> y <code>ProxyPassReverse</code>.
+    </p>
+
+    <ul>
+        <li>
+            <strong>ProxyPass:</strong> establece la correspondencia entre una
+            ruta solicitada por el cliente y una dirección del servidor interno.
+        </li>
+        <li>
+            <strong>ProxyPassReverse:</strong> modifica determinadas cabeceras
+            de respuesta para que las redirecciones del servidor interno sean
+            coherentes con la dirección pública.
+        </li>
+    </ul>
+
+    <div class="ejemplo">
+        <h4>Ejemplo: integrar Apache con Tomcat</h4>
+
+        <p>
+            Supongamos que Tomcat está funcionando en el mismo equipo que Apache,
+            escuchando en el puerto 8080. Queremos que los usuarios puedan acceder
+            a una aplicación desplegada en Tomcat mediante la ruta
+            <code>/aplicacion</code>.
+        </p>
+
+        <p>
+            Podemos crear un archivo de configuración para el sitio web:
+            <code>/etc/apache2/sites-available/aplicacion.conf</code>.
+        </p>
+
+        <pre><code>&lt;VirtualHost *:80&gt;
+
+    ServerName aplicacion.local
+
+    ProxyPreserveHost On
+
+    ProxyPass /aplicacion http://127.0.0.1:8080/aplicacion
+    ProxyPassReverse /aplicacion http://127.0.0.1:8080/aplicacion
+
+    ErrorLog ${APACHE_LOG_DIR}/aplicacion_error.log
+    CustomLog ${APACHE_LOG_DIR}/aplicacion_access.log combined
+
+&lt;/VirtualHost&gt;</code></pre>
+
+        <p>
+            La directiva <code>ProxyPreserveHost On</code> permite conservar la
+            cabecera Host original del cliente al reenviar la petición.
+        </p>
+
+        <p>
+            Las dos directivas ProxyPass establecen que las peticiones dirigidas
+            a <code>/aplicacion</code> se envíen al contexto correspondiente de
+            Tomcat.
+        </p>
+
+        <p>
+            Para activar el sitio:
+        </p>
+
+        <pre><code>sudo a2ensite aplicacion.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2</code></pre>
+
+        <p>
+            La comprobación de la configuración debe mostrar
+            <code>Syntax OK</code> antes de recargar el servicio.
+        </p>
+    </div>
+
+    <h3>1.5. Diferentes aplicaciones y servidores</h3>
+
+    <p>
+        Un mismo servidor Apache puede distribuir las peticiones entre diferentes
+        aplicaciones desplegadas en Tomcat.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de distribución por rutas</h4>
+
+        <pre><code>ProxyPass /tienda http://127.0.0.1:8080/tienda
+ProxyPassReverse /tienda http://127.0.0.1:8080/tienda
+
+ProxyPass /gestion http://127.0.0.1:8080/gestion
+ProxyPassReverse /gestion http://127.0.0.1:8080/gestion</code></pre>
+
+        <p>
+            En este caso, Apache reenvía las peticiones de las rutas
+            <code>/tienda</code> y <code>/gestion</code> a las aplicaciones
+            correspondientes de Tomcat.
+        </p>
+    </div>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        si Apache y Tomcat están instalados en máquinas diferentes, la dirección
+        <code>127.0.0.1</code> debe sustituirse por la dirección IP o el nombre
+        del servidor donde se encuentra Tomcat. También es necesario permitir
+        la comunicación entre ambos equipos en el puerto correspondiente.
+    </div>
+
+    <h3>1.6. Seguridad en la integración</h3>
+
+    <p>
+        Cuando Apache actúa como proxy inverso, conviene evitar que los usuarios
+        accedan directamente a Tomcat si no es necesario.
+    </p>
+
+    <p>Algunas medidas recomendables son:</p>
+
+    <ul>
+        <li>
+            Permitir el acceso público únicamente a los puertos necesarios de
+            Apache, normalmente 80 y 443.
+        </li>
+        <li>
+            Limitar el acceso al puerto 8080 de Tomcat a las direcciones IP
+            autorizadas.
+        </li>
+        <li>
+            Utilizar HTTPS para proteger las comunicaciones entre el navegador
+            y Apache.
+        </li>
+        <li>
+            Evitar publicar interfaces de administración como Manager y
+            Host Manager.
+        </li>
+        <li>
+            Revisar las cabeceras HTTP y las reglas de acceso.
+        </li>
+    </ul>
+
+    <h2>2. Ajustes y optimización del servidor Tomcat</h2>
+
+    <h3>2.1. Importancia de la configuración</h3>
+
+    <p>
+        La configuración de un servidor de aplicaciones influye directamente
+        en su rendimiento, estabilidad y capacidad para atender peticiones.
+    </p>
+
+    <p>
+        Una configuración adecuada debe tener en cuenta los recursos disponibles
+        en el sistema, las características de la aplicación y el número de
+        usuarios que se espera que accedan al servicio.
+    </p>
+
+    <p>
+        Entre los parámetros más importantes se encuentran:
+    </p>
+
+    <ul>
+        <li>Memoria asignada a la máquina virtual Java.</li>
+        <li>Variables de entorno.</li>
+        <li>Parámetros de ejecución de Tomcat.</li>
+        <li>Configuración de conexiones y tiempos de espera.</li>
+        <li>Gestión de errores y registros.</li>
+    </ul>
+
+    <h3>2.2. Memoria de la máquina virtual Java</h3>
+
+    <p>
+        Tomcat se ejecuta sobre la máquina virtual Java (JVM). Esta máquina
+        virtual utiliza una zona de memoria denominada <strong>heap</strong>,
+        destinada principalmente a almacenar los objetos creados por las
+        aplicaciones Java.
+    </p>
+
+    <p>
+        La memoria disponible para la JVM puede configurarse mediante parámetros
+        de ejecución.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Parámetro</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>-Xms</code></td>
+                <td>Establece el tamaño inicial del heap.</td>
+            </tr>
+            <tr>
+                <td><code>-Xmx</code></td>
+                <td>Establece el tamaño máximo del heap.</td>
+            </tr>
+            <tr>
+                <td><code>-Xss</code></td>
+                <td>Establece el tamaño de la pila de cada hilo.</td>
+            </tr>
+            <tr>
+                <td><code>-XX:+UseG1GC</code></td>
+                <td>Activa el recolector de basura G1.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de configuración de memoria</h4>
+
+        <pre><code>-Xms512m
+-Xmx2048m
+-XX:+UseG1GC</code></pre>
+
+        <p>
+            En este ejemplo:
+        </p>
+
+        <ul>
+            <li>La JVM comienza utilizando un heap de 512 MB.</li>
+            <li>El heap puede crecer hasta un máximo de 2048 MB.</li>
+            <li>Se utiliza el recolector de basura G1.</li>
+        </ul>
+
+        <p>
+            Los valores deben adaptarse a la memoria física disponible y a las
+            necesidades reales de la aplicación. Asignar demasiada memoria a
+            Tomcat puede perjudicar al resto de procesos del sistema.
+        </p>
+    </div>
+
+    <h3>2.3. Variables de entorno y parámetros de ejecución</h3>
+
+    <p>
+        Las variables de entorno permiten definir información que los programas
+        utilizan durante su ejecución. En Java y Tomcat se emplean para indicar
+        rutas de instalación, opciones de la JVM y otros parámetros.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Variable</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>JAVA_HOME</code></td>
+                <td>Directorio donde está instalada la máquina virtual Java o el JDK.</td>
+            </tr>
+            <tr>
+                <td><code>CATALINA_HOME</code></td>
+                <td>Directorio de instalación de Tomcat.</td>
+            </tr>
+            <tr>
+                <td><code>CATALINA_BASE</code></td>
+                <td>Directorio que contiene la configuración y los datos de una instancia de Tomcat.</td>
+            </tr>
+            <tr>
+                <td><code>JAVA_OPTS</code></td>
+                <td>Opciones de la JVM utilizadas por los scripts de Tomcat que las admiten.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        En instalaciones tradicionales de Tomcat, los scripts pueden utilizar
+        variables como <code>JAVA_OPTS</code> y <code>CATALINA_OPTS</code>.
+        Esta última suele reservarse para parámetros de la JVM aplicados al
+        proceso servidor.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de parámetros de ejecución</h4>
+
+        <pre><code>export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+export CATALINA_OPTS="-Xms512m -Xmx2048m"
+
+$CATALINA_HOME/bin/startup.sh</code></pre>
+
+        <p>
+            El ejemplo muestra una forma de definir variables en una instalación
+            manual de Tomcat. La ruta de Java debe adaptarse a la versión instalada.
+        </p>
+    </div>
+
+    <h3>2.4. Configuración en Debian</h3>
+
+    <p>
+        En Debian, cuando Tomcat se instala mediante los paquetes de la
+        distribución, la estructura de directorios puede ser diferente de la
+        instalación manual descargada desde la página oficial.
+    </p>
+
+    <p>
+        En una instalación habitual de Tomcat 10 mediante paquetes Debian,
+        algunos directorios importantes son:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Ruta</th>
+                <th>Contenido</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>/etc/tomcat10/</code></td>
+                <td>Archivos de configuración.</td>
+            </tr>
+            <tr>
+                <td><code>/var/lib/tomcat10/</code></td>
+                <td>Datos y aplicaciones desplegadas.</td>
+            </tr>
+            <tr>
+                <td><code>/var/log/tomcat10/</code></td>
+                <td>Archivos de registro.</td>
+            </tr>
+            <tr>
+                <td><code>/usr/share/tomcat10/</code></td>
+                <td>Bibliotecas y archivos compartidos del paquete.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        En estas instalaciones, los parámetros de ejecución de Java suelen
+        gestionarse mediante la configuración del servicio y los mecanismos
+        propios del paquete Debian. No se debe asumir que los scripts o rutas
+        de una instalación manual existen en la instalación empaquetada.
+    </p>
+
+    <p>
+        Para consultar el servicio:
+    </p>
+
+    <pre><code>sudo systemctl status tomcat10</code></pre>
+
+    <p>
+        Para consultar su configuración de servicio:
+    </p>
+
+    <pre><code>systemctl cat tomcat10</code></pre>
+
+    <p>
+        También se pueden consultar los parámetros de la JVM del proceso en
+        ejecución utilizando herramientas como <code>ps</code>:
+    </p>
+
+    <pre><code>ps aux | grep '[t]omcat'</code></pre>
+
+    <div class="callout">
+        <strong>Nota:</strong>
+        las rutas, los nombres de los servicios y los mecanismos para establecer
+        variables pueden cambiar según la versión de Tomcat y la distribución
+        Linux. Antes de modificar la configuración, conviene comprobar cómo se
+        ha instalado el servidor.
+    </div>
+
+    <h3>2.5. Gestión de conexiones y tiempos de espera</h3>
+
+    <p>
+        Tomcat utiliza conectores para recibir las peticiones de los clientes.
+        Estos conectores se configuran en el archivo <code>server.xml</code>.
+    </p>
+
+    <p>
+        Entre sus parámetros se encuentran:
+    </p>
+
+    <ul>
+        <li>
+            <code>port</code>: puerto en el que escucha el conector.
+        </li>
+        <li>
+            <code>connectionTimeout</code>: tiempo máximo de espera para recibir
+            la petición inicial.
+        </li>
+        <li>
+            <code>maxThreads</code>: número máximo de hilos de procesamiento que
+            pueden utilizarse para atender peticiones simultáneas en el conector.
+        </li>
+        <li>
+            <code>maxConnections</code>: número máximo de conexiones que puede
+            gestionar el conector.
+        </li>
+        <li>
+            <code>acceptCount</code>: longitud máxima de la cola de peticiones
+            pendientes cuando se alcanza el límite de conexiones.
+        </li>
+    </ul>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de configuración de un conector HTTP</h4>
+
+        <pre><code>&lt;Connector
+    port="8080"
+    protocol="HTTP/1.1"
+    connectionTimeout="20000"
+    maxThreads="150"
+    maxConnections="8192"
+    acceptCount="100"
+/&gt;</code></pre>
+
+        <p>
+            En este ejemplo se configura un conector HTTP en el puerto 8080.
+            Se establece un límite de 150 hilos de procesamiento y una cola de
+            hasta 100 peticiones pendientes cuando se alcanza el límite de
+            conexiones.
+        </p>
+
+        <p>
+            Estos valores son orientativos. Su modificación debe realizarse
+            después de analizar el comportamiento de la aplicación y los
+            recursos disponibles.
+        </p>
+    </div>
+
+    <h3>2.6. Gestión de errores</h3>
+
+    <p>
+        Durante la ejecución de una aplicación pueden producirse errores de
+        diferentes tipos:
+    </p>
+
+    <ul>
+        <li>Errores de programación en el código Java.</li>
+        <li>Problemas de conexión con bases de datos.</li>
+        <li>Falta de memoria disponible.</li>
+        <li>Errores en la configuración de Tomcat.</li>
+        <li>Aplicaciones que no se despliegan correctamente.</li>
+        <li>Problemas de permisos sobre archivos y directorios.</li>
+    </ul>
+
+    <p>
+        Es importante distinguir entre los errores que recibe el usuario y la
+        información técnica que necesita el administrador para localizar su
+        origen.
+    </p>
+
+    <p>
+        Una aplicación puede configurar páginas de error personalizadas mediante
+        el descriptor <code>web.xml</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de páginas de error personalizadas</h4>
+
+        <pre><code>&lt;web-app&gt;
+
+    &lt;error-page&gt;
+        &lt;error-code&gt;404&lt;/error-code&gt;
+        &lt;location&gt;/errores/404.jsp&lt;/location&gt;
+    &lt;/error-page&gt;
+
+    &lt;error-page&gt;
+        &lt;error-code&gt;500&lt;/error-code&gt;
+        &lt;location&gt;/errores/500.jsp&lt;/location&gt;
+    &lt;/error-page&gt;
+
+&lt;/web-app&gt;</code></pre>
+
+        <p>
+            En este caso, la aplicación utiliza páginas propias para los errores
+            HTTP 404 (recurso no encontrado) y 500 (error interno del servidor).
+        </p>
+
+        <p>
+            Las páginas de error destinadas al usuario no deben mostrar rutas
+            internas, trazas de ejecución, contraseñas ni información sensible.
+        </p>
+    </div>
+
+    <h3>2.7. Registros y diagnóstico</h3>
+
+    <p>
+        Los registros o logs permiten conocer qué sucede durante la ejecución
+        de un servidor. Son fundamentales para detectar errores, estudiar el
+        comportamiento de las aplicaciones y analizar posibles problemas de
+        rendimiento.
+    </p>
+
+    <p>
+        En Tomcat pueden encontrarse diferentes tipos de registros:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Registro</th>
+                <th>Información habitual</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>catalina.out</code></td>
+                <td>Salida estándar y mensajes del proceso en determinadas instalaciones.</td>
+            </tr>
+            <tr>
+                <td><code>catalina.YYYY-MM-DD.log</code></td>
+                <td>Mensajes generales del servidor.</td>
+            </tr>
+            <tr>
+                <td><code>localhost.YYYY-MM-DD.log</code></td>
+                <td>Mensajes asociados al contexto local.</td>
+            </tr>
+            <tr>
+                <td><code>localhost_access_log.YYYY-MM-DD.txt</code></td>
+                <td>Peticiones HTTP recibidas, si está habilitado el registro de acceso.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        Los nombres y la ubicación de los archivos dependen de la configuración
+        y del mecanismo de instalación.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Consultar los registros en Debian</h4>
+
+        <pre><code># Consultar los archivos de registro
+ls -l /var/log/tomcat10/
+
+# Consultar los últimos mensajes del servicio
+sudo journalctl -u tomcat10 -n 50
+
+# Seguir los mensajes en tiempo real
+sudo journalctl -u tomcat10 -f</code></pre>
+
+        <p>
+            El parámetro <code>-n 50</code> muestra los últimos 50 mensajes.
+            La opción <code>-f</code> permite observar los mensajes que se
+            generan mientras el servicio está funcionando.
+        </p>
+    </div>
+
+    <h2>3. Pruebas funcionales y de rendimiento</h2>
+
+    <h3>3.1. Importancia de las pruebas</h3>
+
+    <p>
+        Una vez desplegada una aplicación, es necesario comprobar que funciona
+        correctamente y que el servidor puede atender las peticiones de los
+        usuarios.
+    </p>
+
+    <p>
+        Las pruebas permiten detectar errores antes de poner una aplicación
+        en producción y comprobar que los cambios de configuración no afectan
+        negativamente al servicio.
+    </p>
+
+    <p>
+        Se pueden distinguir dos grandes grupos:
+    </p>
+
+    <ul>
+        <li>
+            <strong>Pruebas funcionales:</strong> verifican que la aplicación
+            realiza correctamente las operaciones previstas.
+        </li>
+        <li>
+            <strong>Pruebas de rendimiento:</strong> analizan el comportamiento
+            del sistema cuando recibe diferentes cantidades de peticiones.
+        </li>
+    </ul>
+
+    <h3>3.2. Comprobación de disponibilidad</h3>
+
+    <p>
+        La disponibilidad indica si un servicio está operativo y puede atender
+        las peticiones de los usuarios.
+    </p>
+
+    <p>
+        Una primera comprobación consiste en verificar que el servicio está
+        iniciado.
+    </p>
+
+    <pre><code>sudo systemctl status tomcat10</code></pre>
+
+    <p>
+        También se puede comprobar si el servidor está escuchando en el puerto
+        configurado:
+    </p>
+
+    <pre><code>sudo ss -ltnp | grep 8080</code></pre>
+
+    <p>
+        Para realizar una petición HTTP desde la terminal se puede utilizar
+        <code>curl</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Comprobar una respuesta HTTP</h4>
+
+        <pre><code># Consultar únicamente las cabeceras HTTP
+curl -I http://localhost:8080/
+
+# Consultar el código de respuesta
+curl -s -o /dev/null -w "%{http_code}\n" \
+http://localhost:8080/</code></pre>
+
+        <p>
+            El código HTTP permite identificar el resultado de la petición.
+            Algunos códigos habituales son:
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Significado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>200</td>
+                    <td>Petición correcta.</td>
+                </tr>
+                <tr>
+                    <td>301 / 302</td>
+                    <td>Redirección.</td>
+                </tr>
+                <tr>
+                    <td>400</td>
+                    <td>Petición incorrecta.</td>
+                </tr>
+                <tr>
+                    <td>401</td>
+                    <td>Se requiere autenticación.</td>
+                </tr>
+                <tr>
+                    <td>403</td>
+                    <td>Acceso prohibido.</td>
+                </tr>
+                <tr>
+                    <td>404</td>
+                    <td>Recurso no encontrado.</td>
+                </tr>
+                <tr>
+                    <td>500</td>
+                    <td>Error interno del servidor.</td>
+                </tr>
+                <tr>
+                    <td>503</td>
+                    <td>Servicio no disponible.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h3>3.3. Pruebas funcionales</h3>
+
+    <p>
+        Las pruebas funcionales verifican que las diferentes partes de una
+        aplicación responden de acuerdo con los requisitos establecidos.
+    </p>
+
+    <p>
+        En una aplicación web desplegada en Tomcat se pueden comprobar aspectos
+        como:
+    </p>
+
+    <ul>
+        <li>Acceso a la página principal.</li>
+        <li>Navegación entre las diferentes secciones.</li>
+        <li>Funcionamiento de formularios.</li>
+        <li>Autenticación de usuarios.</li>
+        <li>Control de acceso según los roles.</li>
+        <li>Persistencia de los datos.</li>
+        <li>Funcionamiento de las sesiones.</li>
+        <li>Acceso a los recursos estáticos.</li>
+        <li>Comportamiento ante rutas inexistentes.</li>
+    </ul>
+
+    <p>
+        Estas pruebas pueden realizarse manualmente desde un navegador o mediante
+        herramientas automatizadas.
+    </p>
+
+    <h3>3.4. Tiempos de respuesta</h3>
+
+    <p>
+        El tiempo de respuesta es el intervalo que transcurre desde que un cliente
+        realiza una petición hasta que recibe la respuesta del servidor.
+    </p>
+
+    <p>
+        Es uno de los indicadores más importantes para evaluar la experiencia
+        de uso de una aplicación web.
+    </p>
+
+    <p>
+        El tiempo de respuesta puede verse afectado por:
+    </p>
+
+    <ul>
+        <li>La velocidad de procesamiento del servidor.</li>
+        <li>La cantidad de usuarios simultáneos.</li>
+        <li>La complejidad de las operaciones realizadas.</li>
+        <li>Las consultas a bases de datos.</li>
+        <li>La latencia de la red.</li>
+        <li>La cantidad de datos transmitidos.</li>
+        <li>La configuración de Apache y Tomcat.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h4>Medir el tiempo de respuesta con curl</h4>
+
+        <pre><code>curl -s -o /dev/null \
+-w "Código: %{http_code}\nTiempo total: %{time_total}s\n" \
+http://localhost:8080/</code></pre>
+
+        <p>
+            La variable <code>time_total</code> muestra el tiempo total empleado
+            en completar la petición, expresado en segundos.
+        </p>
+
+        <p>
+            Esta medición permite realizar comprobaciones sencillas, aunque no
+            sustituye a una prueba de rendimiento con múltiples peticiones.
+        </p>
+    </div>
+
+    <h3>3.5. Pruebas de carga básicas</h3>
+
+    <p>
+        Una prueba de carga consiste en someter una aplicación a un número
+        determinado de peticiones para observar cómo responde.
+    </p>
+
+    <p>
+        Su objetivo es comprobar si el servidor puede mantener un funcionamiento
+        adecuado cuando aumenta el número de usuarios o peticiones simultáneas.
+    </p>
+
+    <p>
+        Para realizar estas pruebas existen herramientas específicas:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Herramienta</th>
+                <th>Características</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>ApacheBench (ab)</strong></td>
+                <td>Permite generar peticiones HTTP y medir resultados de forma sencilla.</td>
+            </tr>
+            <tr>
+                <td><strong>JMeter</strong></td>
+                <td>Permite diseñar pruebas de carga y simular diferentes usuarios y escenarios.</td>
+            </tr>
+            <tr>
+                <td><strong>wrk</strong></td>
+                <td>Herramienta de línea de comandos para generar carga HTTP.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="ejemplo">
+        <h4>Ejemplo con ApacheBench</h4>
+
+        <p>
+            ApacheBench puede instalarse en Debian mediante:
+        </p>
+
+        <pre><code>sudo apt install apache2-utils</code></pre>
+
+        <p>
+            Una vez instalado, se puede realizar una prueba sencilla:
+        </p>
+
+        <pre><code>ab -n 100 -c 10 http://localhost:8080/</code></pre>
+
+        <p>
+            Los parámetros indican:
+        </p>
+
+        <ul>
+            <li><code>-n 100</code>: realizar un total de 100 peticiones.</li>
+            <li><code>-c 10</code>: mantener hasta 10 peticiones concurrentes.</li>
+        </ul>
+
+        <p>
+            Entre los resultados se pueden analizar:
+        </p>
+
+        <ul>
+            <li>Tiempo total empleado.</li>
+            <li>Peticiones por segundo.</li>
+            <li>Tiempo medio por petición.</li>
+            <li>Porcentaje de peticiones con errores.</li>
+            <li>Distribución de los tiempos de respuesta.</li>
+        </ul>
+    </div>
+
+    <div class="advertencia">
+        <strong>Precaución:</strong>
+        las pruebas de carga deben realizarse únicamente sobre servidores propios
+        o sistemas para los que se tenga autorización. Una prueba mal dimensionada
+        puede consumir todos los recursos disponibles y dejar el servicio sin
+        capacidad para atender a otros usuarios.
+    </div>
+
+    <h3>3.6. Interpretación de los resultados</h3>
+
+    <p>
+        Obtener un número elevado de peticiones por segundo no significa
+        necesariamente que una aplicación tenga un buen rendimiento.
+    </p>
+
+    <p>
+        Es necesario analizar diferentes indicadores de forma conjunta:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Indicador</th>
+                <th>Qué permite evaluar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Peticiones por segundo</td>
+                <td>Capacidad de procesamiento de solicitudes.</td>
+            </tr>
+            <tr>
+                <td>Tiempo medio de respuesta</td>
+                <td>Tiempo habitual necesario para responder.</td>
+            </tr>
+            <tr>
+                <td>Percentiles de latencia</td>
+                <td>Comportamiento de los tiempos de respuesta en diferentes porcentajes de peticiones.</td>
+            </tr>
+            <tr>
+                <td>Errores HTTP</td>
+                <td>Solicitudes que no han finalizado correctamente.</td>
+            </tr>
+            <tr>
+                <td>Uso de CPU</td>
+                <td>Consumo de capacidad de procesamiento.</td>
+            </tr>
+            <tr>
+                <td>Uso de memoria</td>
+                <td>Consumo de memoria del proceso y del sistema.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        Para localizar un problema de rendimiento conviene comparar los resultados
+        de las pruebas con los registros del servidor y con las métricas del
+        sistema operativo.
+    </p>
+
+    <h2>4. Introducción a la virtualización y los contenedores</h2>
+
+    <h3>4.1. Concepto de virtualización</h3>
+
+    <p>
+        La virtualización permite ejecutar entornos informáticos independientes
+        sobre una misma máquina física. De esta forma, los recursos de hardware
+        pueden compartirse entre diferentes sistemas.
+    </p>
+
+    <p>
+        Una máquina virtual simula un equipo completo, incluyendo procesador,
+        memoria, almacenamiento y dispositivos de red. Sobre ella se instala
+        un sistema operativo invitado que funciona de manera independiente
+        del sistema anfitrión.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de virtualización</h4>
+
+        <pre><code>+----------------------------------+
+|          Equipo físico           |
+|                                  |
+|  +----------------------------+  |
+|  | Sistema operativo anfitrión|  |
+|  |                            |  |
+|  |  +----------------------+  |  |
+|  |  | Máquina virtual 1    |  |  |
+|  |  | Debian + Tomcat      |  |  |
+|  |  +----------------------+  |  |
+|  |                            |  |
+|  |  +----------------------+  |  |
+|  |  | Máquina virtual 2    |  |  |
+|  |  | Debian + MariaDB     |  |  |
+|  |  +----------------------+  |  |
+|  +----------------------------+  |
++----------------------------------+</code></pre>
+    </div>
+
+    <p>
+        Herramientas como VirtualBox, VMware o KVM permiten crear y administrar
+        máquinas virtuales.
+    </p>
+
+    <h3>4.2. Contenedores</h3>
+
+    <p>
+        Los contenedores son una tecnología de virtualización a nivel de sistema
+        operativo que permite ejecutar aplicaciones en entornos aislados.
+    </p>
+
+    <p>
+        A diferencia de una máquina virtual tradicional, un contenedor no necesita
+        incluir un sistema operativo completo. Comparte el kernel del sistema
+        anfitrión y utiliza mecanismos de aislamiento para separar los procesos,
+        redes y sistemas de archivos.
+    </p>
+
+    <p>
+        Los contenedores permiten empaquetar una aplicación junto con sus
+        dependencias y configuración para facilitar su despliegue en diferentes
+        entornos.
+    </p>
+
+    <h3>4.3. Diferencias entre máquinas virtuales y contenedores</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Máquina virtual</th>
+                <th>Contenedor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sistema operativo</td>
+                <td>Incluye un sistema operativo invitado.</td>
+                <td>Comparte el kernel del anfitrión.</td>
+            </tr>
+            <tr>
+                <td>Aislamiento</td>
+                <td>A nivel de máquina virtual.</td>
+                <td>A nivel de procesos y recursos.</td>
+            </tr>
+            <tr>
+                <td>Consumo de recursos</td>
+                <td>Generalmente mayor.</td>
+                <td>Generalmente menor.</td>
+            </tr>
+            <tr>
+                <td>Tiempo de inicio</td>
+                <td>Normalmente más elevado.</td>
+                <td>Normalmente más reducido.</td>
+            </tr>
+            <tr>
+                <td>Portabilidad</td>
+                <td>Permite trasladar máquinas virtuales completas.</td>
+                <td>Permite distribuir imágenes de aplicaciones.</td>
+            </tr>
+            <tr>
+                <td>Uso habitual</td>
+                <td>Ejecutar sistemas operativos completos.</td>
+                <td>Desplegar aplicaciones y servicios.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>4.4. Docker</h3>
+
+    <p>
+        Docker es una plataforma que permite crear, distribuir y ejecutar
+        aplicaciones mediante contenedores.
+    </p>
+
+    <p>
+        Sus elementos principales son:
+    </p>
+
+    <ul>
+        <li>
+            <strong>Imagen:</strong> plantilla que contiene los archivos y
+            dependencias necesarios para ejecutar una aplicación.
+        </li>
+        <li>
+            <strong>Contenedor:</strong> instancia en ejecución de una imagen.
+        </li>
+        <li>
+            <strong>Dockerfile:</strong> archivo de instrucciones utilizado
+            para construir una imagen.
+        </li>
+        <li>
+            <strong>Registro:</strong> repositorio desde el que se pueden
+            descargar y distribuir imágenes.
+        </li>
+        <li>
+            <strong>Volumen:</strong> mecanismo para conservar datos fuera del
+            ciclo de vida de un contenedor.
+        </li>
+        <li>
+            <strong>Red:</strong> mecanismo que permite la comunicación entre
+            contenedores y otros equipos.
+        </li>
+    </ul>
+
+    <h3>4.5. Ejecutar Tomcat mediante Docker</h3>
+
+    <p>
+        Una de las ventajas de Docker es que permite desplegar Tomcat sin tener
+        que instalar manualmente Java y el servidor de aplicaciones en el
+        sistema anfitrión.
+    </p>
+
+    <p>
+        Se puede utilizar una imagen oficial de Tomcat disponible en Docker Hub.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo: ejecutar un contenedor Tomcat</h4>
+
+        <pre><code>docker run -d \
+    --name servidor-tomcat \
+    -p 8080:8080 \
+    tomcat:10.1</code></pre>
+
+        <p>
+            En este ejemplo:
+        </p>
+
+        <ul>
+            <li><code>docker run</code> crea e inicia un contenedor.</li>
+            <li><code>-d</code> ejecuta el contenedor en segundo plano.</li>
+            <li><code>--name</code> establece un nombre para el contenedor.</li>
+            <li><code>-p 8080:8080</code> publica el puerto 8080 del contenedor en el anfitrión.</li>
+            <li><code>tomcat:10.1</code> indica la imagen que se utilizará.</li>
+        </ul>
+
+        <p>
+            Después de iniciar el contenedor se puede consultar su estado:
+        </p>
+
+        <pre><code>docker ps</code></pre>
+
+        <p>
+            Y consultar los mensajes generados por Tomcat:
+        </p>
+
+        <pre><code>docker logs servidor-tomcat</code></pre>
+
+        <p>
+            La imagen seleccionada debe contener una aplicación de bienvenida
+            accesible para que la comprobación desde el navegador muestre un
+            resultado útil. La imagen oficial puede variar su contenido y
+            estructura según la etiqueta utilizada.
+        </p>
+    </div>
+
+    <h3>4.6. Desplegar una aplicación WAR en Docker</h3>
+
+    <p>
+        Una aplicación Java empaquetada en formato WAR puede incorporarse a una
+        imagen de Tomcat para que se despliegue al iniciar el contenedor.
+    </p>
+
+    <p>
+        Para ello se puede crear un archivo <code>Dockerfile</code> que utilice
+        una imagen de Tomcat como base y copie el archivo WAR al directorio
+        de aplicaciones.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo de Dockerfile</h4>
+
+        <p>
+            Supongamos que el proyecto genera un archivo
+            <code>aplicacion.war</code>.
+        </p>
+
+        <pre><code>FROM tomcat:10.1
+
+COPY aplicacion.war /usr/local/tomcat/webapps/aplicacion.war</code></pre>
+
+        <p>
+            Para construir la imagen:
+        </p>
+
+        <pre><code>docker build -t mi-aplicacion-tomcat .</code></pre>
+
+        <p>
+            Para crear y ejecutar el contenedor:
+        </p>
+
+        <pre><code>docker run -d \
+    --name mi-aplicacion \
+    -p 8080:8080 \
+    mi-aplicacion-tomcat</code></pre>
+
+        <p>
+            Si el despliegue se realiza correctamente, la aplicación estará
+            disponible en:
+        </p>
+
+        <pre><code>http://localhost:8080/aplicacion/</code></pre>
+
+        <p>
+            Es importante que la versión de Tomcat sea compatible con la
+            aplicación. Por ejemplo, Tomcat 10 utiliza las APIs
+            <code>jakarta.servlet</code>, mientras que aplicaciones antiguas
+            desarrolladas para Tomcat 9 pueden utilizar
+            <code>javax.servlet</code>.
+        </p>
+    </div>
+
+    <h3>4.7. Docker Compose</h3>
+
+    <p>
+        Cuando una aplicación necesita varios servicios, como Tomcat y MariaDB,
+        resulta útil definir toda la infraestructura en un único archivo.
+    </p>
+
+    <p>
+        Docker Compose permite describir y gestionar aplicaciones formadas por
+        varios contenedores mediante un archivo YAML, habitualmente denominado
+        <code>compose.yaml</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Ejemplo: Tomcat y MariaDB con Docker Compose</h4>
+
+        <p>
+            El siguiente ejemplo define dos servicios: un servidor Tomcat y una
+            base de datos MariaDB.
+        </p>
+
+        <pre><code>services:
+
+  tomcat:
+    image: tomcat:10.1
+    container_name: servidor-tomcat
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mariadb
+
+  mariadb:
+    image: mariadb:11
+    container_name: servidor-mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: cambiar_esta_clave
+      MARIADB_DATABASE: aplicacion
+      MARIADB_USER: usuario_app
+      MARIADB_PASSWORD: cambiar_esta_otra_clave
+    volumes:
+      - datos_mariadb:/var/lib/mysql
+
+volumes:
+  datos_mariadb:</code></pre>
+
+        <p>
+            En esta configuración:
+        </p>
+
+        <ul>
+            <li>
+                Se define un servicio llamado <code>tomcat</code> que publica
+                el puerto 8080.
+            </li>
+            <li>
+                Se define un servicio <code>mariadb</code> que crea una base
+                de datos y un usuario inicial.
+            </li>
+            <li>
+                Se utiliza un volumen para conservar los datos de MariaDB.
+            </li>
+            <li>
+                <code>depends_on</code> establece una dependencia de arranque,
+                pero no garantiza por sí sola que MariaDB esté preparada para
+                aceptar conexiones.
+            </li>
+        </ul>
+
+        <p>
+            Para iniciar los servicios:
+        </p>
+
+        <pre><code>docker compose up -d</code></pre>
+
+        <p>
+            Para consultar su estado:
+        </p>
+
+        <pre><code>docker compose ps</code></pre>
+
+        <p>
+            Para consultar los registros:
+        </p>
+
+        <pre><code>docker compose logs</code></pre>
+
+        <p>
+            Para detener y eliminar los contenedores y la red creada por Compose:
+        </p>
+
+        <pre><code>docker compose down</code></pre>
+
+        <p>
+            El volumen de datos no se elimina con el comando anterior. Para
+            eliminar también los volúmenes definidos por Compose se utiliza
+            <code>docker compose down -v</code>, por lo que debe emplearse con
+            precaución.
+        </p>
+    </div>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        las contraseñas del ejemplo son valores de demostración. En un entorno
+        real no deben almacenarse directamente en archivos que se publiquen en
+        repositorios. Es preferible utilizar variables de entorno protegidas,
+        archivos de secretos o mecanismos específicos de gestión de credenciales.
+    </div>
+
+    <h3>4.8. Persistencia de datos y redes en contenedores</h3>
+
+    <p>
+        Los contenedores son entornos que pueden eliminarse y crearse de nuevo.
+        Por este motivo, los datos que deban conservarse no deberían depender
+        exclusivamente del sistema de archivos interno del contenedor.
+    </p>
+
+    <p>
+        Docker proporciona volúmenes que permiten almacenar información de forma
+        independiente del ciclo de vida del contenedor.
+    </p>
+
+    <p>
+        También dispone de redes virtuales que permiten que los contenedores
+        se comuniquen entre sí mediante sus nombres de servicio.
+    </p>
+
+    <div class="ejemplo">
+        <h4>Comunicación entre Tomcat y MariaDB</h4>
+
+        <p>
+            En el ejemplo anterior, Tomcat y MariaDB pertenecen a la misma red
+            creada automáticamente por Docker Compose.
+        </p>
+
+        <p>
+            Por tanto, la aplicación Java puede utilizar el nombre del servicio
+            <code>mariadb</code> como dirección del servidor de base de datos,
+            en lugar de utilizar <code>localhost</code>.
+        </p>
+
+        <p>
+            El puerto interno de MariaDB es el 3306. No es necesario publicar
+            este puerto en el anfitrión para que Tomcat pueda conectarse a él
+            dentro de la red de Compose.
+        </p>
+    </div>
+
+    <h2>5. Ejercicios prácticos</h2>
+
+    <p>
+        Los siguientes ejercicios permiten aplicar los conceptos estudiados
+        en el bloque. Se recomienda documentar las configuraciones realizadas,
+        las pruebas ejecutadas y los resultados obtenidos.
+    </p>
+
+    <h3>Ejercicio 1. Integración de Apache y Tomcat</h3>
+
+    <ol>
+        <li>Comprueba el funcionamiento de Apache HTTP Server y Tomcat.</li>
+        <li>Habilita los módulos necesarios para configurar un proxy inverso.</li>
+        <li>Configura Apache para acceder a una aplicación desplegada en Tomcat.</li>
+        <li>Comprueba el acceso desde un navegador utilizando Apache.</li>
+        <li>Analiza los registros generados por ambos servidores.</li>
+    </ol>
+
+    <h3>Ejercicio 2. Ajustes de Tomcat</h3>
+
+    <ol>
+        <li>Identifica los archivos y directorios de configuración de Tomcat.</li>
+        <li>Consulta los parámetros de ejecución de la JVM.</li>
+        <li>Modifica los parámetros de memoria del servidor.</li>
+        <li>Revisa los parámetros del conector HTTP.</li>
+        <li>Reinicia el servicio y comprueba que continúa funcionando correctamente.</li>
+        <li>Analiza los registros para identificar posibles errores.</li>
+    </ol>
+
+    <h3>Ejercicio 3. Pruebas de funcionamiento y rendimiento</h3>
+
+    <ol>
+        <li>Comprueba la disponibilidad del servidor mediante herramientas de terminal.</li>
+        <li>Realiza diferentes peticiones HTTP a una aplicación desplegada.</li>
+        <li>Mide los tiempos de respuesta.</li>
+        <li>Ejecuta una prueba de carga básica con ApacheBench.</li>
+        <li>Analiza las peticiones por segundo, los tiempos de respuesta y los errores.</li>
+        <li>Compara los resultados de varias ejecuciones.</li>
+    </ol>
+
+    <h3>Ejercicio 4. Despliegue mediante contenedores</h3>
+
+    <ol>
+        <li>Comprueba que Docker está instalado y funcionando.</li>
+        <li>Descarga una imagen de Tomcat.</li>
+        <li>Crea un contenedor y publica el puerto HTTP.</li>
+        <li>Despliega una aplicación WAR en una imagen personalizada.</li>
+        <li>Comprueba el funcionamiento de la aplicación desde el navegador.</li>
+        <li>Consulta los registros y el estado del contenedor.</li>
+    </ol>
+
+    <h3>Ejercicio 5. Infraestructura con Docker Compose</h3>
+
+    <ol>
+        <li>Define una infraestructura con Tomcat y MariaDB mediante Docker Compose.</li>
+        <li>Configura la red y la persistencia de los datos.</li>
+        <li>Comprueba que los servicios se inician correctamente.</li>
+        <li>Verifica la comunicación entre la aplicación y la base de datos.</li>
+        <li>Detén y vuelve a iniciar los servicios.</li>
+        <li>Comprueba que los datos almacenados en MariaDB se conservan.</li>
+    </ol>
+
+    <h2>6. Resumen del bloque</h2>
+
+    <ul>
+        <li>
+            Apache HTTP Server y Tomcat pueden integrarse mediante un proxy
+            inverso para separar la recepción de peticiones de la ejecución
+            de aplicaciones Java.
+        </li>
+        <li>
+            Los módulos <code>mod_proxy</code> y <code>mod_proxy_http</code>
+            permiten configurar el reenvío de peticiones HTTP.
+        </li>
+        <li>
+            Los parámetros de la JVM permiten ajustar la memoria y otros
+            aspectos de la ejecución de Tomcat.
+        </li>
+        <li>
+            La configuración de conectores permite adaptar el servidor al
+            número de conexiones y peticiones simultáneas.
+        </li>
+        <li>
+            Los registros permiten diagnosticar errores y analizar el
+            funcionamiento del servidor.
+        </li>
+        <li>
+            Las pruebas funcionales comprueban que la aplicación realiza
+            correctamente sus operaciones.
+        </li>
+        <li>
+            Las pruebas de carga permiten analizar el rendimiento bajo
+            diferentes niveles de actividad.
+        </li>
+        <li>
+            Las máquinas virtuales proporcionan entornos completos y aislados,
+            mientras que los contenedores permiten ejecutar aplicaciones
+            compartiendo el kernel del sistema anfitrión.
+        </li>
+        <li>
+            Docker facilita la creación, distribución y ejecución de
+            aplicaciones mediante imágenes y contenedores.
+        </li>
+        <li>
+            Docker Compose permite definir y administrar infraestructuras
+            formadas por varios servicios.
+        </li>
+    </ul>
+
+</main>
+
+</body>
+</html>

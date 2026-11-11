@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica final. Administración de servidores de aplicaciones</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Práctica final. Administración de servidores de aplicaciones</h1>
+
+    <h2>1. Objetivo de la práctica</h2>
+
+    <p>
+        El objetivo de esta práctica es desplegar y administrar una infraestructura
+        web basada en Apache HTTP Server y Apache Tomcat, aplicando los conocimientos
+        adquiridos durante la unidad didáctica.
+    </p>
+
+    <p>
+        Se trabajarán la instalación y configuración del servidor de aplicaciones,
+        el despliegue de aplicaciones web, la autenticación y el control de acceso,
+        la gestión de sesiones, la integración de servidores, la optimización,
+        las pruebas de funcionamiento y la virtualización mediante contenedores.
+    </p>
+
+    <p>
+        La práctica debe permitir demostrar que se comprende el funcionamiento
+        de los diferentes componentes de una infraestructura web y que se sabe
+        configurar, desplegar, comprobar y documentar un servicio.
+    </p>
+
+    <h2>2. Descripción del trabajo</h2>
+
+    <h3>Apartado 1. Instalación y configuración de Tomcat</h3>
+
+    <ul>
+        <li>Instala y configura Apache Tomcat en el entorno de trabajo.</li>
+        <li>Comprueba el estado del servicio y su funcionamiento.</li>
+        <li>Identifica los principales directorios y archivos de configuración.</li>
+        <li>Analiza los puertos y parámetros básicos de ejecución.</li>
+        <li>Documenta las características principales de la instalación realizada.</li>
+    </ul>
+
+    <h3>Apartado 2. Despliegue de una aplicación web</h3>
+
+    <ul>
+        <li>Prepara una aplicación web Java para su despliegue.</li>
+        <li>Despliega la aplicación en Tomcat.</li>
+        <li>Comprueba el acceso a sus diferentes recursos.</li>
+        <li>Realiza una actualización o modificación del despliegue.</li>
+        <li>Comprueba el comportamiento de la aplicación después de los cambios.</li>
+    </ul>
+
+    <h3>Apartado 3. Autenticación y control de acceso</h3>
+
+    <ul>
+        <li>Configura un mecanismo de autenticación para proteger determinados recursos.</li>
+        <li>Define usuarios y roles con diferentes niveles de acceso.</li>
+        <li>Establece restricciones de acceso a los recursos de la aplicación.</li>
+        <li>Comprueba el comportamiento con usuarios autorizados y no autorizados.</li>
+        <li>Explica las medidas de seguridad aplicadas.</li>
+    </ul>
+
+    <h3>Apartado 4. Gestión de sesiones</h3>
+
+    <ul>
+        <li>Comprueba el funcionamiento de las sesiones HTTP de la aplicación.</li>
+        <li>Analiza el uso de cookies y del identificador de sesión.</li>
+        <li>Verifica el mantenimiento de la sesión durante la navegación.</li>
+        <li>Comprueba el comportamiento al cerrar sesión o cuando esta caduca.</li>
+        <li>Explica cómo se gestiona la información asociada a cada usuario.</li>
+    </ul>
+
+    <h3>Apartado 5. Integración de Apache HTTP Server y Tomcat</h3>
+
+    <ul>
+        <li>Instala o comprueba el funcionamiento de Apache HTTP Server.</li>
+        <li>Configura la integración entre Apache y Tomcat mediante un proxy inverso.</li>
+        <li>Habilita y utiliza los módulos necesarios.</li>
+        <li>Configura el acceso a la aplicación a través de Apache.</li>
+        <li>Comprueba que las peticiones llegan correctamente a Tomcat.</li>
+        <li>Explica las ventajas de utilizar esta arquitectura.</li>
+    </ul>
+
+    <h3>Apartado 6. Ajustes y optimización</h3>
+
+    <ul>
+        <li>Analiza los parámetros de memoria de la máquina virtual Java.</li>
+        <li>Realiza ajustes en la configuración de ejecución de Tomcat.</li>
+        <li>Revisa los parámetros del conector HTTP.</li>
+        <li>Comprueba el funcionamiento del servidor después de los cambios.</li>
+        <li>Justifica los ajustes realizados y explica su posible efecto sobre el rendimiento.</li>
+    </ul>
+
+    <h3>Apartado 7. Pruebas y análisis del funcionamiento</h3>
+
+    <ul>
+        <li>Realiza pruebas funcionales de la aplicación desplegada.</li>
+        <li>Comprueba su disponibilidad y analiza los códigos de respuesta HTTP.</li>
+        <li>Consulta los registros de Apache y Tomcat.</li>
+        <li>Realiza pruebas básicas de carga sobre la aplicación.</li>
+        <li>Analiza los tiempos de respuesta, las peticiones atendidas y los posibles errores.</li>
+        <li>Explica las conclusiones obtenidas a partir de las pruebas.</li>
+    </ul>
+
+    <h3>Apartado 8. Virtualización y contenedores</h3>
+
+    <ul>
+        <li>Prepara un entorno de despliegue mediante Docker.</li>
+        <li>Ejecuta un contenedor con Tomcat.</li>
+        <li>Despliega una aplicación web en el contenedor.</li>
+        <li>Define una infraestructura de varios servicios mediante Docker Compose.</li>
+        <li>Comprueba la comunicación entre los servicios y la persistencia de los datos cuando corresponda.</li>
+        <li>Explica las diferencias entre utilizar una máquina virtual y utilizar contenedores.</li>
+    </ul>
+
+    <h2>3. Documentación y entrega</h2>
+
+    <p>
+        La única entrega de la práctica será un <strong>documento PDF</strong>
+        que recoja todo el proceso realizado.
+    </p>
+
+    <p>
+        El documento debe incluir, para cada apartado:
+    </p>
+
+    <ul>
+        <li>
+            <strong>Descripción:</strong> explicación del objetivo y de lo que
+            se pretende conseguir.
+        </li>
+        <li>
+            <strong>Procedimiento:</strong> descripción de los pasos realizados,
+            las configuraciones aplicadas y los comandos utilizados cuando
+            corresponda.
+        </li>
+        <li>
+            <strong>Capturas de pantalla:</strong> imágenes que permitan comprobar
+            las instalaciones, configuraciones, despliegues y pruebas realizadas.
+        </li>
+        <li>
+            <strong>Resultados:</strong> explicación de los resultados obtenidos
+            y de las comprobaciones efectuadas.
+        </li>
+        <li>
+            <strong>Conclusiones:</strong> valoración del funcionamiento y de
+            los problemas encontrados, si los hubiera.
+        </li>
+    </ul>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        las capturas deben ser claras, legibles y estar relacionadas con las
+        explicaciones del documento. No es suficiente con incluir imágenes sin
+        indicar qué muestran o qué se pretende demostrar con ellas.
+    </div>
+
+    <h3>Estructura recomendada del PDF</h3>
+
+    <ol>
+        <li>Portada con los datos del alumno y el título de la práctica.</li>
+        <li>Introducción y descripción del entorno utilizado.</li>
+        <li>Desarrollo de los ocho apartados de la práctica.</li>
+        <li>Problemas encontrados y soluciones aplicadas.</li>
+        <li>Conclusiones finales.</li>
+    </ol>
+
+    <h2>4. Requisitos de la entrega</h2>
+
+    <ul>
+        <li>Se entregará un único archivo en formato PDF.</li>
+        <li>El documento debe estar organizado y correctamente redactado.</li>
+        <li>Todas las configuraciones y pruebas deben estar explicadas.</li>
+        <li>Las capturas deben demostrar el trabajo realizado.</li>
+        <li>Se deben utilizar nombres y configuraciones coherentes en los ejemplos.</li>
+        <li>El trabajo debe reflejar la realización práctica de las tareas, no limitarse a una descripción teórica.</li>
+    </ul>
+
+</main>
+
+</body>
+</html>

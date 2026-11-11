@@ -1,0 +1,1065 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloque 1. Arquitectura, configuración y administración de aplicaciones</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Bloque 1. Arquitectura, configuración y administración de aplicaciones</h1>
+
+    <p>
+        Los servidores de aplicaciones permiten ejecutar aplicaciones web y proporcionar
+        servicios que van más allá de la entrega de archivos estáticos. En este bloque
+        se estudia su arquitectura, instalación, configuración y administración,
+        utilizando Apache Tomcat como entorno de referencia.
+    </p>
+
+    <h2>1. Arquitectura y funcionamiento de los servidores de aplicaciones</h2>
+
+    <h3>1.1. ¿Qué es un servidor de aplicaciones?</h3>
+
+    <p>
+        Un servidor de aplicaciones es un software que proporciona un entorno de ejecución
+        para aplicaciones, normalmente accesibles a través de una red. Se encarga de
+        recibir peticiones, ejecutar la lógica de negocio y devolver los resultados
+        correspondientes a los clientes.
+    </p>
+
+    <p>
+        A diferencia de un servidor que únicamente entrega archivos, un servidor de
+        aplicaciones puede ejecutar código, gestionar sesiones, controlar el acceso
+        de los usuarios y comunicarse con otros servicios, como bases de datos.
+    </p>
+
+    <p>Entre sus principales responsabilidades se encuentran:</p>
+
+    <ul>
+        <li>Ejecutar la lógica de las aplicaciones web.</li>
+        <li>Gestionar las peticiones HTTP recibidas.</li>
+        <li>Administrar sesiones y mantener información de los usuarios.</li>
+        <li>Proporcionar mecanismos de autenticación y autorización.</li>
+        <li>Gestionar conexiones con bases de datos y otros servicios.</li>
+        <li>Administrar los recursos necesarios para ejecutar las aplicaciones.</li>
+        <li>Registrar errores y acontecimientos durante la ejecución.</li>
+    </ul>
+
+    <h3>1.2. Diferencias entre servidor web y servidor de aplicaciones</h3>
+
+    <p>
+        Aunque ambos pueden participar en la publicación de aplicaciones web,
+        sus responsabilidades son diferentes.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Servidor web</th>
+                <th>Servidor de aplicaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Función principal</td>
+                <td>Recibir peticiones HTTP y entregar recursos.</td>
+                <td>Ejecutar aplicaciones y lógica de negocio.</td>
+            </tr>
+            <tr>
+                <td>Contenido habitual</td>
+                <td>HTML, CSS, JavaScript e imágenes.</td>
+                <td>Aplicaciones dinámicas y componentes ejecutables.</td>
+            </tr>
+            <tr>
+                <td>Procesamiento</td>
+                <td>Principalmente entrega de recursos estáticos y gestión de peticiones.</td>
+                <td>Ejecución de código y generación de respuestas dinámicas.</td>
+            </tr>
+            <tr>
+                <td>Sesiones</td>
+                <td>Puede gestionar determinadas funciones de sesión mediante módulos.</td>
+                <td>Proporciona mecanismos específicos para administrar sesiones de aplicación.</td>
+            </tr>
+            <tr>
+                <td>Ejemplos</td>
+                <td>Apache HTTP Server, Nginx.</td>
+                <td>Apache Tomcat, WildFly, Payara.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        un servidor web y un servidor de aplicaciones pueden trabajar conjuntamente.
+        El primero puede encargarse de recibir las peticiones externas y el segundo
+        de ejecutar la aplicación que genera las respuestas dinámicas.
+    </div>
+
+    <h3>1.3. Arquitectura de una aplicación web</h3>
+
+    <p>
+        En una arquitectura habitual, el navegador del usuario se comunica con un
+        servidor web, que puede reenviar las peticiones dinámicas al servidor de
+        aplicaciones. Este último ejecuta la aplicación y, cuando es necesario,
+        consulta una base de datos.
+    </p>
+
+    <figure>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Three-Tier_Architecture_Diagram.png/800px-Three-Tier_Architecture_Diagram.png"
+             alt="Diagrama de arquitectura de tres capas">
+        <figcaption>Arquitectura de tres capas: presentación, aplicación y datos.</figcaption>
+    </figure>
+
+    <p>Podemos distinguir tres capas principales:</p>
+
+    <ul>
+        <li>
+            <strong>Capa de presentación:</strong>
+            representa la interfaz con la que interactúa el usuario, normalmente
+            mediante un navegador web.
+        </li>
+        <li>
+            <strong>Capa de aplicación:</strong>
+            ejecuta la lógica de negocio, procesa las peticiones y aplica las reglas
+            de funcionamiento de la aplicación.
+        </li>
+        <li>
+            <strong>Capa de datos:</strong>
+            almacena y proporciona acceso a la información mediante sistemas gestores
+            de bases de datos.
+        </li>
+    </ul>
+
+    <h3>1.4. Funcionamiento de una petición web</h3>
+
+    <p>
+        Cuando un usuario accede a una aplicación web, se produce una secuencia
+        de comunicaciones entre los diferentes componentes.
+    </p>
+
+    <ol>
+        <li>El usuario introduce una dirección en el navegador.</li>
+        <li>El navegador establece una conexión con el servidor web.</li>
+        <li>El servidor web recibe la petición HTTP.</li>
+        <li>Si se trata de una petición dinámica, la reenvía al servidor de aplicaciones.</li>
+        <li>El servidor de aplicaciones ejecuta el componente correspondiente.</li>
+        <li>La aplicación puede consultar o modificar información en una base de datos.</li>
+        <li>El servidor genera una respuesta HTTP.</li>
+        <li>El navegador recibe y representa el resultado.</li>
+    </ol>
+
+    <h3>1.5. Apache Tomcat</h3>
+
+    <p>
+        <strong>Apache Tomcat</strong> es un servidor de aplicaciones de código abierto
+        desarrollado por Apache Software Foundation. Está orientado a ejecutar
+        aplicaciones web Java basadas en las tecnologías Servlet y Jakarta Server Pages
+        (JSP).
+    </p>
+
+    <p>Entre sus características destacan:</p>
+
+    <ul>
+        <li>Implementa las especificaciones Servlet y Jakarta Server Pages.</li>
+        <li>Permite desplegar aplicaciones web empaquetadas en archivos WAR.</li>
+        <li>Incluye un servidor HTTP integrado.</li>
+        <li>Gestiona sesiones de usuario.</li>
+        <li>Permite configurar usuarios, roles y restricciones de acceso.</li>
+        <li>Proporciona herramientas de administración y monitorización.</li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Tomcat no es un servidor Jakarta EE completo.</strong>
+        Proporciona principalmente un contenedor de servlets y JSP. No incorpora
+        todos los servicios empresariales que ofrecen plataformas como WildFly o Payara.
+    </div>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: arquitectura con Apache y Tomcat</h3>
+
+        <p>
+            Una empresa dispone de una aplicación web Java que utiliza una base de datos
+            MariaDB. Para publicar la aplicación utiliza Apache HTTP Server y Tomcat.
+        </p>
+
+        <ul>
+            <li>Apache recibe las conexiones externas por el puerto 80 o 443.</li>
+            <li>Tomcat ejecuta la aplicación Java y escucha en el puerto 8080.</li>
+            <li>MariaDB almacena la información de la aplicación.</li>
+        </ul>
+
+        <p>
+            El navegador accede a Apache, que reenvía las peticiones dinámicas a Tomcat.
+            Tomcat procesa la solicitud y devuelve el resultado.
+        </p>
+    </div>
+
+    <h2>2. Instalación y configuración básica de Tomcat</h2>
+
+    <h3>2.1. Requisitos de instalación</h3>
+
+    <p>
+        Tomcat necesita un entorno de ejecución Java para funcionar. Por tanto,
+        antes de instalarlo es necesario disponer de una versión del JDK o JRE
+        compatible con la versión de Tomcat que se vaya a utilizar.
+    </p>
+
+    <p>Los principales requisitos son:</p>
+
+    <ul>
+        <li>Un sistema operativo compatible, como Debian o Ubuntu.</li>
+        <li>Una versión de Java compatible con Tomcat.</li>
+        <li>Memoria y espacio de almacenamiento suficientes.</li>
+        <li>Permisos adecuados para ejecutar y administrar el servicio.</li>
+    </ul>
+
+    <h3>2.2. Comprobar la instalación de Java</h3>
+
+    <p>
+        Antes de instalar Tomcat podemos comprobar si Java está disponible
+        en el sistema.
+    </p>
+
+    <pre><code>java -version</code></pre>
+
+    <p>
+        El comando muestra la versión de Java instalada. Si el sistema no reconoce
+        el comando, será necesario instalar un entorno Java.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: instalación de Java en Debian</h3>
+
+        <pre><code>sudo apt update
+sudo apt install default-jdk
+
+java -version</code></pre>
+    </div>
+
+    <h3>2.3. Instalación de Apache Tomcat en Debian</h3>
+
+    <p>
+        En Debian se puede instalar Tomcat utilizando los repositorios del sistema.
+        El nombre del paquete depende de la versión disponible en la distribución.
+    </p>
+
+    <pre><code>sudo apt update
+sudo apt install tomcat10</code></pre>
+
+    <p>
+        El paquete instala el servidor y configura su ejecución como servicio
+        del sistema. La versión concreta debe comprobarse en los repositorios
+        utilizados.
+    </p>
+
+    <p>Para consultar el estado del servicio:</p>
+
+    <pre><code>sudo systemctl status tomcat10</code></pre>
+
+    <p>Para iniciar, detener o reiniciar el servicio:</p>
+
+    <pre><code>sudo systemctl start tomcat10
+sudo systemctl stop tomcat10
+sudo systemctl restart tomcat10</code></pre>
+
+    <p>Para configurar el inicio automático:</p>
+
+    <pre><code>sudo systemctl enable tomcat10</code></pre>
+
+    <h3>2.4. Comprobar el funcionamiento</h3>
+
+    <p>
+        Por defecto, Tomcat suele utilizar el puerto TCP 8080 para recibir
+        peticiones HTTP. Una vez iniciado el servicio, podemos acceder desde
+        un navegador a la siguiente dirección:
+    </p>
+
+    <pre><code>http://localhost:8080</code></pre>
+
+    <p>
+        Si el servidor está correctamente instalado y configurado, se mostrará
+        la página de bienvenida de Tomcat.
+    </p>
+
+    <div class="callout">
+        <strong>Comprobación desde otra máquina:</strong>
+        si Tomcat está instalado en una máquina virtual, se debe utilizar
+        la dirección IP de esa máquina y comprobar que el puerto 8080
+        es accesible desde el equipo cliente.
+    </div>
+
+    <h3>2.5. Estructura de directorios</h3>
+
+    <p>
+        Tomcat organiza sus archivos en diferentes directorios, cada uno con
+        una responsabilidad específica. La ubicación exacta depende del método
+        de instalación y de la distribución.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Directorio</th>
+                <th>Función</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>bin/</code></td>
+                <td>Scripts y ejecutables para iniciar, detener y administrar Tomcat.</td>
+            </tr>
+            <tr>
+                <td><code>conf/</code></td>
+                <td>Archivos de configuración del servidor.</td>
+            </tr>
+            <tr>
+                <td><code>lib/</code></td>
+                <td>Bibliotecas compartidas utilizadas por Tomcat.</td>
+            </tr>
+            <tr>
+                <td><code>logs/</code></td>
+                <td>Registros de actividad, errores y acontecimientos.</td>
+            </tr>
+            <tr>
+                <td><code>webapps/</code></td>
+                <td>Directorio habitual de despliegue de aplicaciones web.</td>
+            </tr>
+            <tr>
+                <td><code>work/</code></td>
+                <td>Archivos temporales generados durante la ejecución.</td>
+            </tr>
+            <tr>
+                <td><code>temp/</code></td>
+                <td>Archivos temporales del servidor.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.6. Archivos principales de configuración</h3>
+
+    <p>
+        La configuración de Tomcat se realiza principalmente mediante archivos
+        XML situados en el directorio <code>conf/</code>.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Archivo</th>
+                <th>Función</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>server.xml</code></td>
+                <td>Configuración general del servidor, conectores, puertos y servicios.</td>
+            </tr>
+            <tr>
+                <td><code>web.xml</code></td>
+                <td>Configuración predeterminada de las aplicaciones web.</td>
+            </tr>
+            <tr>
+                <td><code>tomcat-users.xml</code></td>
+                <td>Definición de usuarios y roles de administración de Tomcat.</td>
+            </tr>
+            <tr>
+                <td><code>context.xml</code></td>
+                <td>Configuración de contextos y recursos de las aplicaciones.</td>
+            </tr>
+            <tr>
+                <td><code>logging.properties</code></td>
+                <td>Configuración del sistema de registros.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.7. Configuración de puertos</h3>
+
+    <p>
+        Tomcat utiliza diferentes puertos para ofrecer sus servicios. Estos
+        se configuran habitualmente mediante los conectores definidos en
+        <code>server.xml</code>.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Puerto habitual</th>
+                <th>Servicio</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>8080</td>
+                <td>Conector HTTP para recibir peticiones web.</td>
+            </tr>
+            <tr>
+                <td>8443</td>
+                <td>Conector HTTPS cuando está configurado.</td>
+            </tr>
+            <tr>
+                <td>8005</td>
+                <td>Puerto de apagado local, si está habilitado.</td>
+            </tr>
+            <tr>
+                <td>8009</td>
+                <td>Puerto AJP, si se configura y habilita.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        Los puertos pueden modificarse para evitar conflictos con otros servicios
+        o adaptarse a la arquitectura de red.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: conector HTTP</h3>
+
+        <p>
+            El siguiente fragmento representa un conector HTTP configurado
+            para escuchar en el puerto 8080:
+        </p>
+
+        <pre><code>&lt;Connector
+    port="8080"
+    protocol="HTTP/1.1"
+    connectionTimeout="20000"
+    redirectPort="8443" /&gt;</code></pre>
+    </div>
+
+    <h3>2.8. Bibliotecas compartidas</h3>
+
+    <p>
+        Las bibliotecas contienen clases y componentes que pueden utilizarse
+        durante la ejecución de las aplicaciones.
+    </p>
+
+    <p>En Tomcat podemos distinguir:</p>
+
+    <ul>
+        <li>
+            <strong>Bibliotecas del servidor:</strong>
+            se encuentran en el directorio <code>lib/</code> y proporcionan
+            funcionalidades comunes a Tomcat y a las aplicaciones.
+        </li>
+        <li>
+            <strong>Bibliotecas de una aplicación:</strong>
+            se almacenan normalmente en <code>WEB-INF/lib/</code> dentro
+            de cada aplicación.
+        </li>
+        <li>
+            <strong>Clases propias de una aplicación:</strong>
+            se almacenan en <code>WEB-INF/classes/</code>.
+        </li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Precaución:</strong>
+        no se deben instalar indiscriminadamente bibliotecas de aplicaciones
+        en el directorio global de Tomcat. Una biblioteca compartida puede
+        afectar a varias aplicaciones y provocar incompatibilidades entre versiones.
+    </div>
+
+    <h3>2.9. Registros del servidor</h3>
+
+    <p>
+        Los registros o logs permiten conocer qué sucede durante la ejecución
+        del servidor. Son fundamentales para diagnosticar errores de configuración,
+        problemas de conexión y fallos en las aplicaciones.
+    </p>
+
+    <p>Entre los datos que pueden aparecer en los registros se encuentran:</p>
+
+    <ul>
+        <li>Inicio y parada del servidor.</li>
+        <li>Errores al desplegar aplicaciones.</li>
+        <li>Excepciones producidas durante la ejecución.</li>
+        <li>Problemas de conexión y comunicación.</li>
+        <li>Información sobre el funcionamiento de los componentes.</li>
+    </ul>
+
+    <p>En Debian podemos consultar los registros mediante:</p>
+
+    <pre><code>sudo journalctl -u tomcat10
+sudo journalctl -u tomcat10 -f</code></pre>
+
+    <p>
+        También pueden consultarse los archivos del directorio de registros
+        de Tomcat, cuya ubicación depende de la instalación.
+    </p>
+
+    <h2>3. Administración y despliegue de aplicaciones web</h2>
+
+    <h3>3.1. ¿Qué significa desplegar una aplicación?</h3>
+
+    <p>
+        El despliegue consiste en instalar y configurar una aplicación web
+        en un servidor para que pueda ejecutarse y ser utilizada por los clientes.
+    </p>
+
+    <p>El proceso suele incluir las siguientes operaciones:</p>
+
+    <ol>
+        <li>Preparar y empaquetar la aplicación.</li>
+        <li>Copiar los archivos al servidor.</li>
+        <li>Configurar el contexto y los recursos necesarios.</li>
+        <li>Iniciar o actualizar la aplicación.</li>
+        <li>Comprobar que funciona correctamente.</li>
+    </ol>
+
+    <h3>3.2. Estructura de una aplicación web Java</h3>
+
+    <p>
+        Una aplicación web Java tradicional sigue una estructura de directorios
+        definida por la especificación Servlet.
+    </p>
+
+    <pre><code>mi-aplicacion/
+│
+├── index.html
+├── imagenes/
+│   └── logo.png
+│
+└── WEB-INF/
+    ├── web.xml
+    │
+    ├── classes/
+    │   └── com/
+    │       └── ejemplo/
+    │           └── Controlador.class
+    │
+    └── lib/
+        └── biblioteca.jar</code></pre>
+
+    <p>Los elementos principales son:</p>
+
+    <ul>
+        <li>
+            <strong>Archivos públicos:</strong>
+            HTML, CSS, JavaScript e imágenes accesibles desde el navegador.
+        </li>
+        <li>
+            <strong>WEB-INF:</strong>
+            directorio protegido que contiene elementos internos de la aplicación.
+        </li>
+        <li>
+            <strong>web.xml:</strong>
+            descriptor de despliegue de la aplicación.
+        </li>
+        <li>
+            <strong>classes:</strong>
+            clases Java compiladas.
+        </li>
+        <li>
+            <strong>lib:</strong>
+            bibliotecas externas utilizadas por la aplicación.
+        </li>
+    </ul>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        los archivos situados dentro de <code>WEB-INF</code> no pueden
+        solicitarse directamente desde el navegador. El servidor los utiliza
+        internamente para ejecutar la aplicación.
+    </div>
+
+    <h3>3.3. Archivos WAR</h3>
+
+    <p>
+        WAR (Web Application Archive) es el formato habitual para distribuir
+        y desplegar aplicaciones web Java.
+    </p>
+
+    <p>
+        Un archivo WAR es un paquete comprimido que contiene la estructura
+        de la aplicación, sus clases, bibliotecas y archivos de configuración.
+    </p>
+
+    <p>Entre sus ventajas destacan:</p>
+
+    <ul>
+        <li>Facilita la distribución de aplicaciones.</li>
+        <li>Permite agrupar todos los componentes en un único archivo.</li>
+        <li>Facilita la instalación y actualización.</li>
+        <li>Permite automatizar procesos de despliegue.</li>
+    </ul>
+
+    <h3>3.4. Directorio webapps</h3>
+
+    <p>
+        Tomcat utiliza habitualmente el directorio <code>webapps/</code>
+        como ubicación para desplegar aplicaciones.
+    </p>
+
+    <p>
+        Cuando se copia un archivo WAR en este directorio, Tomcat puede
+        detectar el nuevo paquete y desplegar automáticamente la aplicación,
+        siempre que el despliegue automático esté habilitado.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: despliegue de una aplicación</h3>
+
+        <p>
+            Supongamos que disponemos del archivo <code>tienda.war</code>.
+            Podemos copiarlo al directorio de aplicaciones de Tomcat.
+        </p>
+
+        <pre><code>sudo cp tienda.war /var/lib/tomcat10/webapps/</code></pre>
+
+        <p>
+            Una vez desplegada, normalmente podremos acceder a ella mediante:
+        </p>
+
+        <pre><code>http://localhost:8080/tienda</code></pre>
+
+        <p>
+            La ruta exacta del directorio de despliegue puede variar según
+            la instalación y la distribución.
+        </p>
+    </div>
+
+    <h3>3.5. Actualización de aplicaciones</h3>
+
+    <p>
+        Cuando se publica una nueva versión de una aplicación, es necesario
+        sustituir la versión anterior por la nueva.
+    </p>
+
+    <p>El proceso de actualización puede incluir:</p>
+
+    <ol>
+        <li>Realizar una copia de seguridad de la versión anterior.</li>
+        <li>Preparar el nuevo archivo WAR.</li>
+        <li>Sustituir el archivo anterior.</li>
+        <li>Permitir que Tomcat vuelva a desplegar la aplicación.</li>
+        <li>Comprobar su funcionamiento.</li>
+    </ol>
+
+    <div class="advertencia">
+        <strong>Precaución:</strong>
+        antes de actualizar una aplicación en producción es necesario valorar
+        la compatibilidad de los datos, las dependencias y los cambios en la
+        configuración. Una actualización incorrecta puede provocar interrupciones
+        del servicio.
+    </div>
+
+    <h3>3.6. Retirada de aplicaciones</h3>
+
+    <p>
+        La retirada de una aplicación consiste en eliminarla del servidor
+        cuando deja de ser necesaria.
+    </p>
+
+    <p>
+        Para ello se debe detener o desinstalar correctamente la aplicación
+        y eliminar sus archivos de despliegue, teniendo en cuenta los datos
+        que deban conservarse.
+    </p>
+
+    <p>Por ejemplo, para eliminar un archivo WAR:</p>
+
+    <pre><code>sudo rm /var/lib/tomcat10/webapps/tienda.war</code></pre>
+
+    <p>
+        También se debe comprobar si existe un directorio desplegado asociado
+        y si quedan recursos o configuraciones que deban retirarse.
+    </p>
+
+    <h3>3.7. Administración mediante herramientas gráficas</h3>
+
+    <p>
+        Tomcat dispone de aplicaciones de administración que permiten gestionar
+        el despliegue y el estado de las aplicaciones desde un navegador.
+    </p>
+
+    <p>Entre las herramientas disponibles se encuentran:</p>
+
+    <ul>
+        <li>
+            <strong>Manager App:</strong>
+            permite desplegar, detener, iniciar, recargar y retirar aplicaciones.
+        </li>
+        <li>
+            <strong>Host Manager:</strong>
+            permite administrar hosts virtuales de Tomcat.
+        </li>
+    </ul>
+
+    <p>
+        Estas herramientas requieren configurar usuarios y roles adecuados.
+        Además, su acceso suele estar restringido por motivos de seguridad.
+    </p>
+
+    <h2>4. Componentes web y configuración de aplicaciones</h2>
+
+    <h3>4.1. Servlets</h3>
+
+    <p>
+        Un Servlet es un componente Java que se ejecuta dentro de un contenedor
+        de servlets, como el proporcionado por Tomcat. Su función principal
+        es procesar peticiones y generar respuestas dinámicas.
+    </p>
+
+    <p>
+        Los servlets permiten recibir datos de formularios, consultar bases
+        de datos, validar información y generar contenido para el navegador.
+    </p>
+
+    <p>Su funcionamiento general comprende:</p>
+
+    <ol>
+        <li>El navegador envía una petición HTTP.</li>
+        <li>Tomcat identifica el servlet asociado a la URL solicitada.</li>
+        <li>El contenedor ejecuta el método correspondiente.</li>
+        <li>El servlet procesa la petición.</li>
+        <li>Se genera una respuesta que Tomcat envía al navegador.</li>
+    </ol>
+
+    <h3>4.2. Ciclo de vida de un Servlet</h3>
+
+    <p>
+        El contenedor administra el ciclo de vida de los servlets. Los métodos
+        principales son:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Función</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>init()</code></td>
+                <td>Se ejecuta cuando se inicializa el servlet.</td>
+            </tr>
+            <tr>
+                <td><code>service()</code></td>
+                <td>Procesa las peticiones recibidas.</td>
+            </tr>
+            <tr>
+                <td><code>doGet()</code></td>
+                <td>Gestiona peticiones HTTP GET.</td>
+            </tr>
+            <tr>
+                <td><code>doPost()</code></td>
+                <td>Gestiona peticiones HTTP POST.</td>
+            </tr>
+            <tr>
+                <td><code>destroy()</code></td>
+                <td>Se ejecuta cuando el servlet va a ser retirado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: Servlet básico</h3>
+
+        <p>
+            El siguiente ejemplo muestra un servlet que responde a una petición
+            GET con un mensaje HTML.
+        </p>
+
+        <pre><code>import java.io.IOException;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+@WebServlet("/saludo")
+public class SaludoServlet extends HttpServlet {
+
+    @Override
+    protected void doGet(
+        HttpServletRequest request,
+        HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        response.setContentType("text/html;charset=UTF-8");
+
+        response.getWriter().println(
+            "&lt;h1&gt;Hola desde Tomcat&lt;/h1&gt;"
+        );
+    }
+}</code></pre>
+
+        <p>
+            Si el servlet está correctamente desplegado, se podrá acceder
+            a él mediante una URL similar a:
+        </p>
+
+        <pre><code>http://localhost:8080/mi-aplicacion/saludo</code></pre>
+    </div>
+
+    <h3>4.3. Jakarta Server Pages (JSP)</h3>
+
+    <p>
+        JSP es una tecnología que permite generar contenido dinámico mediante
+        páginas que combinan HTML con elementos procesados en el servidor.
+    </p>
+
+    <p>
+        Cuando Tomcat recibe una petición a una página JSP, transforma su contenido
+        en un servlet y lo ejecuta. El navegador recibe el resultado generado,
+        no el código JSP original.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: página JSP</h3>
+
+        <pre><code>&lt;%@ page contentType="text/html;charset=UTF-8" %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Página JSP&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+    &lt;h1&gt;Aplicación web&lt;/h1&gt;
+
+    &lt;p&gt;Fecha del servidor:&lt;/p&gt;
+
+    &lt;%= new java.util.Date() %&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    </div>
+
+    <h3>4.4. Configuración mediante web.xml</h3>
+
+    <p>
+        El archivo <code>web.xml</code> es el descriptor de despliegue de una
+        aplicación web Java. Permite declarar componentes y establecer
+        diferentes parámetros de configuración.
+    </p>
+
+    <p>Entre sus posibilidades se encuentran:</p>
+
+    <ul>
+        <li>Definir servlets.</li>
+        <li>Asociar servlets con determinadas URL.</li>
+        <li>Establecer páginas de inicio.</li>
+        <li>Configurar parámetros de inicialización.</li>
+        <li>Definir tiempos de espera de las sesiones.</li>
+        <li>Establecer restricciones de seguridad.</li>
+        <li>Definir páginas de error.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: configuración de un Servlet en web.xml</h3>
+
+        <pre><code>&lt;web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         version="6.0"&gt;
+
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;SaludoServlet&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;com.ejemplo.SaludoServlet&lt;/servlet-class&gt;
+    &lt;/servlet&gt;
+
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;SaludoServlet&lt;/servlet-name&gt;
+        &lt;url-pattern&gt;/saludo&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+
+&lt;/web-app&gt;</code></pre>
+
+        <p>
+            En este ejemplo se declara un servlet y se establece que las
+            peticiones a <code>/saludo</code> deben ser atendidas por él.
+        </p>
+    </div>
+
+    <div class="callout">
+        <strong>Nota sobre versiones:</strong>
+        Tomcat 10 y versiones posteriores utilizan el espacio de nombres
+        <code>jakarta.servlet</code>. Las aplicaciones antiguas basadas en
+        Tomcat 9 utilizan <code>javax.servlet</code>. Ambas API no son
+        directamente intercambiables.
+    </div>
+
+    <h3>4.5. Contextos de aplicación</h3>
+
+    <p>
+        Un contexto representa una aplicación web desplegada dentro de Tomcat.
+        Cada aplicación dispone de una ruta de acceso propia, denominada
+        ruta de contexto.
+    </p>
+
+    <p>
+        Por ejemplo, si desplegamos una aplicación llamada <code>tienda</code>,
+        su URL habitual será:
+    </p>
+
+    <pre><code>http://localhost:8080/tienda</code></pre>
+
+    <p>
+        El contexto permite aislar la configuración y los recursos de cada
+        aplicación. También puede utilizarse para establecer parámetros
+        específicos, conexiones a bases de datos y otros recursos.
+    </p>
+
+    <h3>4.6. Recursos de las aplicaciones</h3>
+
+    <p>
+        Las aplicaciones web pueden necesitar recursos externos para funcionar,
+        como conexiones a bases de datos, archivos, bibliotecas o servicios
+        de otros sistemas.
+    </p>
+
+    <p>
+        Tomcat permite configurar recursos mediante diferentes mecanismos.
+        Uno de ellos es JNDI, que proporciona un sistema de nombres para
+        localizar recursos configurados en el servidor.
+    </p>
+
+    <p>Algunos recursos habituales son:</p>
+
+    <ul>
+        <li>Conexiones a bases de datos mediante DataSource.</li>
+        <li>Ficheros de configuración externos.</li>
+        <li>Bibliotecas compartidas.</li>
+        <li>Servicios proporcionados por otros sistemas.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: configuración de un DataSource</h3>
+
+        <p>
+            Una aplicación puede utilizar un recurso JNDI para obtener
+            una conexión a una base de datos sin tener que gestionar
+            directamente todos los parámetros de conexión.
+        </p>
+
+        <pre><code>&lt;Resource
+    name="jdbc/EmpresaDB"
+    auth="Container"
+    type="javax.sql.DataSource"
+    driverClassName="org.mariadb.jdbc.Driver"
+    url="jdbc:mariadb://localhost:3306/empresa"
+    username="aplicacion"
+    password="clave_segura"
+    maxTotal="20"
+    maxIdle="5" /&gt;</code></pre>
+
+        <p>
+            La aplicación puede localizar posteriormente el recurso
+            mediante su nombre JNDI.
+        </p>
+    </div>
+
+    <div class="advertencia">
+        <strong>Seguridad de los recursos:</strong>
+        las credenciales de acceso a bases de datos no deben almacenarse
+        en repositorios públicos ni exponerse en archivos accesibles
+        directamente desde el navegador. En producción deben utilizarse
+        mecanismos adecuados de protección de secretos.
+    </div>
+
+    <h2>5. Ejercicios prácticos de aplicación</h2>
+
+    <h3>Ejercicio 1. Identificación de la arquitectura</h3>
+
+    <p>
+        Analiza una arquitectura formada por un navegador, Apache HTTP Server,
+        Tomcat y MariaDB.
+    </p>
+
+    <ul>
+        <li>Identifica la función de cada componente.</li>
+        <li>Representa gráficamente el recorrido de una petición web.</li>
+        <li>Explica qué componente procesa una petición dinámica.</li>
+        <li>Indica qué sucedería si uno de los servicios deja de funcionar.</li>
+    </ul>
+
+    <h3>Ejercicio 2. Instalación y administración de Tomcat</h3>
+
+    <p>
+        Realiza la instalación de Tomcat en una máquina Debian y comprueba
+        su funcionamiento.
+    </p>
+
+    <ul>
+        <li>Comprueba la versión de Java.</li>
+        <li>Instala e inicia Tomcat.</li>
+        <li>Consulta el estado del servicio.</li>
+        <li>Accede a la página de bienvenida.</li>
+        <li>Localiza los principales directorios y archivos de configuración.</li>
+        <li>Consulta los registros del servidor.</li>
+    </ul>
+
+    <h3>Ejercicio 3. Despliegue de aplicaciones</h3>
+
+    <p>
+        Prepara una aplicación web Java y realiza su despliegue en Tomcat.
+    </p>
+
+    <ul>
+        <li>Identifica la estructura de directorios de la aplicación.</li>
+        <li>Genera un archivo WAR.</li>
+        <li>Despliega la aplicación en Tomcat.</li>
+        <li>Comprueba el acceso desde un navegador.</li>
+        <li>Realiza una actualización de la aplicación.</li>
+        <li>Retira la aplicación del servidor.</li>
+    </ul>
+
+    <h3>Ejercicio 4. Componentes web</h3>
+
+    <p>
+        Desarrolla una pequeña aplicación que incluya una página JSP y un Servlet.
+    </p>
+
+    <ul>
+        <li>Configura el acceso a un Servlet mediante una URL.</li>
+        <li>Genera una respuesta dinámica.</li>
+        <li>Utiliza un archivo <code>web.xml</code> para configurar el componente.</li>
+        <li>Comprueba el funcionamiento de la aplicación.</li>
+        <li>Identifica los archivos que forman parte del despliegue.</li>
+    </ul>
+
+    <hr>
+
+    <h2>6. Resumen del bloque</h2>
+
+    <ul>
+        <li>
+            Un servidor de aplicaciones proporciona un entorno para ejecutar
+            aplicaciones web y gestionar sus servicios.
+        </li>
+        <li>
+            Apache HTTP Server y Apache Tomcat pueden trabajar conjuntamente
+            para atender peticiones web.
+        </li>
+        <li>
+            Tomcat es un contenedor de servlets y JSP que permite ejecutar
+            aplicaciones Java.
+        </li>
+        <li>
+            Los archivos de configuración, las bibliotecas y los registros
+            son elementos fundamentales para administrar el servidor.
+        </li>
+        <li>
+            Los archivos WAR permiten distribuir y desplegar aplicaciones web.
+        </li>
+        <li>
+            Los servlets procesan peticiones HTTP y las páginas JSP generan
+            contenido dinámico.
+        </li>
+        <li>
+            Los contextos permiten organizar las aplicaciones desplegadas
+            y configurar sus recursos.
+        </li>
+    </ul>
+
+</main>
+
+</body>
+</html>
