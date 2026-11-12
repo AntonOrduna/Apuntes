@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica UD4 - Automatización de tareas de administración</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main class="content">
+
+    <h1 class="document-title">Práctica UD4. Automatización de tareas de administración de MariaDB</h1>
+
+    <p>
+        En esta práctica se trabajará con diferentes mecanismos de automatización
+        de un sistema gestor de bases de datos. Se utilizarán procedimientos
+        almacenados, estructuras de control, disparadores, eventos programados
+        y herramientas del sistema operativo Debian.
+    </p>
+
+    <p>
+        El objetivo es desarrollar un conjunto de tareas administrativas
+        automatizadas que permitan mantener, controlar y proteger la información
+        almacenada en MariaDB, reduciendo la necesidad de intervención manual.
+    </p>
+
+    <div class="callout">
+        <strong>Entrega obligatoria</strong>
+        <p>
+            Se entregará un único archivo PDF que documente todo el trabajo
+            realizado. El documento deberá incluir capturas de pantalla
+            de las operaciones, instrucciones utilizadas, resultados obtenidos
+            y explicaciones de los pasos realizados.
+        </p>
+        <p>
+            No se entregarán archivos SQL, scripts Bash ni otros archivos
+            independientes. Todo el trabajo deberá quedar documentado
+            dentro del PDF.
+        </p>
+    </div>
+
+    <h2>1. Preparación del entorno de trabajo</h2>
+
+    <p>
+        Prepara el entorno de prácticas utilizando la máquina virtual Debian
+        con MariaDB instalado y el cliente MySQL Workbench o la consola
+        de MariaDB.
+    </p>
+
+    <p>Realiza las siguientes operaciones:</p>
+
+    <ul>
+        <li>Comprueba que el servicio MariaDB está instalado y funcionando.</li>
+        <li>Accede al servidor mediante un usuario con los permisos necesarios.</li>
+        <li>Crea una base de datos denominada <code>gestion_automatizada</code>.</li>
+        <li>Comprueba que puedes realizar operaciones SQL sobre ella.</li>
+        <li>Prepara las tablas necesarias para los distintos apartados de la práctica.</li>
+    </ul>
+
+    <p>
+        Utiliza una estructura de datos relacionada con una pequeña empresa,
+        tienda o sistema de gestión. Deberás disponer, como mínimo, de una
+        tabla principal de registros que permita realizar inserciones,
+        modificaciones y eliminaciones.
+    </p>
+
+    <h2>2. Procedimientos almacenados y variables</h2>
+
+    <p>
+        Crea procedimientos almacenados que permitan automatizar operaciones
+        habituales sobre la base de datos.
+    </p>
+
+    <h3>2.1. Procedimiento con variables</h3>
+
+    <ul>
+        <li>Define un procedimiento que utilice variables locales.</li>
+        <li>Utiliza <code>DECLARE</code> para declarar las variables.</li>
+        <li>Utiliza <code>SET</code> para asignar valores.</li>
+        <li>Realiza alguna operación de consulta o cálculo con esas variables.</li>
+        <li>Ejecuta el procedimiento mediante <code>CALL</code>.</li>
+    </ul>
+
+    <h3>2.2. Procedimiento con parámetros</h3>
+
+    <ul>
+        <li>Crea un procedimiento que reciba al menos un parámetro de entrada.</li>
+        <li>Realiza una operación sobre la base de datos utilizando ese parámetro.</li>
+        <li>Define otro procedimiento que utilice un parámetro de salida <code>OUT</code>.</li>
+        <li>Ejecuta los procedimientos y comprueba los resultados.</li>
+    </ul>
+
+    <h2>3. Estructuras de control de flujo</h2>
+
+    <p>
+        Amplía los procedimientos anteriores incorporando estructuras
+        que permitan controlar la ejecución de las instrucciones.
+    </p>
+
+    <h3>3.1. Condicionales</h3>
+
+    <ul>
+        <li>Crea un procedimiento que utilice <code>IF</code>, <code>ELSEIF</code> y <code>ELSE</code>.</li>
+        <li>Establece diferentes comportamientos según el valor de una variable o parámetro.</li>
+        <li>Comprueba que se ejecutan correctamente las distintas condiciones.</li>
+    </ul>
+
+    <h3>3.2. Bucles</h3>
+
+    <ul>
+        <li>Desarrolla un procedimiento que utilice un bucle <code>WHILE</code>.</li>
+        <li>Incorpora un ejemplo utilizando <code>REPEAT</code> o <code>LOOP</code>.</li>
+        <li>Utiliza una condición de salida para evitar ejecuciones indefinidas.</li>
+        <li>Comprueba los resultados de las operaciones realizadas.</li>
+    </ul>
+
+    <h3>3.3. Tratamiento de errores</h3>
+
+    <ul>
+        <li>Incorpora un mecanismo básico de tratamiento de errores en un procedimiento.</li>
+        <li>Utiliza un manejador de excepciones mediante <code>DECLARE HANDLER</code>.</li>
+        <li>Provoca una situación de error controlada y comprueba el comportamiento del procedimiento.</li>
+    </ul>
+
+    <h2>4. Disparadores e integridad de la información</h2>
+
+    <p>
+        Implementa automatismos que se ejecuten cuando se realicen operaciones
+        sobre las tablas de la base de datos.
+    </p>
+
+    <h3>4.1. Validación mediante triggers</h3>
+
+    <ul>
+        <li>Crea un trigger <code>BEFORE INSERT</code> que valide los datos antes de insertar un registro.</li>
+        <li>Establece una condición que permita rechazar valores incorrectos.</li>
+        <li>Utiliza <code>SIGNAL</code> para generar un error cuando no se cumpla la condición.</li>
+        <li>Comprueba el funcionamiento con una operación válida y otra que deba ser rechazada.</li>
+    </ul>
+
+    <h3>4.2. Auditoría de modificaciones</h3>
+
+    <ul>
+        <li>Crea una tabla destinada a almacenar el historial de modificaciones.</li>
+        <li>Desarrolla un trigger <code>AFTER UPDATE</code>.</li>
+        <li>Utiliza <code>OLD</code> y <code>NEW</code> para obtener los valores anteriores y nuevos.</li>
+        <li>Registra la fecha de modificación y los datos necesarios para identificar el registro afectado.</li>
+        <li>Realiza varias modificaciones y comprueba los registros generados en el historial.</li>
+    </ul>
+
+    <h3>4.3. Registro de eliminaciones</h3>
+
+    <ul>
+        <li>Crea una tabla para conservar información de los registros eliminados.</li>
+        <li>Desarrolla un trigger asociado al evento <code>DELETE</code>.</li>
+        <li>Utiliza <code>OLD</code> para recuperar los valores del registro eliminado.</li>
+        <li>Comprueba que la información queda almacenada después de ejecutar un <code>DELETE</code>.</li>
+    </ul>
+
+    <h2>5. Eventos programados de MariaDB</h2>
+
+    <p>
+        Configura el planificador de eventos de MariaDB y utiliza
+        <code>CREATE EVENT</code> para automatizar operaciones periódicas.
+    </p>
+
+    <h3>5.1. Activación del planificador</h3>
+
+    <ul>
+        <li>Consulta el valor de la variable <code>event_scheduler</code>.</li>
+        <li>Activa el planificador si se encuentra deshabilitado.</li>
+        <li>Configura su activación permanente en Debian.</li>
+        <li>Reinicia el servicio MariaDB y comprueba que la configuración se mantiene.</li>
+    </ul>
+
+    <h3>5.2. Creación de eventos</h3>
+
+    <ul>
+        <li>Crea un evento de ejecución única mediante <code>ON SCHEDULE AT</code>.</li>
+        <li>Crea un evento periódico utilizando <code>ON SCHEDULE EVERY</code>.</li>
+        <li>Programa una tarea de mantenimiento que realice una operación sobre los datos.</li>
+        <li>Consulta los eventos existentes mediante <code>SHOW EVENTS</code>.</li>
+        <li>Desactiva y vuelve a activar uno de los eventos.</li>
+        <li>Elimina un evento de prueba.</li>
+    </ul>
+
+    <p>
+        Documenta las fechas, intervalos y operaciones que has configurado.
+        Comprueba el funcionamiento de las instrucciones que forman parte
+        de los eventos.
+    </p>
+
+    <h2>6. Automatización mediante cron en Debian</h2>
+
+    <p>
+        Utiliza el planificador <code>cron</code> para ejecutar automáticamente
+        scripts SQL desde el sistema operativo.
+    </p>
+
+    <h3>6.1. Preparación de cron</h3>
+
+    <ul>
+        <li>Comprueba que el servicio <code>cron</code> está instalado y funcionando.</li>
+        <li>Consulta las tareas programadas del usuario.</li>
+        <li>Prepara un archivo SQL con una operación de mantenimiento.</li>
+        <li>Ejecuta el archivo manualmente desde la terminal mediante el cliente <code>mariadb</code>.</li>
+    </ul>
+
+    <h3>6.2. Programación de la tarea</h3>
+
+    <ul>
+        <li>Programa la ejecución del archivo SQL mediante <code>crontab -e</code>.</li>
+        <li>Configura una periodicidad adecuada.</li>
+        <li>Comprueba la entrada creada mediante <code>crontab -l</code>.</li>
+        <li>Verifica la ejecución y los cambios producidos en la base de datos.</li>
+    </ul>
+
+    <h3>6.3. Registro de ejecuciones</h3>
+
+    <ul>
+        <li>Redirige la salida de la tarea a un archivo de registro.</li>
+        <li>Registra los errores que puedan producirse.</li>
+        <li>Consulta los registros del servicio cron.</li>
+        <li>Explica cómo comprobarías si una tarea ha terminado correctamente.</li>
+    </ul>
+
+    <h2>7. Copias de seguridad automatizadas</h2>
+
+    <p>
+        Implementa un sistema de copias de seguridad de una base de datos
+        mediante <code>mariadb-dump</code>.
+    </p>
+
+    <h3>7.1. Copia manual</h3>
+
+    <ul>
+        <li>Genera una copia de seguridad de la base de datos utilizada en la práctica.</li>
+        <li>Guarda el archivo en un directorio específico.</li>
+        <li>Incluye la fecha y hora en el nombre del archivo.</li>
+        <li>Comprueba que el archivo se ha generado correctamente.</li>
+    </ul>
+
+    <h3>7.2. Script de copia de seguridad</h3>
+
+    <ul>
+        <li>Crea un script Bash que realice la copia automáticamente.</li>
+        <li>Utiliza <code>mariadb-dump</code> para exportar la base de datos.</li>
+        <li>Comprime el archivo generado.</li>
+        <li>Registra la fecha y el resultado de la operación.</li>
+        <li>Incorpora un tratamiento básico de errores.</li>
+        <li>Configura el acceso a MariaDB mediante un archivo de credenciales protegido.</li>
+    </ul>
+
+    <h3>7.3. Planificación y restauración</h3>
+
+    <ul>
+        <li>Programa la ejecución periódica del script mediante cron.</li>
+        <li>Comprueba que se genera una nueva copia.</li>
+        <li>Restaura una de las copias en una base de datos independiente de prueba.</li>
+        <li>Comprueba que se han recuperado correctamente las tablas y los datos.</li>
+    </ul>
+
+    <h2>8. Análisis y documentación final</h2>
+
+    <p>
+        Una vez realizadas todas las operaciones, incluye una valoración
+        técnica del sistema de automatización desarrollado.
+    </p>
+
+    <p>En este apartado debes explicar:</p>
+
+    <ul>
+        <li>Qué tareas has automatizado y qué objetivo tiene cada una.</li>
+        <li>Qué operaciones se ejecutan mediante procedimientos, triggers y eventos.</li>
+        <li>Qué tareas se han programado mediante cron.</li>
+        <li>Qué diferencias existen entre el planificador de MariaDB y el del sistema operativo.</li>
+        <li>Cómo se registran los resultados y se detectan los errores.</li>
+        <li>Qué medidas permiten garantizar la integridad de los datos.</li>
+        <li>Por qué es necesario comprobar periódicamente las copias de seguridad.</li>
+    </ul>
+
+    <h2>9. Formato y requisitos de entrega</h2>
+
+    <div class="callout">
+        <strong>Única entrega: documento PDF</strong>
+        <p>
+            Se entregará un único archivo PDF con la documentación completa
+            de la práctica.
+        </p>
+    </div>
+
+    <h3>Contenido obligatorio del PDF</h3>
+
+    <ol>
+        <li><strong>Portada:</strong> título de la práctica, nombre del alumno y fecha.</li>
+        <li><strong>Preparación:</strong> descripción del entorno y base de datos utilizada.</li>
+        <li><strong>Desarrollo:</strong> documentación de todos los apartados de la práctica.</li>
+        <li><strong>Capturas:</strong> evidencias de las instrucciones ejecutadas y de los resultados obtenidos.</li>
+        <li><strong>Explicaciones:</strong> comentarios propios sobre los pasos realizados y el funcionamiento de cada elemento.</li>
+        <li><strong>Conclusiones:</strong> valoración final del trabajo realizado.</li>
+    </ol>
+
+    <h3>Requisitos de las capturas</h3>
+
+    <ul>
+        <li>Las capturas deben mostrar claramente las operaciones realizadas.</li>
+        <li>Se deben incluir tanto las instrucciones ejecutadas como sus resultados.</li>
+        <li>Las imágenes deben ser legibles y tener un tamaño adecuado.</li>
+        <li>Cada captura debe ir acompañada de una explicación de lo que se está realizando.</li>
+        <li>No es suficiente con incluir capturas sin comentarios.</li>
+        <li>Cuando una operación produzca un error, debe documentarse y explicarse su causa o resolución.</li>
+    </ul>
+
+    <h3>Nombre del archivo</h3>
+
+    <pre><code>UD4_Apellidos_Nombre.pdf</code></pre>
+
+    <h2>10. Consideraciones finales</h2>
+
+    <ul>
+        <li>Todos los apartados deben estar realizados y documentados.</li>
+        <li>Las operaciones deben ejecutarse realmente en el entorno de prácticas.</li>
+        <li>Los resultados mostrados en las capturas deben corresponder con las instrucciones explicadas.</li>
+        <li>Se valorará especialmente que las explicaciones demuestren comprensión del funcionamiento de cada mecanismo de automatización.</li>
+        <li>La presentación, organización y legibilidad del PDF forman parte de la evaluación.</li>
+    </ul>
+
+</main>
+
+</body>
+</html>

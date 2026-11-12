@@ -1,0 +1,1299 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloque 4. Planificación y ejecución automática de tareas</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main class="content">
+
+    <h1 class="document-title">Bloque 4. Planificación y ejecución automática de tareas</h1>
+
+    <p>
+        La administración de un sistema gestor de bases de datos incluye
+        numerosas operaciones que deben realizarse de forma periódica:
+        copias de seguridad, mantenimiento, limpieza de información,
+        comprobaciones de integridad y generación de informes.
+    </p>
+
+    <p>
+        Para evitar tener que ejecutar manualmente estas operaciones,
+        podemos utilizar herramientas de planificación que permitan
+        programar su ejecución en determinados momentos o intervalos.
+    </p>
+
+    <div class="callout">
+        <strong>Objetivos del bloque</strong>
+        <ul>
+            <li>Comprender la importancia de planificar tareas administrativas.</li>
+            <li>Conocer el planificador de eventos integrado en MariaDB.</li>
+            <li>Crear eventos programados mediante <code>CREATE EVENT</code>.</li>
+            <li>Utilizar <code>cron</code> en Debian para ejecutar scripts SQL.</li>
+            <li>Automatizar copias de seguridad con <code>mariadb-dump</code>.</li>
+            <li>Registrar resultados y gestionar errores en tareas automatizadas.</li>
+        </ul>
+    </div>
+
+    <h2>1. Planificación de tareas administrativas</h2>
+
+    <p>
+        La planificación de tareas consiste en establecer cuándo y con qué
+        frecuencia deben ejecutarse determinadas operaciones de administración.
+        Una tarea puede ejecutarse una única vez, repetirse periódicamente
+        o activarse en función de un calendario.
+    </p>
+
+    <h3>1.1. ¿Qué tareas se pueden automatizar?</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tarea</th>
+                <th>Descripción</th>
+                <th>Periodicidad habitual</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Copias de seguridad</td>
+                <td>Generar copias de las bases de datos.</td>
+                <td>Diaria o semanal.</td>
+            </tr>
+            <tr>
+                <td>Limpieza de registros</td>
+                <td>Eliminar información temporal o caducada.</td>
+                <td>Diaria o mensual.</td>
+            </tr>
+            <tr>
+                <td>Generación de informes</td>
+                <td>Obtener estadísticas o resúmenes.</td>
+                <td>Diaria, semanal o mensual.</td>
+            </tr>
+            <tr>
+                <td>Comprobaciones</td>
+                <td>Verificar condiciones de integridad o disponibilidad.</td>
+                <td>Periódica.</td>
+            </tr>
+            <tr>
+                <td>Mantenimiento</td>
+                <td>Ejecutar operaciones de mantenimiento de las tablas.</td>
+                <td>Según necesidades.</td>
+            </tr>
+            <tr>
+                <td>Archivado</td>
+                <td>Trasladar información antigua a tablas históricas.</td>
+                <td>Mensual o anual.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>1.2. Ventajas de la planificación</h3>
+
+    <ul>
+        <li><strong>Reducción de tareas manuales:</strong> evita que el administrador tenga que iniciar cada operación.</li>
+        <li><strong>Regularidad:</strong> las tareas se ejecutan siguiendo una planificación establecida.</li>
+        <li><strong>Menor riesgo de olvidos:</strong> las operaciones periódicas no dependen de que una persona las recuerde.</li>
+        <li><strong>Mejor organización:</strong> permite distribuir las operaciones en horarios de menor actividad.</li>
+        <li><strong>Trazabilidad:</strong> facilita registrar cuándo se ejecutó una tarea y cuál fue su resultado.</li>
+    </ul>
+
+    <div class="callout">
+        <strong>Importante</strong>
+        <p>
+            Automatizar una tarea no significa olvidarse de ella. Es necesario
+            comprobar periódicamente que se ejecuta correctamente, que los
+            resultados son válidos y que existen recursos suficientes para
+            almacenar los datos generados.
+        </p>
+    </div>
+
+    <h2>2. Herramientas de planificación</h2>
+
+    <p>
+        Las tareas administrativas pueden planificarse desde diferentes
+        niveles del sistema:
+    </p>
+
+    <h3>2.1. Planificador integrado en MariaDB</h3>
+
+    <p>
+        MariaDB dispone de un planificador de eventos que permite ejecutar
+        instrucciones SQL automáticamente en fechas o intervalos determinados.
+    </p>
+
+    <p>
+        Los eventos se almacenan en el propio servidor y se ejecutan cuando
+        se cumple la planificación definida.
+    </p>
+
+    <p>Es adecuado para automatizar operaciones como:</p>
+
+    <ul>
+        <li>Eliminar registros antiguos.</li>
+        <li>Actualizar datos de mantenimiento.</li>
+        <li>Generar resúmenes estadísticos.</li>
+        <li>Ejecutar procedimientos almacenados.</li>
+        <li>Actualizar información de tablas relacionadas.</li>
+    </ul>
+
+    <h3>2.2. Planificador del sistema operativo</h3>
+
+    <p>
+        Debian dispone de herramientas externas para programar tareas.
+        Una de las más utilizadas es <code>cron</code>.
+    </p>
+
+    <p>
+        A diferencia de los eventos de MariaDB, <code>cron</code> permite
+        ejecutar comandos del sistema operativo. Por ejemplo:
+    </p>
+
+    <ul>
+        <li>Ejecutar archivos SQL mediante el cliente de MariaDB.</li>
+        <li>Generar copias de seguridad con <code>mariadb-dump</code>.</li>
+        <li>Comprimir y organizar archivos.</li>
+        <li>Copiar copias de seguridad a otros directorios o servidores.</li>
+        <li>Ejecutar scripts de mantenimiento escritos en Bash.</li>
+    </ul>
+
+    <h3>2.3. Comparación</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Eventos MariaDB</th>
+                <th>cron (Debian)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Ámbito</td>
+                <td>Servidor de bases de datos.</td>
+                <td>Sistema operativo.</td>
+            </tr>
+            <tr>
+                <td>Ejecuta SQL</td>
+                <td>Directamente.</td>
+                <td>Mediante el cliente MariaDB.</td>
+            </tr>
+            <tr>
+                <td>Ejecuta comandos del sistema</td>
+                <td>No directamente.</td>
+                <td>Sí.</td>
+            </tr>
+            <tr>
+                <td>Copias con mariadb-dump</td>
+                <td>No es su función habitual.</td>
+                <td>Sí.</td>
+            </tr>
+            <tr>
+                <td>Dependencia principal</td>
+                <td>Planificador de eventos activo en MariaDB.</td>
+                <td>Servicio cron activo en Debian.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>3. Eventos programados de MariaDB</h2>
+
+    <p>
+        Un evento programado es un objeto de la base de datos que permite
+        ejecutar una o varias instrucciones SQL automáticamente en un
+        momento determinado.
+    </p>
+
+    <p>
+        Para crear eventos se utiliza la instrucción <code>CREATE EVENT</code>.
+    </p>
+
+    <h3>3.1. Comprobar el planificador de eventos</h3>
+
+    <p>
+        Antes de crear eventos debemos comprobar si el planificador está
+        activado.
+    </p>
+
+    <pre><code>SHOW VARIABLES LIKE 'event_scheduler';</code></pre>
+
+    <p>
+        El resultado puede mostrar alguno de estos valores:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Valor</th>
+                <th>Significado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ON</td>
+                <td>El planificador está activado.</td>
+            </tr>
+            <tr>
+                <td>OFF</td>
+                <td>El planificador está desactivado.</td>
+            </tr>
+            <tr>
+                <td>DISABLED</td>
+                <td>El planificador no está disponible porque se ha deshabilitado en la configuración del servidor.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>3.2. Activar el planificador</h3>
+
+    <p>
+        Si el planificador está desactivado, un usuario con los privilegios
+        necesarios puede activarlo mediante:
+    </p>
+
+    <pre><code>SET GLOBAL event_scheduler = ON;</code></pre>
+
+    <p>
+        Esta modificación afecta al funcionamiento actual del servidor.
+        Para comprobar el resultado:
+    </p>
+
+    <pre><code>SHOW VARIABLES LIKE 'event_scheduler';</code></pre>
+
+    <div class="advertencia">
+        <strong>Persistencia de la configuración</strong>
+        <p>
+            La instrucción <code>SET GLOBAL</code> modifica el valor en
+            ejecución, pero no garantiza que se conserve después de reiniciar
+            MariaDB.
+        </p>
+        <p>
+            Para mantenerlo activado, hay que configurar el servidor en Debian.
+        </p>
+    </div>
+
+    <h3>3.3. Configuración permanente en Debian</h3>
+
+    <p>
+        En Debian, la configuración de MariaDB suele organizarse mediante
+        archivos situados en:
+    </p>
+
+    <pre><code>/etc/mysql/mariadb.conf.d/</code></pre>
+
+    <p>
+        Podemos crear un archivo específico para la configuración del
+        planificador:
+    </p>
+
+    <pre><code>sudo nano /etc/mysql/mariadb.conf.d/60-event-scheduler.cnf</code></pre>
+
+    <p>Introducimos el siguiente contenido:</p>
+
+    <pre><code>[mariadbd]
+event_scheduler = ON</code></pre>
+
+    <p>
+        Guardamos el archivo y reiniciamos el servicio:
+    </p>
+
+    <pre><code>sudo systemctl restart mariadb</code></pre>
+
+    <p>Comprobamos el estado:</p>
+
+    <pre><code>sudo systemctl status mariadb</code></pre>
+
+    <p>Y verificamos desde MariaDB:</p>
+
+    <pre><code>SHOW VARIABLES LIKE 'event_scheduler';</code></pre>
+
+    <h2>4. Creación de eventos mediante CREATE EVENT</h2>
+
+    <h3>4.1. Sintaxis general</h3>
+
+    <pre><code>CREATE EVENT nombre_evento
+ON SCHEDULE planificación
+DO
+    instrucción_sql;</code></pre>
+
+    <p>Los elementos principales son:</p>
+
+    <ul>
+        <li><code>CREATE EVENT</code>: crea el evento programado.</li>
+        <li><code>nombre_evento</code>: identifica el evento.</li>
+        <li><code>ON SCHEDULE</code>: establece cuándo debe ejecutarse.</li>
+        <li><code>DO</code>: indica las instrucciones que se ejecutarán.</li>
+    </ul>
+
+    <h3>4.2. Evento de ejecución única: AT</h3>
+
+    <p>
+        La cláusula <code>AT</code> permite programar una tarea para una
+        fecha y hora determinadas.
+    </p>
+
+    <pre><code>CREATE EVENT ev_limpieza_unica
+ON SCHEDULE AT '2026-12-01 02:00:00'
+DO
+    DELETE FROM registros_temporales
+    WHERE fecha &lt; CURRENT_DATE - INTERVAL 30 DAY;</code></pre>
+
+    <p>
+        Este evento se ejecutará una sola vez en la fecha y hora indicadas,
+        siempre que el planificador esté activo y el evento esté habilitado.
+    </p>
+
+    <h3>4.3. Evento periódico: EVERY</h3>
+
+    <p>
+        La cláusula <code>EVERY</code> permite establecer un intervalo
+        de repetición.
+    </p>
+
+    <p>Por ejemplo, para ejecutar una tarea cada día:</p>
+
+    <pre><code>CREATE EVENT ev_limpieza_diaria
+ON SCHEDULE EVERY 1 DAY
+DO
+    DELETE FROM registros_temporales
+    WHERE fecha &lt; CURRENT_DATE - INTERVAL 30 DAY;</code></pre>
+
+    <p>También podemos utilizar otros intervalos:</p>
+
+    <pre><code>-- Cada hora
+ON SCHEDULE EVERY 1 HOUR
+
+-- Cada 15 minutos
+ON SCHEDULE EVERY 15 MINUTE
+
+-- Cada semana
+ON SCHEDULE EVERY 1 WEEK
+
+-- Cada mes
+ON SCHEDULE EVERY 1 MONTH</code></pre>
+
+    <h3>4.4. Definir el inicio y el final de un evento</h3>
+
+    <p>
+        Podemos establecer cuándo comienza la planificación y cuándo
+        debe dejar de repetirse mediante <code>STARTS</code> y <code>ENDS</code>.
+    </p>
+
+    <pre><code>CREATE EVENT ev_informe_periodico
+ON SCHEDULE EVERY 1 DAY
+STARTS CURRENT_TIMESTAMP + INTERVAL 1 DAY
+ENDS CURRENT_TIMESTAMP + INTERVAL 30 DAY
+DO
+    INSERT INTO informes (fecha_generacion, descripcion)
+    VALUES (NOW(), 'Informe diario generado');</code></pre>
+
+    <p>
+        En este ejemplo, el evento se ejecutará diariamente durante el
+        periodo comprendido entre las fechas de inicio y finalización.
+    </p>
+
+    <h3>4.5. Crear un evento con varias instrucciones</h3>
+
+    <p>
+        Cuando necesitamos ejecutar varias instrucciones, podemos utilizar
+        un bloque <code>BEGIN ... END</code>.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE EVENT ev_actualizar_resumen
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    UPDATE productos
+    SET stock = 0
+    WHERE stock &lt; 0;
+
+    INSERT INTO registro_tareas (
+        tarea,
+        fecha_ejecucion
+    )
+    VALUES (
+        'Actualización de productos',
+        NOW()
+    );
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>
+        El ejemplo presupone que existe la tabla <code>registro_tareas</code>.
+        El evento ejecuta ambas instrucciones en cada activación.
+    </p>
+
+    <h2>5. Gestión de eventos programados</h2>
+
+    <h3>5.1. Consultar los eventos existentes</h3>
+
+    <pre><code>SHOW EVENTS;</code></pre>
+
+    <p>También podemos consultar la definición de un evento concreto:</p>
+
+    <pre><code>SHOW CREATE EVENT ev_limpieza_diaria;</code></pre>
+
+    <h3>5.2. Desactivar temporalmente un evento</h3>
+
+    <p>
+        Si queremos impedir que un evento se ejecute sin eliminarlo,
+        podemos desactivarlo:
+    </p>
+
+    <pre><code>ALTER EVENT ev_limpieza_diaria DISABLE;</code></pre>
+
+    <h3>5.3. Activar un evento</h3>
+
+    <pre><code>ALTER EVENT ev_limpieza_diaria ENABLE;</code></pre>
+
+    <h3>5.4. Eliminar un evento</h3>
+
+    <pre><code>DROP EVENT IF EXISTS ev_limpieza_diaria;</code></pre>
+
+    <h3>5.5. Consultar la tabla de eventos</h3>
+
+    <p>
+        Los eventos se almacenan en el esquema del sistema
+        <code>mysql</code>. También pueden consultarse mediante:
+    </p>
+
+    <pre><code>SELECT
+    EVENT_NAME,
+    EVENT_TYPE,
+    STATUS,
+    INTERVAL_VALUE,
+    INTERVAL_FIELD,
+    STARTS,
+    ENDS
+FROM information_schema.EVENTS
+WHERE EVENT_SCHEMA = 'tienda';</code></pre>
+
+    <h2>6. Ejemplo completo: limpieza automática de registros</h2>
+
+    <p>
+        Vamos a crear una tabla que almacene registros temporales y un evento
+        que elimine automáticamente aquellos que tengan más de 30 días.
+    </p>
+
+    <h3>6.1. Crear la tabla</h3>
+
+    <pre><code>CREATE DATABASE IF NOT EXISTS mantenimiento;
+USE mantenimiento;
+
+CREATE TABLE registros_temporales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    descripcion VARCHAR(200),
+    fecha DATETIME NOT NULL
+);</code></pre>
+
+    <h3>6.2. Insertar datos de prueba</h3>
+
+    <pre><code>INSERT INTO registros_temporales (descripcion, fecha)
+VALUES
+('Registro antiguo 1', NOW() - INTERVAL 45 DAY),
+('Registro antiguo 2', NOW() - INTERVAL 60 DAY),
+('Registro reciente 1', NOW() - INTERVAL 5 DAY),
+('Registro reciente 2', NOW());</code></pre>
+
+    <p>Comprobamos los registros existentes:</p>
+
+    <pre><code>SELECT *
+FROM registros_temporales;</code></pre>
+
+    <h3>6.3. Crear un evento periódico</h3>
+
+    <pre><code>DELIMITER //
+
+CREATE EVENT ev_limpieza_registros
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    DELETE FROM registros_temporales
+    WHERE fecha &lt; NOW() - INTERVAL 30 DAY;
+END//
+
+DELIMITER ;</code></pre>
+
+    <h3>6.4. Comprobar el evento</h3>
+
+    <pre><code>SHOW EVENTS FROM mantenimiento;</code></pre>
+
+    <p>
+        El evento está programado para ejecutarse diariamente. Para comprobar
+        inmediatamente la lógica de limpieza, podemos ejecutar manualmente
+        la misma instrucción:
+    </p>
+
+    <pre><code>DELETE FROM registros_temporales
+WHERE fecha &lt; NOW() - INTERVAL 30 DAY;
+
+SELECT *
+FROM registros_temporales;</code></pre>
+
+    <div class="callout">
+        <strong>Importante</strong>
+        <p>
+            Ejecutar manualmente la instrucción permite comprobar su resultado,
+            pero no equivale a comprobar que el planificador ejecuta el evento.
+            Para verificar la planificación hay que consultar su estado y
+            comprobar su ejecución cuando llegue el momento programado.
+        </p>
+    </div>
+
+    <h2>7. Automatización mediante cron en Debian</h2>
+
+    <p>
+        Los eventos de MariaDB son útiles para ejecutar instrucciones SQL
+        dentro del servidor. Sin embargo, algunas tareas requieren ejecutar
+        comandos del sistema operativo.
+    </p>
+
+    <p>
+        Para estas operaciones podemos utilizar <strong>cron</strong>,
+        un servicio de Debian que permite programar comandos para que se
+        ejecuten automáticamente en fechas y horas determinadas.
+    </p>
+
+    <h3>7.1. Comprobar el servicio cron</h3>
+
+    <p>Comprobamos si está instalado:</p>
+
+    <pre><code>dpkg -l cron</code></pre>
+
+    <p>Si no está instalado:</p>
+
+    <pre><code>sudo apt update
+sudo apt install cron</code></pre>
+
+    <p>Comprobamos su estado:</p>
+
+    <pre><code>sudo systemctl status cron</code></pre>
+
+    <p>Si fuese necesario, lo activamos:</p>
+
+    <pre><code>sudo systemctl enable --now cron</code></pre>
+
+    <h3>7.2. Programar tareas con crontab</h3>
+
+    <p>
+        Cada usuario puede disponer de su propia lista de tareas programadas.
+        Para editarla utilizamos:
+    </p>
+
+    <pre><code>crontab -e</code></pre>
+
+    <p>
+        Para consultar las tareas programadas:
+    </p>
+
+    <pre><code>crontab -l</code></pre>
+
+    <p>
+        Las tareas se definen mediante una expresión formada por cinco campos
+        temporales y el comando que se desea ejecutar.
+    </p>
+
+    <h3>7.3. Estructura de una tarea cron</h3>
+
+    <pre><code>MINUTO HORA DIA_MES MES DIA_SEMANA COMANDO</code></pre>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Campo</th>
+                <th>Valores habituales</th>
+                <th>Significado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Minuto</td>
+                <td>0-59</td>
+                <td>Minuto de ejecución.</td>
+            </tr>
+            <tr>
+                <td>Hora</td>
+                <td>0-23</td>
+                <td>Hora de ejecución.</td>
+            </tr>
+            <tr>
+                <td>Día del mes</td>
+                <td>1-31</td>
+                <td>Día del mes.</td>
+            </tr>
+            <tr>
+                <td>Mes</td>
+                <td>1-12</td>
+                <td>Mes del año.</td>
+            </tr>
+            <tr>
+                <td>Día de la semana</td>
+                <td>0-7</td>
+                <td>Día de la semana. El domingo puede representarse con 0 o 7.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>Algunos operadores importantes:</p>
+
+    <ul>
+        <li><code>*</code>: cualquier valor del campo.</li>
+        <li><code>,</code>: permite indicar varios valores.</li>
+        <li><code>-</code>: indica un intervalo de valores.</li>
+        <li><code>/</code>: establece intervalos de repetición.</li>
+    </ul>
+
+    <h3>7.4. Ejemplos de planificación</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Expresión</th>
+                <th>Significado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>0 2 * * *</code></td>
+                <td>Todos los días a las 02:00.</td>
+            </tr>
+            <tr>
+                <td><code>30 3 * * 1</code></td>
+                <td>Todos los lunes a las 03:30.</td>
+            </tr>
+            <tr>
+                <td><code>0 1 1 * *</code></td>
+                <td>El día 1 de cada mes a la 01:00.</td>
+            </tr>
+            <tr>
+                <td><code>*/15 * * * *</code></td>
+                <td>Cada 15 minutos.</td>
+            </tr>
+            <tr>
+                <td><code>0 8-18 * * 1-5</code></td>
+                <td>Cada hora en punto, de 8:00 a 18:00, de lunes a viernes.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>8. Ejecutar scripts SQL desde cron</h2>
+
+    <p>
+        Para ejecutar un archivo SQL de forma automática podemos utilizar
+        el cliente de MariaDB desde la terminal de Debian.
+    </p>
+
+    <h3>8.1. Crear un archivo SQL</h3>
+
+    <p>
+        Vamos a crear un archivo que contenga instrucciones para realizar
+        una tarea administrativa.
+    </p>
+
+    <pre><code>mkdir -p ~/scripts
+nano ~/scripts/mantenimiento.sql</code></pre>
+
+    <p>Introducimos el siguiente contenido:</p>
+
+    <pre><code>USE mantenimiento;
+
+DELETE FROM registros_temporales
+WHERE fecha &lt; NOW() - INTERVAL 30 DAY;
+
+INSERT INTO registro_tareas (tarea, fecha_ejecucion)
+VALUES ('Limpieza automática', NOW());</code></pre>
+
+    <p>
+        El ejemplo presupone que existe la tabla
+        <code>registro_tareas</code>. Podemos crearla previamente:
+    </p>
+
+    <pre><code>CREATE TABLE registro_tareas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tarea VARCHAR(150) NOT NULL,
+    fecha_ejecucion DATETIME NOT NULL
+);</code></pre>
+
+    <h3>8.2. Ejecutar el script manualmente</h3>
+
+    <p>
+        Antes de programar su ejecución, debemos comprobar que funciona
+        correctamente.
+    </p>
+
+    <pre><code>mariadb -u usuario_admin -p &lt; ~/scripts/mantenimiento.sql</code></pre>
+
+    <p>
+        El parámetro <code>-u</code> indica el usuario de MariaDB y
+        <code>-p</code> solicita su contraseña.
+    </p>
+
+    <p>
+        También podemos ejecutar un archivo SQL desde una sesión interactiva:
+    </p>
+
+    <pre><code>SOURCE /home/usuario/scripts/mantenimiento.sql;</code></pre>
+
+    <h3>8.3. Programar su ejecución</h3>
+
+    <p>
+        Editamos el crontab del usuario que ejecutará la tarea:
+    </p>
+
+    <pre><code>crontab -e</code></pre>
+
+    <p>
+        Añadimos una línea para ejecutar el script todos los días a las 02:00:
+    </p>
+
+    <pre><code>0 2 * * * /usr/bin/mariadb -u usuario_admin -p'CLAVE' &lt; /home/usuario/scripts/mantenimiento.sql</code></pre>
+
+    <div class="advertencia">
+        <strong>Seguridad de las credenciales</strong>
+        <p>
+            No es recomendable escribir contraseñas directamente en el
+            crontab, porque pueden quedar expuestas al consultar la
+            configuración del usuario.
+        </p>
+        <p>
+            Una alternativa es utilizar un archivo de configuración
+            protegido, por ejemplo <code>~/.my.cnf</code>, con permisos
+            restrictivos.
+        </p>
+    </div>
+
+    <h3>8.4. Utilizar un archivo de configuración de MariaDB</h3>
+
+    <p>
+        Podemos crear un archivo de configuración para que el cliente
+        MariaDB obtenga las credenciales sin tener que incluirlas
+        directamente en el comando.
+    </p>
+
+    <pre><code>nano ~/.my.cnf</code></pre>
+
+    <p>Contenido:</p>
+
+    <pre><code>[client]
+user=usuario_admin
+password=CLAVE
+host=localhost</code></pre>
+
+    <p>
+        Protegemos el archivo para que solo el propietario pueda leerlo:
+    </p>
+
+    <pre><code>chmod 600 ~/.my.cnf</code></pre>
+
+    <p>
+        Ahora podemos ejecutar el script sin incluir las credenciales:
+    </p>
+
+    <pre><code>mariadb &lt; /home/usuario/scripts/mantenimiento.sql</code></pre>
+
+    <p>
+        La entrada de cron quedaría de la siguiente manera:
+    </p>
+
+    <pre><code>0 2 * * * /usr/bin/mariadb &lt; /home/usuario/scripts/mantenimiento.sql</code></pre>
+
+    <p>
+        El usuario de Debian que ejecuta cron debe tener acceso al archivo
+        de configuración y utilizar una cuenta de MariaDB con los privilegios
+        mínimos necesarios.
+    </p>
+
+    <h2>9. Copias de seguridad automatizadas con mariadb-dump</h2>
+
+    <p>
+        Una de las tareas administrativas más importantes es la realización
+        periódica de copias de seguridad.
+    </p>
+
+    <p>
+        MariaDB proporciona la herramienta <code>mariadb-dump</code>, que
+        permite exportar la estructura y los datos de una base de datos
+        a un archivo SQL.
+    </p>
+
+    <h3>9.1. Realizar una copia manual</h3>
+
+    <p>
+        Para realizar una copia de la base de datos <code>tienda</code>:
+    </p>
+
+    <pre><code>mariadb-dump -u usuario_admin -p tienda &gt; tienda.sql</code></pre>
+
+    <p>
+        El archivo <code>tienda.sql</code> contendrá instrucciones SQL para
+        reconstruir la base de datos y sus datos.
+    </p>
+
+    <h3>9.2. Copiar todas las bases de datos</h3>
+
+    <pre><code>mariadb-dump -u usuario_admin -p --all-databases &gt; todas_las_bases.sql</code></pre>
+
+    <p>
+        Esta opción exporta todas las bases de datos a un único archivo.
+        El usuario debe disponer de los privilegios necesarios para acceder
+        a la información que se desea exportar.
+    </p>
+
+    <h3>9.3. Crear un directorio para las copias</h3>
+
+    <pre><code>mkdir -p ~/copias_mariadb</code></pre>
+
+    <p>
+        Conviene utilizar nombres de archivo que permitan identificar
+        la fecha de realización de cada copia.
+    </p>
+
+    <h3>9.4. Copia con fecha y hora</h3>
+
+    <pre><code>mariadb-dump -u usuario_admin tienda \
+&gt; ~/copias_mariadb/tienda_$(date +%Y%m%d_%H%M%S).sql</code></pre>
+
+    <p>
+        La expresión <code>$(date ...)</code> ejecuta el comando
+        <code>date</code> y utiliza su resultado para construir el nombre
+        del archivo.
+    </p>
+
+    <p>
+        Por ejemplo, una copia realizada el 12 de noviembre de 2026
+        a las 02:00 podría llamarse:
+    </p>
+
+    <pre><code>tienda_20261112_020000.sql</code></pre>
+
+    <h3>9.5. Comprimir las copias</h3>
+
+    <p>
+        Para reducir el espacio ocupado podemos comprimir la salida
+        directamente:
+    </p>
+
+    <pre><code>mariadb-dump -u usuario_admin tienda | gzip \
+&gt; ~/copias_mariadb/tienda_$(date +%Y%m%d_%H%M%S).sql.gz</code></pre>
+
+    <h3>9.6. Programar una copia diaria con cron</h3>
+
+    <p>
+        Editamos el crontab:
+    </p>
+
+    <pre><code>crontab -e</code></pre>
+
+    <p>
+        Añadimos la siguiente tarea para realizar una copia todos los días
+        a las 02:30:
+    </p>
+
+    <pre><code>30 2 * * * /usr/bin/mariadb-dump tienda | gzip &gt; /home/usuario/copias_mariadb/tienda_$(date +\%Y\%m\%d_\%H\%M\%S).sql.gz</code></pre>
+
+    <p>
+        En las entradas de crontab, el carácter <code>%</code> tiene un
+        significado especial. Por eso debe escaparse con una barra
+        invertida cuando se utiliza dentro de un comando.
+    </p>
+
+    <div class="callout">
+        <strong>Recomendación</strong>
+        <p>
+            Una copia de seguridad solo es útil si puede recuperarse.
+            Es necesario comprobar periódicamente los archivos generados
+            y realizar pruebas de restauración en una base de datos
+            independiente.
+        </p>
+    </div>
+
+    <h2>10. Registrar resultados y gestionar errores</h2>
+
+    <p>
+        Una tarea automatizada debe permitir conocer si se ha ejecutado,
+        cuándo lo ha hecho y si ha terminado correctamente.
+    </p>
+
+    <p>
+        Si una tarea falla y no existe ningún mecanismo de registro,
+        puede pasar desapercibida durante mucho tiempo.
+    </p>
+
+    <h3>10.1. Redirigir la salida a un archivo de registro</h3>
+
+    <p>
+        En Linux podemos utilizar los operadores de redirección para
+        guardar la salida de los comandos.
+    </p>
+
+    <ul>
+        <li><code>&gt;</code>: crea o sobrescribe un archivo.</li>
+        <li><code>&gt;&gt;</code>: añade información al final de un archivo.</li>
+        <li><code>2&gt;</code>: redirige los mensajes de error.</li>
+        <li><code>2&gt;&amp;1</code>: combina la salida de error con la salida estándar.</li>
+    </ul>
+
+    <p>Ejemplo de registro de una ejecución:</p>
+
+    <pre><code>mariadb-dump tienda &gt; copia.sql \
+2&gt;&gt; /home/usuario/logs/copias_error.log</code></pre>
+
+    <h3>10.2. Crear un script Bash para las copias</h3>
+
+    <p>
+        En lugar de introducir toda la lógica directamente en cron, podemos
+        crear un script Bash que realice la copia y registre el resultado.
+    </p>
+
+    <p>Creamos el directorio de scripts y registros:</p>
+
+    <pre><code>mkdir -p ~/scripts
+mkdir -p ~/logs
+mkdir -p ~/copias_mariadb</code></pre>
+
+    <p>Creamos el archivo:</p>
+
+    <pre><code>nano ~/scripts/copia_tienda.sh</code></pre>
+
+    <p>Contenido del script:</p>
+
+    <pre><code>#!/bin/bash
+
+# Configuración
+BASE_DATOS="tienda"
+DIRECTORIO="/home/usuario/copias_mariadb"
+LOG="/home/usuario/logs/copias.log"
+
+# Fecha para identificar la copia
+FECHA=$(date +%Y%m%d_%H%M%S)
+
+# Archivo de destino
+ARCHIVO="$DIRECTORIO/${BASE_DATOS}_${FECHA}.sql.gz"
+
+# Crear directorios si no existen
+mkdir -p "$DIRECTORIO"
+mkdir -p "$(dirname "$LOG")"
+
+# Realizar la copia
+if mariadb-dump "$BASE_DATOS" | gzip &gt; "$ARCHIVO"; then
+
+    echo "[$(date)] Copia correcta: $ARCHIVO" &gt;&gt; "$LOG"
+
+else
+
+    echo "[$(date)] ERROR al realizar la copia" &gt;&gt; "$LOG"
+    rm -f "$ARCHIVO"
+    exit 1
+
+fi</code></pre>
+
+    <p>
+        El script utiliza el archivo <code>~/.my.cnf</code> para obtener
+        las credenciales de conexión.
+    </p>
+
+    <h3>10.3. Dar permisos de ejecución</h3>
+
+    <pre><code>chmod +x ~/scripts/copia_tienda.sh</code></pre>
+
+    <h3>10.4. Ejecutar manualmente</h3>
+
+    <pre><code>~/scripts/copia_tienda.sh</code></pre>
+
+    <p>Comprobamos los archivos generados:</p>
+
+    <pre><code>ls -lh ~/copias_mariadb/</code></pre>
+
+    <p>Consultamos el registro:</p>
+
+    <pre><code>cat ~/logs/copias.log</code></pre>
+
+    <h3>10.5. Programar el script con cron</h3>
+
+    <p>
+        Editamos el crontab del usuario:
+    </p>
+
+    <pre><code>crontab -e</code></pre>
+
+    <p>Añadimos:</p>
+
+    <pre><code>30 2 * * * /home/usuario/scripts/copia_tienda.sh</code></pre>
+
+    <p>
+        De esta forma, el script se ejecutará todos los días a las 02:30.
+    </p>
+
+    <h3>10.6. Comprobar los registros de cron</h3>
+
+    <p>
+        Debian utiliza el sistema de registros del sistema para almacenar
+        información sobre la ejecución de servicios y tareas.
+    </p>
+
+    <p>Podemos consultar los mensajes del servicio cron mediante:</p>
+
+    <pre><code>sudo journalctl -u cron</code></pre>
+
+    <p>
+        Para consultar los últimos mensajes:
+    </p>
+
+    <pre><code>sudo journalctl -u cron -n 50</code></pre>
+
+    <p>
+        En instalaciones que utilizan registros tradicionales también
+        puede consultarse:
+    </p>
+
+    <pre><code>sudo grep CRON /var/log/syslog</code></pre>
+
+    <div class="advertencia">
+        <strong>Atención a los errores de los scripts</strong>
+        <p>
+            En el ejemplo anterior, el código de salida de una tubería
+            Bash puede corresponder únicamente al último comando ejecutado.
+            Para detectar también errores de <code>mariadb-dump</code>,
+            conviene utilizar <code>set -o pipefail</code> al principio
+            del script.
+        </p>
+        <p>
+            Por tanto, una versión más robusta debe comenzar con:
+        </p>
+        <pre><code>#!/bin/bash
+set -o pipefail</code></pre>
+    </div>
+
+    <h2>11. Restauración de una copia de seguridad</h2>
+
+    <p>
+        La automatización de copias debe complementarse con procedimientos
+        de restauración. No basta con generar archivos: debemos asegurarnos
+        de que contienen información recuperable.
+    </p>
+
+    <h3>11.1. Restaurar una copia SQL</h3>
+
+    <p>
+        Si la copia se ha generado en formato SQL sin comprimir:
+    </p>
+
+    <pre><code>mariadb -u usuario_admin tienda &lt; tienda.sql</code></pre>
+
+    <h3>11.2. Restaurar una copia comprimida</h3>
+
+    <p>
+        Si se ha utilizado <code>gzip</code>:
+    </p>
+
+    <pre><code>gunzip -c tienda.sql.gz | mariadb -u usuario_admin tienda</code></pre>
+
+    <p>
+        El usuario de MariaDB debe tener los permisos necesarios para
+        crear o modificar los objetos incluidos en la copia.
+    </p>
+
+    <h3>11.3. Buenas prácticas para las copias</h3>
+
+    <ul>
+        <li>Guardar las copias en un directorio distinto al de los datos originales.</li>
+        <li>Utilizar nombres que incluyan fecha y hora.</li>
+        <li>Proteger los archivos frente a accesos no autorizados.</li>
+        <li>Conservar varias versiones de las copias.</li>
+        <li>Eliminar las copias antiguas siguiendo una política de retención.</li>
+        <li>Guardar copias en otro dispositivo o ubicación cuando sea posible.</li>
+        <li>Realizar pruebas periódicas de restauración.</li>
+        <li>Registrar las ejecuciones y comprobar los errores.</li>
+    </ul>
+
+    <h2>12. Comparación: eventos MariaDB y cron</h2>
+
+    <p>
+        Ambas herramientas permiten automatizar tareas, pero tienen
+        finalidades diferentes y pueden utilizarse conjuntamente.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Situación</th>
+                <th>Herramienta recomendada</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Eliminar registros antiguos de una tabla cada día.</td>
+                <td>Evento MariaDB.</td>
+            </tr>
+            <tr>
+                <td>Actualizar automáticamente el estado de registros.</td>
+                <td>Evento MariaDB.</td>
+            </tr>
+            <tr>
+                <td>Ejecutar un procedimiento almacenado cada semana.</td>
+                <td>Evento MariaDB.</td>
+            </tr>
+            <tr>
+                <td>Generar una copia con mariadb-dump.</td>
+                <td>cron.</td>
+            </tr>
+            <tr>
+                <td>Comprimir archivos y eliminar copias antiguas.</td>
+                <td>cron.</td>
+            </tr>
+            <tr>
+                <td>Enviar una copia a otro servidor.</td>
+                <td>cron y herramientas del sistema.</td>
+            </tr>
+            <tr>
+                <td>Ejecutar un script Bash de mantenimiento.</td>
+                <td>cron.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>13. Resumen del bloque</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Planificación</td>
+                <td>Programar la ejecución de tareas administrativas.</td>
+            </tr>
+            <tr>
+                <td>event_scheduler</td>
+                <td>Variable que controla el planificador de eventos de MariaDB.</td>
+            </tr>
+            <tr>
+                <td>CREATE EVENT</td>
+                <td>Crea un evento programado.</td>
+            </tr>
+            <tr>
+                <td>ON SCHEDULE AT</td>
+                <td>Programa una ejecución única.</td>
+            </tr>
+            <tr>
+                <td>ON SCHEDULE EVERY</td>
+                <td>Programa ejecuciones periódicas.</td>
+            </tr>
+            <tr>
+                <td>ALTER EVENT</td>
+                <td>Modifica o habilita/deshabilita un evento.</td>
+            </tr>
+            <tr>
+                <td>DROP EVENT</td>
+                <td>Elimina un evento.</td>
+            </tr>
+            <tr>
+                <td>cron</td>
+                <td>Planificador de tareas del sistema operativo.</td>
+            </tr>
+            <tr>
+                <td>crontab</td>
+                <td>Permite consultar y editar las tareas programadas.</td>
+            </tr>
+            <tr>
+                <td>mariadb-dump</td>
+                <td>Genera copias de seguridad en formato SQL.</td>
+            </tr>
+            <tr>
+                <td>Redirecciones</td>
+                <td>Permiten guardar salidas y errores en archivos.</td>
+            </tr>
+            <tr>
+                <td>journalctl</td>
+                <td>Permite consultar los registros de servicios del sistema.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>14. Ejercicios prácticos de comprobación</h2>
+
+    <h3>Ejercicio 1. Planificador de eventos</h3>
+
+    <p>
+        Comprueba el estado de <code>event_scheduler</code> en el servidor
+        MariaDB. Actívalo si está deshabilitado y verifica que el cambio
+        se ha aplicado.
+    </p>
+
+    <h3>Ejercicio 2. Evento de mantenimiento</h3>
+
+    <p>
+        Crea una tabla para almacenar registros temporales y programa un
+        evento que elimine diariamente aquellos que tengan más de 30 días.
+        Comprueba la definición y el estado del evento.
+    </p>
+
+    <h3>Ejercicio 3. Gestión de eventos</h3>
+
+    <p>
+        Crea un evento periódico, desactívalo, vuelve a activarlo y consulta
+        su definición. Finalmente, elimínalo.
+    </p>
+
+    <h3>Ejercicio 4. Programación con cron</h3>
+
+    <p>
+        Crea un archivo SQL que realice una operación de mantenimiento
+        sobre una base de datos. Ejecútalo manualmente desde Debian y
+        programa su ejecución periódica mediante <code>cron</code>.
+    </p>
+
+    <h3>Ejercicio 5. Copia de seguridad automatizada</h3>
+
+    <p>
+        Genera una copia de seguridad de una base de datos utilizando
+        <code>mariadb-dump</code>. Incluye la fecha y hora en el nombre
+        del archivo y comprueba que se ha generado correctamente.
+    </p>
+
+    <h3>Ejercicio 6. Registro de resultados</h3>
+
+    <p>
+        Crea un script Bash que realice una copia de seguridad, registre
+        la fecha de ejecución y permita identificar si la operación
+        ha terminado correctamente o ha producido un error.
+    </p>
+
+    <h3>Ejercicio 7. Restauración</h3>
+
+    <p>
+        Utiliza una copia de seguridad generada anteriormente para restaurar
+        la información en una base de datos de prueba. Comprueba que se
+        han recuperado correctamente la estructura y los datos.
+    </p>
+
+    <div class="callout">
+        <strong>Conclusión</strong>
+        <p>
+            La planificación de tareas permite automatizar operaciones
+            administrativas y mejorar la disponibilidad y el mantenimiento
+            de un sistema gestor de bases de datos. Los eventos de MariaDB
+            son apropiados para ejecutar instrucciones SQL dentro del servidor,
+            mientras que <code>cron</code> permite integrar las tareas de
+            administración de la base de datos con las herramientas del
+            sistema operativo.
+        </p>
+        <p>
+            Una automatización fiable debe incluir controles, registros,
+            gestión de errores y comprobaciones periódicas de los resultados.
+        </p>
+    </div>
+
+</main>
+
+</body>
+</html>

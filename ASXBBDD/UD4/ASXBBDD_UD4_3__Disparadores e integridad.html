@@ -1,0 +1,874 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bloque 3. Disparadores e integridad de la información</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main class="content">
+
+    <h1 class="document-title">Bloque 3. Disparadores e integridad de la información</h1>
+
+    <p>
+        Los disparadores, también conocidos como <strong>triggers</strong>, permiten
+        ejecutar automáticamente instrucciones SQL cuando se produce un determinado
+        evento sobre una tabla. Son una herramienta importante para automatizar
+        tareas, mantener la integridad de los datos y registrar los cambios
+        realizados en una base de datos.
+    </p>
+
+    <div class="callout">
+        <strong>Objetivos del bloque</strong>
+        <ul>
+            <li>Comprender qué es un disparador y cuándo se ejecuta.</li>
+            <li>Identificar los eventos que pueden activar un trigger.</li>
+            <li>Crear disparadores con las instrucciones <code>CREATE TRIGGER</code>.</li>
+            <li>Utilizar <code>OLD</code> y <code>NEW</code> para acceder a los datos afectados.</li>
+            <li>Automatizar validaciones, auditorías y operaciones relacionadas con la integridad.</li>
+        </ul>
+    </div>
+
+    <h2>1. Concepto de disparador (trigger)</h2>
+
+    <p>
+        Un <strong>disparador</strong> es un objeto almacenado en una base de datos
+        que ejecuta automáticamente un conjunto de instrucciones SQL cuando ocurre
+        un evento determinado sobre una tabla.
+    </p>
+
+    <p>
+        A diferencia de un procedimiento almacenado, que debe ejecutarse
+        explícitamente mediante una llamada como <code>CALL</code>, un disparador
+        se ejecuta de forma automática cuando se produce el evento para el que
+        ha sido definido.
+    </p>
+
+    <h3>1.1. ¿Para qué se utilizan?</h3>
+
+    <p>Los disparadores permiten automatizar diferentes tareas:</p>
+
+    <ul>
+        <li><strong>Validación de datos:</strong> impedir que se almacenen valores incorrectos.</li>
+        <li><strong>Auditoría:</strong> registrar quién modifica los datos y cuándo.</li>
+        <li><strong>Historial:</strong> conservar los valores anteriores de los registros.</li>
+        <li><strong>Actualización automática:</strong> modificar información relacionada cuando cambia una tabla.</li>
+        <li><strong>Integridad:</strong> aplicar reglas adicionales que no se pueden expresar fácilmente mediante restricciones convencionales.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <strong>Ejemplo de funcionamiento</strong>
+        <p>
+            Imaginemos una tienda que almacena sus productos en una tabla
+            <code>productos</code>. Cuando se modifica el precio de un producto,
+            queremos guardar automáticamente el precio anterior y el nuevo precio
+            en una tabla de historial.
+        </p>
+        <p>
+            El usuario únicamente ejecuta un <code>UPDATE</code>. El trigger se
+            encarga de registrar el cambio sin que el usuario tenga que realizar
+            ninguna operación adicional.
+        </p>
+    </div>
+
+    <h2>2. Eventos que activan los disparadores</h2>
+
+    <p>
+        En MariaDB, los disparadores se asocian a tres tipos de operaciones
+        realizadas sobre una tabla:
+    </p>
+
+    <h3>2.1. INSERT</h3>
+
+    <p>
+        Se ejecuta cuando se inserta un nuevo registro en una tabla.
+        Puede utilizarse para validar los datos antes de almacenarlos o
+        registrar automáticamente la incorporación de nuevos registros.
+    </p>
+
+    <pre><code>INSERT INTO productos (nombre, precio, stock)
+VALUES ('Teclado', 25.50, 10);</code></pre>
+
+    <h3>2.2. UPDATE</h3>
+
+    <p>
+        Se ejecuta cuando se modifica uno o varios registros existentes.
+        Resulta especialmente útil para controlar cambios, mantener historiales
+        o comprobar que los nuevos valores cumplen determinadas condiciones.
+    </p>
+
+    <pre><code>UPDATE productos
+SET precio = 29.90
+WHERE id = 1;</code></pre>
+
+    <h3>2.3. DELETE</h3>
+
+    <p>
+        Se ejecuta cuando se elimina uno o varios registros. Puede utilizarse
+        para guardar una copia de la información eliminada antes de que
+        desaparezca de la tabla original.
+    </p>
+
+    <pre><code>DELETE FROM productos
+WHERE id = 1;</code></pre>
+
+    <div class="callout">
+        <strong>Importante</strong>
+        <p>
+            Los triggers se ejecutan por cada fila afectada por la operación.
+            Si una instrucción <code>UPDATE</code> modifica diez registros,
+            el disparador asociado se ejecutará diez veces, una por cada fila.
+        </p>
+    </div>
+
+    <h2>3. Momentos de ejecución: BEFORE y AFTER</h2>
+
+    <p>
+        Además del evento que activa el disparador, es necesario indicar
+        cuándo debe ejecutarse respecto a la operación que lo provoca.
+    </p>
+
+    <h3>3.1. BEFORE</h3>
+
+    <p>
+        El disparador se ejecuta <strong>antes</strong> de realizar la operación
+        sobre la tabla.
+    </p>
+
+    <p>Se utiliza principalmente para:</p>
+
+    <ul>
+        <li>Validar los valores que se van a insertar o modificar.</li>
+        <li>Rechazar operaciones que incumplen determinadas reglas.</li>
+        <li>Modificar valores antes de almacenarlos.</li>
+        <li>Aplicar reglas de negocio adicionales.</li>
+    </ul>
+
+    <h3>3.2. AFTER</h3>
+
+    <p>
+        El disparador se ejecuta <strong>después</strong> de realizar la operación
+        sobre la tabla.
+    </p>
+
+    <p>Se utiliza principalmente para:</p>
+
+    <ul>
+        <li>Registrar modificaciones en tablas de auditoría.</li>
+        <li>Guardar información histórica.</li>
+        <li>Actualizar información complementaria.</li>
+        <li>Realizar operaciones relacionadas con el cambio producido.</li>
+    </ul>
+
+    <h3>3.3. Combinaciones posibles</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Momento</th>
+                <th>Evento</th>
+                <th>Uso habitual</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>BEFORE</td>
+                <td>INSERT</td>
+                <td>Validar datos antes de insertar.</td>
+            </tr>
+            <tr>
+                <td>AFTER</td>
+                <td>INSERT</td>
+                <td>Registrar nuevas incorporaciones.</td>
+            </tr>
+            <tr>
+                <td>BEFORE</td>
+                <td>UPDATE</td>
+                <td>Comprobar o ajustar nuevos valores.</td>
+            </tr>
+            <tr>
+                <td>AFTER</td>
+                <td>UPDATE</td>
+                <td>Guardar los cambios realizados.</td>
+            </tr>
+            <tr>
+                <td>BEFORE</td>
+                <td>DELETE</td>
+                <td>Comprobar o conservar información antes de eliminar.</td>
+            </tr>
+            <tr>
+                <td>AFTER</td>
+                <td>DELETE</td>
+                <td>Registrar la eliminación realizada.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>4. Creación de disparadores con CREATE TRIGGER</h2>
+
+    <p>
+        Para crear un disparador en MariaDB se utiliza la instrucción
+        <code>CREATE TRIGGER</code>.
+    </p>
+
+    <h3>4.1. Sintaxis general</h3>
+
+    <pre><code>DELIMITER //
+
+CREATE TRIGGER nombre_trigger
+BEFORE | AFTER INSERT | UPDATE | DELETE
+ON nombre_tabla
+FOR EACH ROW
+BEGIN
+    -- Instrucciones SQL
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>Los elementos principales son:</p>
+
+    <ul>
+        <li><code>CREATE TRIGGER</code>: crea el disparador.</li>
+        <li><code>nombre_trigger</code>: identifica el disparador.</li>
+        <li><code>BEFORE</code> o <code>AFTER</code>: establece el momento de ejecución.</li>
+        <li><code>INSERT</code>, <code>UPDATE</code> o <code>DELETE</code>: indica el evento que lo activa.</li>
+        <li><code>ON</code>: especifica la tabla asociada.</li>
+        <li><code>FOR EACH ROW</code>: indica que se ejecutará para cada fila afectada.</li>
+        <li><code>BEGIN ... END</code>: contiene las instrucciones que ejecutará el disparador.</li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Uso de DELIMITER</strong>
+        <p>
+            Cuando se crean procedimientos o triggers con varias instrucciones,
+            es necesario cambiar temporalmente el delimitador en la consola
+            o en el editor SQL de Workbench. Así se evita que el punto y coma
+            de las instrucciones internas finalice prematuramente la definición.
+        </p>
+        <p>
+            <code>DELIMITER</code> es una instrucción del cliente SQL, no una
+            instrucción que forme parte del cuerpo del trigger almacenado.
+        </p>
+    </div>
+
+    <h3>4.2. Consultar los disparadores existentes</h3>
+
+    <p>Para consultar los disparadores de una base de datos:</p>
+
+    <pre><code>SHOW TRIGGERS;</code></pre>
+
+    <p>También se puede consultar la definición de un trigger concreto:</p>
+
+    <pre><code>SHOW CREATE TRIGGER nombre_trigger;</code></pre>
+
+    <h3>4.3. Eliminar un disparador</h3>
+
+    <p>Para eliminar un trigger se utiliza:</p>
+
+    <pre><code>DROP TRIGGER IF EXISTS nombre_trigger;</code></pre>
+
+    <h2>5. Variables OLD y NEW</h2>
+
+    <p>
+        Los disparadores pueden necesitar consultar los valores de la fila
+        sobre la que se está realizando la operación. Para ello, MariaDB
+        proporciona dos referencias especiales: <code>OLD</code> y
+        <code>NEW</code>.
+    </p>
+
+    <h3>5.1. NEW</h3>
+
+    <p>
+        <code>NEW</code> permite acceder a los valores nuevos de una fila.
+        Se utiliza en operaciones de inserción y modificación.
+    </p>
+
+    <p>Por ejemplo:</p>
+
+    <pre><code>NEW.precio
+NEW.nombre
+NEW.stock</code></pre>
+
+    <h3>5.2. OLD</h3>
+
+    <p>
+        <code>OLD</code> permite acceder a los valores que tenía la fila
+        antes de realizar una modificación o eliminación.
+    </p>
+
+    <p>Por ejemplo:</p>
+
+    <pre><code>OLD.precio
+OLD.nombre
+OLD.stock</code></pre>
+
+    <h3>5.3. Disponibilidad según el evento</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Evento</th>
+                <th>OLD</th>
+                <th>NEW</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>INSERT</td>
+                <td>No disponible</td>
+                <td>Disponible</td>
+            </tr>
+            <tr>
+                <td>UPDATE</td>
+                <td>Disponible</td>
+                <td>Disponible</td>
+            </tr>
+            <tr>
+                <td>DELETE</td>
+                <td>Disponible</td>
+                <td>No disponible</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Regla para recordar</strong>
+        <p>
+            En una inserción solo existe <code>NEW</code>, porque el registro
+            todavía no tenía valores anteriores. En una eliminación solo existe
+            <code>OLD</code>, porque el registro va a desaparecer. En una
+            modificación existen ambos.
+        </p>
+    </div>
+
+    <h3>5.4. Modificar valores mediante NEW</h3>
+
+    <p>
+        En un trigger <code>BEFORE INSERT</code> o <code>BEFORE UPDATE</code>
+        se pueden modificar determinados valores de <code>NEW</code> para
+        ajustar la información antes de almacenarla.
+    </p>
+
+    <p>Por ejemplo, podemos convertir automáticamente el nombre de un producto a mayúsculas:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE TRIGGER trg_productos_mayusculas
+BEFORE INSERT ON productos
+FOR EACH ROW
+BEGIN
+    SET NEW.nombre = UPPER(NEW.nombre);
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Si se inserta un producto con el nombre <code>teclado</code>,
+        el valor almacenado será <code>TECLADO</code>.
+    </p>
+
+    <h2>6. Automatización de tareas relacionadas con la integridad</h2>
+
+    <p>
+        La integridad de la información consiste en garantizar que los datos
+        almacenados sean correctos, coherentes y cumplan las reglas establecidas
+        para la aplicación.
+    </p>
+
+    <p>
+        MariaDB dispone de diferentes mecanismos para mantener la integridad:
+    </p>
+
+    <ul>
+        <li><strong>Restricciones:</strong> <code>PRIMARY KEY</code>, <code>FOREIGN KEY</code>, <code>UNIQUE</code>, <code>NOT NULL</code> y <code>CHECK</code>.</li>
+        <li><strong>Tipos de datos:</strong> limitan los valores que pueden almacenarse.</li>
+        <li><strong>Transacciones:</strong> permiten confirmar o deshacer operaciones relacionadas.</li>
+        <li><strong>Triggers:</strong> automatizan comprobaciones y operaciones adicionales.</li>
+    </ul>
+
+    <div class="callout">
+        <strong>Buena práctica</strong>
+        <p>
+            Siempre que sea posible, las reglas de integridad deben definirse
+            mediante restricciones propias del modelo relacional. Los triggers
+            deben utilizarse para aquellas validaciones o automatizaciones
+            que requieren lógica adicional.
+        </p>
+    </div>
+
+    <h2>7. Ejemplo práctico: validación de precios</h2>
+
+    <p>
+        Vamos a crear una tabla de productos y un disparador que impida insertar
+        o modificar productos con un precio igual o inferior a cero.
+    </p>
+
+    <h3>7.1. Crear la tabla</h3>
+
+    <pre><code>CREATE DATABASE IF NOT EXISTS tienda;
+USE tienda;
+
+CREATE TABLE productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0
+);</code></pre>
+
+    <h3>7.2. Crear el trigger BEFORE INSERT</h3>
+
+    <pre><code>DELIMITER //
+
+CREATE TRIGGER trg_validar_precio_insert
+BEFORE INSERT ON productos
+FOR EACH ROW
+BEGIN
+    IF NEW.precio &lt;= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El precio debe ser superior a cero';
+    END IF;
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>
+        La instrucción <code>SIGNAL</code> permite generar un error desde
+        el disparador. En este caso, se utiliza para impedir que se realice
+        una inserción que incumple la regla definida.
+    </p>
+
+    <h3>7.3. Probar el funcionamiento</h3>
+
+    <p>Una inserción correcta:</p>
+
+    <pre><code>INSERT INTO productos (nombre, precio, stock)
+VALUES ('Monitor', 149.99, 15);</code></pre>
+
+    <p>Una inserción incorrecta:</p>
+
+    <pre><code>INSERT INTO productos (nombre, precio, stock)
+VALUES ('Ratón', -5, 20);</code></pre>
+
+    <p>
+        En el segundo caso, el trigger genera un error y la fila no se inserta.
+    </p>
+
+    <h3>7.4. Validar también las modificaciones</h3>
+
+    <p>
+        La regla anterior solo controla las inserciones. Si queremos evitar
+        que posteriormente se establezca un precio incorrecto, debemos crear
+        otro disparador para el evento <code>UPDATE</code>.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE TRIGGER trg_validar_precio_update
+BEFORE UPDATE ON productos
+FOR EACH ROW
+BEGIN
+    IF NEW.precio &lt;= 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El precio debe ser superior a cero';
+    END IF;
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>Podemos comprobarlo mediante:</p>
+
+    <pre><code>UPDATE productos
+SET precio = -10
+WHERE id = 1;</code></pre>
+
+    <p>
+        La operación será rechazada porque el nuevo precio no cumple
+        la condición establecida.
+    </p>
+
+    <h2>8. Auditoría e historial de modificaciones</h2>
+
+    <p>
+        Una de las aplicaciones más importantes de los triggers es registrar
+        los cambios realizados en una base de datos. Esto permite conocer
+        qué información se ha modificado y conservar los valores anteriores.
+    </p>
+
+    <h3>8.1. Crear una tabla de historial</h3>
+
+    <p>
+        Vamos a crear una tabla que almacene los cambios de precio realizados
+        sobre los productos.
+    </p>
+
+    <pre><code>CREATE TABLE historial_precios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    precio_anterior DECIMAL(10,2),
+    precio_nuevo DECIMAL(10,2),
+    fecha_cambio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario VARCHAR(100)
+);</code></pre>
+
+    <p>
+        Esta tabla no tiene una clave foránea hacia <code>productos</code>
+        porque puede interesarnos conservar el historial incluso después
+        de eliminar el producto original.
+    </p>
+
+    <h3>8.2. Crear el trigger AFTER UPDATE</h3>
+
+    <p>
+        Cuando se modifique el precio de un producto, queremos insertar
+        automáticamente un registro en la tabla de historial.
+    </p>
+
+    <pre><code>DELIMITER //
+
+CREATE TRIGGER trg_historial_precios
+AFTER UPDATE ON productos
+FOR EACH ROW
+BEGIN
+    IF OLD.precio &lt;&gt; NEW.precio THEN
+
+        INSERT INTO historial_precios (
+            producto_id,
+            precio_anterior,
+            precio_nuevo,
+            usuario
+        )
+        VALUES (
+            OLD.id,
+            OLD.precio,
+            NEW.precio,
+            CURRENT_USER()
+        );
+
+    END IF;
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>
+        En este ejemplo:
+    </p>
+
+    <ul>
+        <li><code>OLD.id</code> identifica el producto modificado.</li>
+        <li><code>OLD.precio</code> contiene el precio anterior.</li>
+        <li><code>NEW.precio</code> contiene el precio nuevo.</li>
+        <li><code>CURRENT_USER()</code> devuelve la cuenta MariaDB utilizada para determinar los privilegios de la conexión.</li>
+    </ul>
+
+    <h3>8.3. Comprobar el historial</h3>
+
+    <p>Modificamos el precio de un producto:</p>
+
+    <pre><code>UPDATE productos
+SET precio = 159.99
+WHERE id = 1;</code></pre>
+
+    <p>Consultamos el historial:</p>
+
+    <pre><code>SELECT *
+FROM historial_precios
+ORDER BY fecha_cambio DESC;</code></pre>
+
+    <p>
+        Se habrá creado automáticamente un registro con el precio anterior
+        y el precio nuevo.
+    </p>
+
+    <div class="advertencia">
+        <strong>Consideración sobre la auditoría</strong>
+        <p>
+            <code>CURRENT_USER()</code> identifica la cuenta MariaDB que se
+            utiliza para comprobar los privilegios de la conexión. No siempre
+            coincide con la identidad de la persona física que realiza la operación.
+            Si la aplicación necesita identificar al usuario final, deberá
+            proporcionar esa información mediante un mecanismo controlado.
+        </p>
+    </div>
+
+    <h2>9. Registrar eliminaciones</h2>
+
+    <p>
+        También podemos conservar los datos de un producto antes de que
+        sea eliminado. Para ello, utilizaremos un trigger
+        <code>BEFORE DELETE</code> o <code>AFTER DELETE</code>.
+    </p>
+
+    <p>Primero creamos una tabla para conservar los productos eliminados:</p>
+
+    <pre><code>CREATE TABLE productos_eliminados (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT,
+    nombre VARCHAR(100),
+    precio DECIMAL(10,2),
+    stock INT,
+    fecha_eliminacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+
+    <p>Después creamos el disparador:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE TRIGGER trg_productos_eliminados
+AFTER DELETE ON productos
+FOR EACH ROW
+BEGIN
+    INSERT INTO productos_eliminados (
+        producto_id,
+        nombre,
+        precio,
+        stock
+    )
+    VALUES (
+        OLD.id,
+        OLD.nombre,
+        OLD.precio,
+        OLD.stock
+    );
+END//
+
+DELIMITER ;</code></pre>
+
+    <p>
+        Ahora, cuando se elimine un producto, sus datos quedarán registrados
+        en la tabla <code>productos_eliminados</code>.
+    </p>
+
+    <pre><code>DELETE FROM productos
+WHERE id = 1;
+
+SELECT *
+FROM productos_eliminados;</code></pre>
+
+    <h2>10. Integridad y consistencia: aspectos importantes</h2>
+
+    <h3>10.1. Los triggers forman parte de la operación original</h3>
+
+    <p>
+        Las instrucciones ejecutadas por un trigger forman parte de la operación
+        que lo ha activado. Si el disparador genera un error, la operación
+        original puede ser rechazada.
+    </p>
+
+    <p>
+        Para que las operaciones relacionadas puedan beneficiarse de la
+        transaccionalidad, las tablas implicadas deben utilizar un motor
+        transaccional, como <strong>InnoDB</strong>.
+    </p>
+
+    <h3>10.2. Evitar modificaciones recursivas</h3>
+
+    <p>
+        Un trigger no debe intentar modificar directamente la misma tabla
+        que ha provocado su ejecución. MariaDB restringe este tipo de
+        operaciones para evitar comportamientos recursivos y problemas
+        de consistencia.
+    </p>
+
+    <p>
+        Por ejemplo, un trigger asociado a <code>productos</code> no debe
+        ejecutar un <code>UPDATE productos</code> sobre esa misma tabla.
+        Para ajustar los valores de la fila afectada se utiliza
+        <code>NEW</code> en los triggers <code>BEFORE</code>, cuando
+        la operación lo permite.
+    </p>
+
+    <h3>10.3. No sustituir las restricciones por triggers</h3>
+
+    <p>
+        Antes de crear un disparador para controlar una regla, debemos
+        comprobar si puede resolverse mediante una restricción estándar.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Necesidad</th>
+                <th>Mecanismo recomendado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Evitar valores nulos</td>
+                <td>NOT NULL</td>
+            </tr>
+            <tr>
+                <td>Evitar identificadores duplicados</td>
+                <td>PRIMARY KEY o UNIQUE</td>
+            </tr>
+            <tr>
+                <td>Relacionar registros entre tablas</td>
+                <td>FOREIGN KEY</td>
+            </tr>
+            <tr>
+                <td>Controlar una condición sobre una columna</td>
+                <td>CHECK</td>
+            </tr>
+            <tr>
+                <td>Registrar automáticamente modificaciones</td>
+                <td>TRIGGER</td>
+            </tr>
+            <tr>
+                <td>Aplicar reglas de negocio complejas</td>
+                <td>TRIGGER o procedimiento almacenado, según el caso</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>11. Gestión y buenas prácticas con triggers</h2>
+
+    <p>
+        Antes de incorporar disparadores a una base de datos, conviene tener
+        en cuenta algunas recomendaciones:
+    </p>
+
+    <ul>
+        <li>Utilizar nombres descriptivos, por ejemplo <code>trg_productos_auditoria</code>.</li>
+        <li>Realizar únicamente las operaciones necesarias dentro del trigger.</li>
+        <li>Evitar consultas y operaciones innecesariamente complejas.</li>
+        <li>Documentar las reglas de negocio implementadas.</li>
+        <li>Comprobar los efectos de los triggers antes de desplegar cambios.</li>
+        <li>Revisar los triggers existentes cuando se modifica la estructura de una tabla.</li>
+        <li>Evitar que varios triggers realicen operaciones contradictorias.</li>
+        <li>Probar tanto las operaciones correctas como los casos que deben generar errores.</li>
+    </ul>
+
+    <h3>11.1. Consultar la definición de un trigger</h3>
+
+    <pre><code>SHOW CREATE TRIGGER trg_historial_precios;</code></pre>
+
+    <h3>11.2. Consultar los triggers de una base de datos</h3>
+
+    <pre><code>USE tienda;
+
+SHOW TRIGGERS;</code></pre>
+
+    <h3>11.3. Eliminar un trigger</h3>
+
+    <pre><code>DROP TRIGGER IF EXISTS trg_historial_precios;</code></pre>
+
+    <h2>12. Resumen del bloque</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Trigger</td>
+                <td>Objeto que ejecuta instrucciones automáticamente ante un evento.</td>
+            </tr>
+            <tr>
+                <td>INSERT</td>
+                <td>Activa el trigger al insertar registros.</td>
+            </tr>
+            <tr>
+                <td>UPDATE</td>
+                <td>Activa el trigger al modificar registros.</td>
+            </tr>
+            <tr>
+                <td>DELETE</td>
+                <td>Activa el trigger al eliminar registros.</td>
+            </tr>
+            <tr>
+                <td>BEFORE</td>
+                <td>Ejecuta el trigger antes de la operación.</td>
+            </tr>
+            <tr>
+                <td>AFTER</td>
+                <td>Ejecuta el trigger después de la operación.</td>
+            </tr>
+            <tr>
+                <td>NEW</td>
+                <td>Permite consultar los valores nuevos de una fila.</td>
+            </tr>
+            <tr>
+                <td>OLD</td>
+                <td>Permite consultar los valores anteriores de una fila.</td>
+            </tr>
+            <tr>
+                <td>SIGNAL</td>
+                <td>Genera un error desde el trigger para rechazar una operación.</td>
+            </tr>
+            <tr>
+                <td>SHOW TRIGGERS</td>
+                <td>Consulta los disparadores existentes.</td>
+            </tr>
+            <tr>
+                <td>DROP TRIGGER</td>
+                <td>Elimina un disparador.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>13. Ejercicios prácticos de comprobación</h2>
+
+    <p>
+        Los siguientes ejercicios permiten comprobar los conceptos trabajados
+        en el bloque utilizando la base de datos <code>tienda</code>.
+    </p>
+
+    <h3>Ejercicio 1. Validación de datos</h3>
+
+    <p>
+        Crea un disparador que impida insertar productos cuyo stock sea negativo.
+        Comprueba su funcionamiento con una inserción correcta y otra incorrecta.
+    </p>
+
+    <h3>Ejercicio 2. Control de modificaciones</h3>
+
+    <p>
+        Crea un trigger que impida modificar el precio de un producto si el
+        nuevo precio es inferior al anterior. Comprueba que una modificación
+        que aumenta el precio funciona correctamente.
+    </p>
+
+    <h3>Ejercicio 3. Historial de cambios</h3>
+
+    <p>
+        Amplía la tabla de historial para registrar también los cambios
+        realizados sobre el stock de los productos. El registro deberá
+        almacenar el valor anterior, el nuevo valor y la fecha del cambio.
+    </p>
+
+    <h3>Ejercicio 4. Registro de eliminaciones</h3>
+
+    <p>
+        Crea un trigger que registre en una tabla independiente los datos
+        de los productos eliminados. Comprueba que la información se conserva
+        después de ejecutar un <code>DELETE</code>.
+    </p>
+
+    <h3>Ejercicio 5. Comprobación de automatización</h3>
+
+    <p>
+        Realiza varias operaciones de inserción, modificación y eliminación.
+        Consulta las tablas de auditoría y explica qué operaciones han
+        provocado la ejecución de cada disparador.
+    </p>
+
+    <div class="callout">
+        <strong>Conclusión</strong>
+        <p>
+            Los triggers permiten incorporar automatismos directamente en
+            la base de datos. Su uso facilita la validación de información,
+            el registro de modificaciones y la aplicación de reglas de negocio.
+            Sin embargo, deben diseñarse cuidadosamente para evitar efectos
+            inesperados y mantener la coherencia de los datos.
+        </p>
+    </div>
+
+</main>
+
+</body>
+</html>

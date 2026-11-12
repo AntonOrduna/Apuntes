@@ -1,0 +1,1895 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD - Scripts SQL y estructuras de control</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Creación de secuencias de comandos y estructuras de control</h1>
+
+    <p>
+        Los sistemas gestores de bases de datos permiten crear programas
+        almacenados que ejecutan varias instrucciones SQL de forma
+        organizada. Mediante estos programas es posible automatizar
+        operaciones administrativas, aplicar condiciones, repetir
+        instrucciones y controlar el comportamiento de las operaciones.
+    </p>
+
+    <p>
+        En este bloque se estudiarán las variables, los procedimientos
+        almacenados y las estructuras de control de flujo disponibles
+        en MariaDB. También se utilizarán parámetros para comunicar
+        información entre los procedimientos y las aplicaciones que
+        los ejecutan.
+    </p>
+
+    <div class="callout">
+        <strong>Objetivos del bloque</strong>
+        <ul>
+            <li>Comprender el funcionamiento de las variables SQL.</li>
+            <li>Crear y ejecutar procedimientos almacenados.</li>
+            <li>Utilizar parámetros de entrada y salida.</li>
+            <li>Aplicar estructuras condicionales y repetitivas.</li>
+            <li>Automatizar operaciones DDL y DML.</li>
+            <li>Controlar errores durante la ejecución de procedimientos.</li>
+            <li>Proteger la integridad y consistencia de los datos.</li>
+        </ul>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>1. Variables y secuencias de comandos SQL</h2>
+
+    <h3>1.1. ¿Qué es una variable?</h3>
+
+    <p>
+        Una variable es un espacio de almacenamiento temporal que permite
+        guardar un valor para utilizarlo posteriormente durante la
+        ejecución de un programa.
+    </p>
+
+    <p>
+        En los procedimientos almacenados de MariaDB, las variables
+        permiten almacenar números, textos, fechas y otros valores
+        que pueden utilizarse en consultas y operaciones SQL.
+    </p>
+
+    <p>
+        Por ejemplo, un procedimiento puede almacenar el número de
+        alumnos de un curso, calcular un importe o guardar el resultado
+        de una consulta para utilizarlo en una operación posterior.
+    </p>
+
+    <h3>1.2. Declaración de variables con DECLARE</h3>
+
+    <p>
+        Dentro de un procedimiento almacenado, las variables locales
+        se declaran utilizando la instrucción <code>DECLARE</code>.
+    </p>
+
+    <p>
+        La declaración debe realizarse al principio del bloque
+        <code>BEGIN ... END</code>, antes de las instrucciones
+        ejecutables. Primero se declaran las variables y después
+        se escriben las operaciones que las utilizan.
+    </p>
+
+    <p>Sintaxis general:</p>
+
+    <pre><code>DECLARE nombre_variable tipo_dato;</code></pre>
+
+    <p>
+        Algunos tipos de datos habituales son:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Ejemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>INT</td>
+                <td>Números enteros.</td>
+                <td>25</td>
+            </tr>
+            <tr>
+                <td>DECIMAL(10,2)</td>
+                <td>Números decimales con precisión definida.</td>
+                <td>1250.75</td>
+            </tr>
+            <tr>
+                <td>VARCHAR(100)</td>
+                <td>Cadenas de texto de longitud variable.</td>
+                <td>'Administración'</td>
+            </tr>
+            <tr>
+                <td>DATE</td>
+                <td>Fechas.</td>
+                <td>'2026-11-12'</td>
+            </tr>
+            <tr>
+                <td>DATETIME</td>
+                <td>Fecha y hora.</td>
+                <td>'2026-11-12 10:30:00'</td>
+            </tr>
+            <tr>
+                <td>BOOLEAN</td>
+                <td>Valores lógicos, representados internamente como 0 y 1.</td>
+                <td>TRUE</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: declaración de variables</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE ejemplo_variables()
+BEGIN
+    DECLARE cantidad INT;
+    DECLARE nombre VARCHAR(100);
+    DECLARE precio DECIMAL(10,2);
+    DECLARE fecha DATE;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El procedimiento declara cuatro variables locales. Todavía
+            no realiza ninguna operación con ellas.
+        </p>
+    </div>
+
+    <h3>1.3. Asignación de valores con SET</h3>
+
+    <p>
+        Una vez declarada una variable, podemos asignarle un valor
+        mediante la instrucción <code>SET</code>.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>SET nombre_variable = valor;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: asignación de valores</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE ejemplo_asignacion()
+BEGIN
+    DECLARE cantidad INT;
+    DECLARE producto VARCHAR(100);
+    DECLARE precio DECIMAL(10,2);
+
+    SET cantidad = 10;
+    SET producto = 'Teclado';
+    SET precio = 25.50;
+
+    SELECT cantidad, producto, precio;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Las variables almacenan los valores asignados y posteriormente
+            se muestran mediante una consulta SELECT.
+        </p>
+
+        <p>Para ejecutar el procedimiento:</p>
+
+        <pre><code>CALL ejemplo_asignacion();</code></pre>
+    </div>
+
+    <h3>1.4. Variables y consultas SELECT</h3>
+
+    <p>
+        Las variables también pueden utilizarse para almacenar el resultado
+        de una consulta SQL. Para ello se utiliza la sintaxis
+        <code>SELECT ... INTO</code>.
+    </p>
+
+    <p>
+        Esta instrucción permite recuperar un valor de una consulta
+        y guardarlo directamente en una variable.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: almacenar el número de alumnos</h3>
+
+        <p>
+            Supongamos que tenemos la siguiente tabla:
+        </p>
+
+        <pre><code>CREATE TABLE alumnos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100),
+    curso VARCHAR(20)
+);
+
+INSERT INTO alumnos (nombre, curso)
+VALUES
+('Ana', 'DAW'),
+('Luis', 'DAW'),
+('Marta', 'DAM'),
+('Pedro', 'DAW');</code></pre>
+
+        <p>
+            Podemos crear un procedimiento que almacene el número
+            de alumnos:
+        </p>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE contar_alumnos()
+BEGIN
+    DECLARE total INT;
+
+    SELECT COUNT(*)
+    INTO total
+    FROM alumnos;
+
+    SELECT total AS numero_alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Al ejecutar <code>CALL contar_alumnos();</code>, la variable
+            <code>total</code> almacenará el número de registros de la tabla.
+        </p>
+    </div>
+
+    <h3>1.5. Ámbito y duración de las variables</h3>
+
+    <p>
+        Las variables locales declaradas mediante <code>DECLARE</code>
+        tienen un ámbito limitado al bloque en el que se declaran.
+        Cuando termina la ejecución del procedimiento, dejan de estar
+        disponibles.
+    </p>
+
+    <p>
+        Es importante diferenciarlas de las variables de usuario
+        de MariaDB, que pueden utilizarse durante una sesión de conexión.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Variable local</th>
+                <th>Variable de usuario</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Declaración</td>
+                <td>DECLARE</td>
+                <td>Se asigna directamente.</td>
+            </tr>
+            <tr>
+                <td>Sintaxis</td>
+                <td>nombre_variable</td>
+                <td>@nombre_variable</td>
+            </tr>
+            <tr>
+                <td>Ámbito</td>
+                <td>Bloque del procedimiento.</td>
+                <td>Sesión de conexión.</td>
+            </tr>
+            <tr>
+                <td>Duración</td>
+                <td>Durante la ejecución del bloque.</td>
+                <td>Hasta que termina la sesión.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: variable de usuario</h3>
+
+        <pre><code>SET @nombre = 'Ana';
+
+SET @edad = 25;
+
+SELECT @nombre, @edad;</code></pre>
+
+        <p>
+            Las variables precedidas por <code>@</code> pueden utilizarse
+            directamente desde una sesión de MariaDB sin necesidad
+            de crear un procedimiento.
+        </p>
+    </div>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        <p>
+            No deben confundirse las variables locales declaradas con
+            DECLARE y las variables de usuario precedidas por @.
+            Las primeras se utilizan principalmente dentro de programas
+            almacenados, mientras que las segundas pertenecen a la sesión
+            de conexión.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>2. Procedimientos almacenados</h2>
+
+    <h3>2.1. ¿Qué es un procedimiento almacenado?</h3>
+
+    <p>
+        Un procedimiento almacenado es un conjunto de instrucciones SQL
+        que se guarda en el servidor de bases de datos y puede ejecutarse
+        posteriormente mediante una llamada.
+    </p>
+
+    <p>
+        Permite agrupar diferentes operaciones en una única unidad lógica.
+        De esta forma, una aplicación o un administrador puede ejecutar
+        varias instrucciones SQL utilizando una sola llamada.
+    </p>
+
+    <p>
+        Los procedimientos almacenados son especialmente útiles para
+        automatizar operaciones administrativas y reutilizar código.
+    </p>
+
+    <h3>2.2. Ventajas de los procedimientos almacenados</h3>
+
+    <ul>
+        <li>
+            <strong>Reutilización:</strong>
+            un mismo procedimiento puede ejecutarse tantas veces como sea necesario.
+        </li>
+        <li>
+            <strong>Centralización:</strong>
+            la lógica de determinadas operaciones se almacena en el servidor.
+        </li>
+        <li>
+            <strong>Organización:</strong>
+            permite agrupar instrucciones relacionadas.
+        </li>
+        <li>
+            <strong>Seguridad:</strong>
+            pueden concederse permisos de ejecución sin necesidad de
+            proporcionar acceso directo a todas las tablas.
+        </li>
+        <li>
+            <strong>Mantenimiento:</strong>
+            permite modificar la lógica de una operación en un único lugar.
+        </li>
+    </ul>
+
+    <h3>2.3. Creación de procedimientos con CREATE PROCEDURE</h3>
+
+    <p>
+        Para crear un procedimiento almacenado se utiliza la instrucción
+        <code>CREATE PROCEDURE</code>.
+    </p>
+
+    <p>Sintaxis general:</p>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE nombre_procedimiento()
+BEGIN
+    -- Instrucciones SQL
+END //
+
+DELIMITER ;</code></pre>
+
+    <p>
+        En esta estructura aparecen varios elementos:
+    </p>
+
+    <ul>
+        <li>
+            <code>DELIMITER //</code> cambia temporalmente el delimitador
+            de instrucciones.
+        </li>
+        <li>
+            <code>CREATE PROCEDURE</code> crea el procedimiento.
+        </li>
+        <li>
+            <code>BEGIN</code> indica el comienzo del bloque de instrucciones.
+        </li>
+        <li>
+            Las instrucciones SQL contienen las operaciones que se ejecutarán.
+        </li>
+        <li>
+            <code>END</code> marca el final del procedimiento.
+        </li>
+        <li>
+            <code>DELIMITER ;</code> recupera el delimitador habitual.
+        </li>
+    </ul>
+
+    <h3>2.4. ¿Por qué se utiliza DELIMITER?</h3>
+
+    <p>
+        Normalmente, MariaDB utiliza el punto y coma (<code>;</code>)
+        para identificar el final de una instrucción SQL.
+    </p>
+
+    <p>
+        Sin embargo, un procedimiento puede contener muchas instrucciones,
+        cada una terminada en punto y coma. Si se utilizara el delimitador
+        habitual durante su creación, el cliente podría interpretar
+        que el procedimiento termina en la primera instrucción.
+    </p>
+
+    <p>
+        Para evitarlo, se cambia temporalmente el delimitador por otro
+        símbolo, como <code>//</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo de creación de un procedimiento</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE mostrar_alumnos()
+BEGIN
+    SELECT * FROM alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Durante la creación, el punto y coma termina las instrucciones
+            internas, mientras que <code>//</code> indica el final de la
+            definición completa del procedimiento.
+        </p>
+    </div>
+
+    <div class="callout">
+        <strong>Importante:</strong>
+        <p>
+            DELIMITER es una instrucción del cliente de MariaDB,
+            no una instrucción SQL que se almacene dentro del procedimiento.
+            Se utiliza para facilitar la introducción de bloques con
+            múltiples instrucciones desde herramientas como la consola
+            y Workbench.
+        </p>
+    </div>
+
+    <h3>2.5. Ejecución de procedimientos con CALL</h3>
+
+    <p>
+        Una vez creado el procedimiento, se puede ejecutar mediante
+        la instrucción <code>CALL</code>.
+    </p>
+
+    <pre><code>CALL mostrar_alumnos();</code></pre>
+
+    <p>
+        No es necesario volver a escribir todas las instrucciones
+        que contiene el procedimiento. MariaDB ejecuta directamente
+        el código almacenado.
+    </p>
+
+    <h3>2.6. Modificación y eliminación de procedimientos</h3>
+
+    <p>
+        Para modificar un procedimiento almacenado, normalmente se
+        elimina su definición anterior y se crea de nuevo.
+    </p>
+
+    <pre><code>DROP PROCEDURE IF EXISTS mostrar_alumnos;</code></pre>
+
+    <p>
+        Después se puede ejecutar nuevamente la instrucción
+        <code>CREATE PROCEDURE</code> con el código actualizado.
+    </p>
+
+    <p>
+        Para consultar los procedimientos almacenados:
+    </p>
+
+    <pre><code>SHOW PROCEDURE STATUS;
+
+SHOW CREATE PROCEDURE mostrar_alumnos;</code></pre>
+
+    <p>
+        Estas instrucciones permiten consultar los procedimientos
+        existentes y visualizar su definición.
+    </p>
+
+    <!-- ================================================= -->
+    <h2>3. Parámetros de los procedimientos almacenados</h2>
+
+    <h3>3.1. ¿Qué son los parámetros?</h3>
+
+    <p>
+        Los parámetros permiten enviar información a un procedimiento
+        cuando se ejecuta y recuperar resultados después de su ejecución.
+    </p>
+
+    <p>
+        Gracias a ellos, un mismo procedimiento puede realizar operaciones
+        diferentes dependiendo de los valores recibidos.
+    </p>
+
+    <p>
+        Por ejemplo, se puede crear un procedimiento que consulte
+        los alumnos de un curso determinado. El curso se enviará
+        como parámetro.
+    </p>
+
+    <h3>3.2. Parámetros de entrada: IN</h3>
+
+    <p>
+        Los parámetros <code>IN</code> permiten enviar valores al
+        procedimiento desde la instrucción <code>CALL</code>.
+    </p>
+
+    <p>
+        Son los parámetros más habituales y se utilizan cuando el
+        procedimiento necesita recibir datos para realizar una operación.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: consultar alumnos de un curso</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE alumnos_por_curso(
+    IN p_curso VARCHAR(20)
+)
+BEGIN
+    SELECT *
+    FROM alumnos
+    WHERE curso = p_curso;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Para ejecutar el procedimiento:
+        </p>
+
+        <pre><code>CALL alumnos_por_curso('DAW');</code></pre>
+
+        <p>
+            El valor DAW se envía al parámetro de entrada
+            <code>p_curso</code>. El procedimiento devuelve únicamente
+            los alumnos que pertenecen a ese curso.
+        </p>
+    </div>
+
+    <h3>3.3. Parámetros de salida: OUT</h3>
+
+    <p>
+        Los parámetros <code>OUT</code> permiten devolver información
+        desde el procedimiento hacia el programa o la sesión que lo ejecuta.
+    </p>
+
+    <p>
+        El procedimiento asigna un valor al parámetro y el usuario
+        puede recuperarlo utilizando una variable de sesión.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: devolver el número de alumnos</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE total_alumnos(
+    OUT p_total INT
+)
+BEGIN
+    SELECT COUNT(*)
+    INTO p_total
+    FROM alumnos;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Para ejecutar el procedimiento y recuperar el resultado:
+        </p>
+
+        <pre><code>CALL total_alumnos(@resultado);
+
+SELECT @resultado AS total_alumnos;</code></pre>
+
+        <p>
+            El valor calculado se almacena en la variable de sesión
+            <code>@resultado</code>.
+        </p>
+    </div>
+
+    <h3>3.4. Parámetros de entrada y salida: INOUT</h3>
+
+    <p>
+        Los parámetros <code>INOUT</code> permiten recibir un valor
+        inicial y devolver otro valor después de ejecutar el procedimiento.
+    </p>
+
+    <p>
+        Se utilizan cuando el procedimiento necesita modificar un valor
+        que recibe como entrada.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: incrementar una cantidad</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE incrementar(
+    INOUT p_numero INT
+)
+BEGIN
+    SET p_numero = p_numero + 1;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Ejecución:
+        </p>
+
+        <pre><code>SET @valor = 10;
+
+CALL incrementar(@valor);
+
+SELECT @valor;</code></pre>
+
+        <p>
+            La variable comienza con el valor 10 y después de ejecutar
+            el procedimiento contiene el valor 11.
+        </p>
+    </div>
+
+    <h3>3.5. Comparación de los tipos de parámetros</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Función</th>
+                <th>Ejemplo de uso</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>IN</td>
+                <td>Recibe un valor desde el exterior.</td>
+                <td>Consultar alumnos de un curso.</td>
+            </tr>
+            <tr>
+                <td>OUT</td>
+                <td>Devuelve un resultado.</td>
+                <td>Devolver el número de alumnos.</td>
+            </tr>
+            <tr>
+                <td>INOUT</td>
+                <td>Recibe y devuelve un valor.</td>
+                <td>Incrementar una cantidad recibida.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================= -->
+    <h2>4. Estructuras de control de flujo</h2>
+
+    <h3>4.1. ¿Qué son las estructuras de control?</h3>
+
+    <p>
+        Las estructuras de control permiten modificar el orden habitual
+        de ejecución de las instrucciones de un programa.
+    </p>
+
+    <p>
+        Sin estructuras de control, las instrucciones de un procedimiento
+        se ejecutarían siempre de forma secuencial, una detrás de otra.
+    </p>
+
+    <p>
+        Mediante las estructuras condicionales y repetitivas es posible
+        tomar decisiones y ejecutar determinadas instrucciones varias veces.
+    </p>
+
+    <p>Se distinguen dos grandes grupos:</p>
+
+    <ul>
+        <li>
+            <strong>Estructuras condicionales:</strong>
+            permiten ejecutar instrucciones dependiendo del resultado
+            de una condición.
+        </li>
+        <li>
+            <strong>Estructuras repetitivas:</strong>
+            permiten ejecutar un conjunto de instrucciones varias veces.
+        </li>
+    </ul>
+
+    <!-- ================================================= -->
+    <h2>5. Estructuras condicionales</h2>
+
+    <h3>5.1. Estructura IF</h3>
+
+    <p>
+        La estructura <code>IF</code> permite ejecutar un bloque de
+        instrucciones cuando se cumple una condición.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>IF condicion THEN
+    instrucciones;
+END IF;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: comprobar una cantidad</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE comprobar_cantidad(
+    IN p_cantidad INT
+)
+BEGIN
+    IF p_cantidad > 10 THEN
+        SELECT 'Cantidad elevada' AS mensaje;
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Si el valor recibido es superior a 10, se muestra el mensaje.
+            En caso contrario, no se ejecuta ninguna instrucción dentro
+            del bloque IF.
+        </p>
+
+        <pre><code>CALL comprobar_cantidad(15);</code></pre>
+    </div>
+
+    <h3>5.2. Estructura IF ... ELSE</h3>
+
+    <p>
+        Cuando necesitamos ejecutar una alternativa si la condición
+        no se cumple, podemos utilizar <code>ELSE</code>.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>IF condicion THEN
+    instrucciones_si_verdadero;
+ELSE
+    instrucciones_si_falso;
+END IF;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: comprobar si un alumno está matriculado</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE comprobar_alumno(
+    IN p_id INT
+)
+BEGIN
+    DECLARE total INT;
+
+    SELECT COUNT(*)
+    INTO total
+    FROM alumnos
+    WHERE id = p_id;
+
+    IF total > 0 THEN
+        SELECT 'El alumno existe' AS mensaje;
+    ELSE
+        SELECT 'El alumno no existe' AS mensaje;
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El procedimiento comprueba si existe un alumno con el
+            identificador recibido y muestra un mensaje diferente
+            dependiendo del resultado.
+        </p>
+    </div>
+
+    <h3>5.3. Estructura IF ... ELSEIF ... ELSE</h3>
+
+    <p>
+        Cuando existen varias posibilidades, se pueden utilizar
+        diferentes condiciones mediante <code>ELSEIF</code>.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>IF condicion1 THEN
+    instrucciones1;
+ELSEIF condicion2 THEN
+    instrucciones2;
+ELSEIF condicion3 THEN
+    instrucciones3;
+ELSE
+    instrucciones_alternativas;
+END IF;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: clasificar un número de alumnos</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE clasificar_grupo(
+    IN p_total INT
+)
+BEGIN
+    IF p_total = 0 THEN
+        SELECT 'Grupo vacío' AS estado;
+
+    ELSEIF p_total <= 15 THEN
+        SELECT 'Grupo pequeño' AS estado;
+
+    ELSEIF p_total <= 30 THEN
+        SELECT 'Grupo normal' AS estado;
+
+    ELSE
+        SELECT 'Grupo numeroso' AS estado;
+    END IF;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Dependiendo del número de alumnos recibido, el procedimiento
+            clasifica el grupo en una de las cuatro categorías.
+        </p>
+    </div>
+
+    <h3>5.4. Operadores utilizados en las condiciones</h3>
+
+    <p>
+        Las condiciones de las estructuras IF utilizan operadores
+        de comparación y operadores lógicos.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Operador</th>
+                <th>Significado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>=</td><td>Igual.</td></tr>
+            <tr><td>&lt;&gt;</td><td>Diferente.</td></tr>
+            <tr><td>&gt;</td><td>Mayor que.</td></tr>
+            <tr><td>&lt;</td><td>Menor que.</td></tr>
+            <tr><td>&gt;=</td><td>Mayor o igual.</td></tr>
+            <tr><td>&lt;=</td><td>Menor o igual.</td></tr>
+            <tr><td>AND</td><td>Se deben cumplir ambas condiciones.</td></tr>
+            <tr><td>OR</td><td>Debe cumplirse al menos una condición.</td></tr>
+            <tr><td>NOT</td><td>Invierte el resultado lógico.</td></tr>
+        </tbody>
+    </table>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: utilizar varias condiciones</h3>
+
+        <pre><code>IF p_edad >= 18 AND p_edad <= 65 THEN
+    SELECT 'Edad laboral' AS mensaje;
+ELSE
+    SELECT 'Fuera del intervalo' AS mensaje;
+END IF;</code></pre>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>6. Estructuras repetitivas</h2>
+
+    <p>
+        Las estructuras repetitivas permiten ejecutar varias veces
+        un bloque de instrucciones. Son especialmente útiles cuando
+        necesitamos procesar datos de forma iterativa o realizar
+        operaciones administrativas repetidas.
+    </p>
+
+    <h3>6.1. Bucle WHILE</h3>
+
+    <p>
+        El bucle <code>WHILE</code> ejecuta un conjunto de instrucciones
+        mientras se cumpla una condición.
+    </p>
+
+    <p>
+        La condición se comprueba antes de cada repetición. Si inicialmente
+        no se cumple, el bloque no se ejecuta ninguna vez.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>WHILE condicion DO
+    instrucciones;
+END WHILE;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: mostrar los números del 1 al 5</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE numeros_while()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    WHILE contador <= 5 DO
+
+        SELECT contador;
+
+        SET contador = contador + 1;
+
+    END WHILE;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El procedimiento comienza con el valor 1. En cada repetición
+            muestra el valor actual e incrementa el contador.
+            Cuando llega a 6, la condición deja de cumplirse.
+        </p>
+    </div>
+
+    <h3>6.2. Bucle REPEAT</h3>
+
+    <p>
+        El bucle <code>REPEAT</code> ejecuta un conjunto de instrucciones
+        hasta que se cumple una condición.
+    </p>
+
+    <p>
+        A diferencia de WHILE, la condición se comprueba al final
+        del bloque. Por ello, el contenido se ejecuta al menos una vez.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>REPEAT
+    instrucciones;
+UNTIL condicion
+END REPEAT;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: contar hasta 5 con REPEAT</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE numeros_repeat()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    REPEAT
+
+        SELECT contador;
+
+        SET contador = contador + 1;
+
+    UNTIL contador > 5
+    END REPEAT;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            En este caso, las instrucciones se ejecutan primero y
+            posteriormente se comprueba si el contador ha superado 5.
+        </p>
+    </div>
+
+    <h3>6.3. Bucle LOOP</h3>
+
+    <p>
+        El bucle <code>LOOP</code> permite repetir instrucciones
+        indefinidamente hasta que se ejecuta una instrucción que
+        interrumpe el bucle.
+    </p>
+
+    <p>
+        Para abandonar el bucle se utiliza <code>LEAVE</code>,
+        normalmente junto con una etiqueta que identifica el bloque.
+    </p>
+
+    <p>Sintaxis:</p>
+
+    <pre><code>nombre_bucle: LOOP
+
+    instrucciones;
+
+    IF condicion_salida THEN
+        LEAVE nombre_bucle;
+    END IF;
+
+END LOOP nombre_bucle;</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: contar hasta 5 con LOOP</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE numeros_loop()
+BEGIN
+    DECLARE contador INT DEFAULT 1;
+
+    bucle: LOOP
+
+        SELECT contador;
+
+        SET contador = contador + 1;
+
+        IF contador > 5 THEN
+            LEAVE bucle;
+        END IF;
+
+    END LOOP bucle;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El bucle continúa ejecutándose hasta que el contador supera 5.
+            En ese momento, <code>LEAVE bucle</code> termina la repetición.
+        </p>
+    </div>
+
+    <h3>6.4. Comparación de las estructuras repetitivas</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Estructura</th>
+                <th>Comprobación</th>
+                <th>Características</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>WHILE</td>
+                <td>Al principio.</td>
+                <td>Puede no ejecutarse ninguna vez.</td>
+            </tr>
+            <tr>
+                <td>REPEAT</td>
+                <td>Al final.</td>
+                <td>Se ejecuta al menos una vez.</td>
+            </tr>
+            <tr>
+                <td>LOOP</td>
+                <td>No tiene condición propia.</td>
+                <td>Necesita una salida explícita, por ejemplo LEAVE.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>6.5. Control de iteraciones con ITERATE</h3>
+
+    <p>
+        Además de <code>LEAVE</code>, MariaDB dispone de
+        <code>ITERATE</code>, que permite volver al comienzo de
+        una iteración de un bucle.
+    </p>
+
+    <p>
+        Es similar a la instrucción CONTINUE de otros lenguajes
+        de programación.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: mostrar solamente números pares</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE mostrar_pares()
+BEGIN
+    DECLARE contador INT DEFAULT 0;
+
+    bucle: LOOP
+
+        SET contador = contador + 1;
+
+        IF contador > 10 THEN
+            LEAVE bucle;
+        END IF;
+
+        IF MOD(contador, 2) <> 0 THEN
+            ITERATE bucle;
+        END IF;
+
+        SELECT contador;
+
+    END LOOP bucle;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El procedimiento recorre los números del 1 al 10.
+            Cuando encuentra un número impar, utiliza ITERATE
+            para continuar con la siguiente repetición sin ejecutar
+            la consulta SELECT.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>7. Automatización de operaciones administrativas</h2>
+
+    <h3>7.1. Procedimientos para operaciones DDL</h3>
+
+    <p>
+        Las instrucciones DDL permiten definir y modificar la estructura
+        de las bases de datos.
+    </p>
+
+    <p>Entre las operaciones DDL más habituales se encuentran:</p>
+
+    <ul>
+        <li><code>CREATE DATABASE</code>: crear bases de datos.</li>
+        <li><code>CREATE TABLE</code>: crear tablas.</li>
+        <li><code>ALTER TABLE</code>: modificar estructuras.</li>
+        <li><code>DROP TABLE</code>: eliminar tablas.</li>
+        <li><code>DROP DATABASE</code>: eliminar bases de datos.</li>
+    </ul>
+
+    <p>
+        Estas operaciones también pueden incorporarse a procedimientos
+        almacenados para automatizar tareas de administración.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: crear una tabla de registros de actividad</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE crear_tabla_log()
+BEGIN
+    CREATE TABLE IF NOT EXISTS registro_actividad (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        descripcion VARCHAR(200) NOT NULL,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Cada vez que se ejecuta el procedimiento se comprueba
+            la existencia de la tabla y se crea si todavía no existe.
+        </p>
+
+        <pre><code>CALL crear_tabla_log();</code></pre>
+    </div>
+
+    <h3>7.2. Procedimientos para operaciones DML</h3>
+
+    <p>
+        Las instrucciones DML permiten consultar y modificar los datos
+        almacenados en las tablas.
+    </p>
+
+    <p>Entre las operaciones más habituales se encuentran:</p>
+
+    <ul>
+        <li><code>SELECT</code>: consultar información.</li>
+        <li><code>INSERT</code>: insertar registros.</li>
+        <li><code>UPDATE</code>: modificar registros.</li>
+        <li><code>DELETE</code>: eliminar registros.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: actualizar los datos de un alumno</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE cambiar_curso(
+    IN p_id INT,
+    IN p_nuevo_curso VARCHAR(20)
+)
+BEGIN
+    UPDATE alumnos
+    SET curso = p_nuevo_curso
+    WHERE id = p_id;
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El procedimiento recibe el identificador del alumno
+            y el nuevo curso. Después realiza la actualización.
+        </p>
+
+        <pre><code>CALL cambiar_curso(1, 'DAM');</code></pre>
+    </div>
+
+    <h3>7.3. Ejecución de varias instrucciones</h3>
+
+    <p>
+        Una de las principales ventajas de los procedimientos almacenados
+        es que permiten ejecutar varias instrucciones dentro de un mismo
+        bloque.
+    </p>
+
+    <p>
+        Por ejemplo, un procedimiento administrativo puede:
+    </p>
+
+    <ol>
+        <li>Comprobar si existe un registro.</li>
+        <li>Insertar información en una tabla de auditoría.</li>
+        <li>Actualizar los datos de una tabla principal.</li>
+        <li>Registrar el resultado de la operación.</li>
+    </ol>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: registrar una modificación</h3>
+
+        <pre><code>CREATE TABLE IF NOT EXISTS auditoria_alumnos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    alumno_id INT,
+    curso_anterior VARCHAR(20),
+    curso_nuevo VARCHAR(20),
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE actualizar_alumno(
+    IN p_id INT,
+    IN p_curso VARCHAR(20)
+)
+BEGIN
+    DECLARE curso_antiguo VARCHAR(20);
+
+    SELECT curso
+    INTO curso_antiguo
+    FROM alumnos
+    WHERE id = p_id;
+
+    UPDATE alumnos
+    SET curso = p_curso
+    WHERE id = p_id;
+
+    INSERT INTO auditoria_alumnos (
+        alumno_id,
+        curso_anterior,
+        curso_nuevo
+    )
+    VALUES (
+        p_id,
+        curso_antiguo,
+        p_curso
+    );
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Este procedimiento actualiza el curso de un alumno y registra
+            el valor anterior y el nuevo en una tabla de auditoría.
+        </p>
+    </div>
+
+    <div class="advertencia">
+        <strong>Consideración importante:</strong>
+        <p>
+            El ejemplo anterior presupone que el identificador del alumno
+            existe. En un procedimiento real es necesario comprobarlo antes
+            de continuar. También es recomendable utilizar transacciones
+            para asegurar que la actualización y el registro de auditoría
+            se realizan conjuntamente.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>8. Tratamiento básico de errores</h2>
+
+    <h3>8.1. ¿Por qué es necesario controlar los errores?</h3>
+
+    <p>
+        Durante la ejecución de un procedimiento pueden producirse
+        diferentes errores:
+    </p>
+
+    <ul>
+        <li>Intentar insertar un valor duplicado en una clave primaria.</li>
+        <li>Introducir un valor que incumple una restricción.</li>
+        <li>Consultar una tabla inexistente.</li>
+        <li>Realizar una operación sobre un registro que no existe.</li>
+        <li>Producir un error de integridad referencial.</li>
+    </ul>
+
+    <p>
+        Si no se controlan adecuadamente, estos errores pueden interrumpir
+        la ejecución del procedimiento y dejar operaciones incompletas.
+    </p>
+
+    <h3>8.2. Manejadores de errores: DECLARE HANDLER</h3>
+
+    <p>
+        MariaDB permite definir manejadores de condiciones mediante
+        <code>DECLARE HANDLER</code>.
+    </p>
+
+    <p>
+        Estos manejadores especifican qué debe hacer el procedimiento
+        cuando se produce una determinada condición.
+    </p>
+
+    <p>Sintaxis general:</p>
+
+    <pre><code>DECLARE tipo_manejador HANDLER
+FOR condicion
+instruccion;</code></pre>
+
+    <p>Los tipos de manejadores principales son:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Manejador</th>
+                <th>Comportamiento</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CONTINUE</td>
+                <td>Ejecuta el manejador y continúa con la ejecución.</td>
+            </tr>
+            <tr>
+                <td>EXIT</td>
+                <td>Ejecuta el manejador y termina el bloque BEGIN ... END donde está declarado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        Algunas condiciones habituales son:
+    </p>
+
+    <ul>
+        <li><code>NOT FOUND</code>: no se ha encontrado un registro o resultado.</li>
+        <li><code>SQLEXCEPTION</code>: se ha producido una excepción SQL.</li>
+        <li><code>SQLWARNING</code>: se ha producido una advertencia SQL.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: controlar una excepción SQL</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE insertar_alumno(
+    IN p_id INT,
+    IN p_nombre VARCHAR(100),
+    IN p_curso VARCHAR(20)
+)
+BEGIN
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT 'Se ha producido un error al insertar el alumno'
+        AS mensaje;
+    END;
+
+    INSERT INTO alumnos (id, nombre, curso)
+    VALUES (p_id, p_nombre, p_curso);
+
+    SELECT 'Alumno insertado correctamente' AS mensaje;
+
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Si se produce una excepción SQL durante la inserción,
+            se ejecuta el manejador EXIT y se muestra un mensaje.
+            El procedimiento termina después de ejecutar el manejador.
+        </p>
+    </div>
+
+    <h3>8.3. Capturar el código y el mensaje del error</h3>
+
+    <p>
+        MariaDB proporciona funciones para obtener información
+        sobre la condición que ha provocado un error.
+    </p>
+
+    <ul>
+        <li><code>MYSQL_ERRNO</code>: devuelve el código numérico del error.</li>
+        <li><code>MESSAGE_TEXT</code>: devuelve el mensaje descriptivo.</li>
+        <li><code>RETURNED_SQLSTATE</code>: devuelve el código SQLSTATE.</li>
+    </ul>
+
+    <p>
+        Se pueden utilizar dentro de un manejador mediante
+        <code>GET DIAGNOSTICS</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: obtener información del error</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE insertar_controlado(
+    IN p_id INT,
+    IN p_nombre VARCHAR(100),
+    IN p_curso VARCHAR(20)
+)
+BEGIN
+
+    DECLARE v_codigo INT;
+    DECLARE v_mensaje TEXT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        GET DIAGNOSTICS CONDITION 1
+            v_codigo = MYSQL_ERRNO,
+            v_mensaje = MESSAGE_TEXT;
+
+        SELECT v_codigo AS codigo_error,
+               v_mensaje AS descripcion_error;
+    END;
+
+    INSERT INTO alumnos (id, nombre, curso)
+    VALUES (p_id, p_nombre, p_curso);
+
+    SELECT 'Operación realizada correctamente' AS resultado;
+
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            Cuando se produce un error SQL, el manejador obtiene
+            su código y descripción para mostrar información
+            más detallada.
+        </p>
+    </div>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        <p>
+            Capturar una excepción no significa que los datos se hayan
+            recuperado automáticamente. Si una operación ha modificado
+            información antes de producirse el error, puede ser necesario
+            utilizar transacciones y ejecutar ROLLBACK para evitar
+            inconsistencias.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>9. Integridad y consistencia en los procedimientos</h2>
+
+    <h3>9.1. Riesgos de las operaciones automatizadas</h3>
+
+    <p>
+        Un procedimiento almacenado puede ejecutar múltiples operaciones
+        sobre diferentes tablas. Por ello, es importante garantizar
+        que los cambios realizados mantienen la integridad de la información.
+    </p>
+
+    <p>
+        Por ejemplo, si un procedimiento transfiere un alumno de un curso
+        a otro y registra el movimiento en una tabla de historial,
+        ambas operaciones deberían completarse correctamente.
+    </p>
+
+    <h3>9.2. Uso de transacciones</h3>
+
+    <p>
+        Las transacciones permiten agrupar varias operaciones para que
+        se confirmen conjuntamente o se deshagan si se produce un problema.
+    </p>
+
+    <p>Las instrucciones principales son:</p>
+
+    <ul>
+        <li><code>START TRANSACTION</code>: inicia una transacción.</li>
+        <li><code>COMMIT</code>: confirma los cambios.</li>
+        <li><code>ROLLBACK</code>: deshace los cambios pendientes.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: operación con transacción y control de errores</h3>
+
+        <pre><code>DELIMITER //
+
+CREATE PROCEDURE actualizar_y_auditar(
+    IN p_id INT,
+    IN p_curso VARCHAR(20)
+)
+BEGIN
+
+    DECLARE v_curso_antiguo VARCHAR(20);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SELECT 'Error: operación cancelada' AS resultado;
+    END;
+
+    START TRANSACTION;
+
+    SELECT curso
+    INTO v_curso_antiguo
+    FROM alumnos
+    WHERE id = p_id
+    FOR UPDATE;
+
+    UPDATE alumnos
+    SET curso = p_curso
+    WHERE id = p_id;
+
+    INSERT INTO auditoria_alumnos (
+        alumno_id,
+        curso_anterior,
+        curso_nuevo
+    )
+    VALUES (
+        p_id,
+        v_curso_antiguo,
+        p_curso
+    );
+
+    COMMIT;
+
+    SELECT 'Operación completada' AS resultado;
+
+END //
+
+DELIMITER ;</code></pre>
+
+        <p>
+            El procedimiento inicia una transacción, consulta el curso
+            actual, actualiza el alumno y registra el cambio en la tabla
+            de auditoría.
+        </p>
+
+        <p>
+            Si se produce una excepción SQL, el manejador ejecuta
+            <code>ROLLBACK</code> para deshacer las operaciones pendientes.
+            Si todo funciona correctamente, se ejecuta
+            <code>COMMIT</code>.
+        </p>
+    </div>
+
+    <div class="advertencia">
+        <strong>Requisito del motor de almacenamiento</strong>
+        <p>
+            Para que las transacciones permitan deshacer los cambios
+            correctamente, las tablas implicadas deben utilizar un motor
+            transaccional, como InnoDB. Las operaciones DDL, como CREATE
+            TABLE o DROP TABLE, pueden provocar confirmaciones implícitas
+            y no deben tratarse como operaciones transaccionales ordinarias.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>10. Ejemplo integrador: automatización de la gestión de alumnos</h2>
+
+    <p>
+        En este ejemplo se combinan variables, parámetros, estructuras
+        condicionales, operaciones DML y control de errores para
+        automatizar una operación administrativa.
+    </p>
+
+    <h3>10.1. Estructura de la base de datos</h3>
+
+    <pre><code>CREATE DATABASE IF NOT EXISTS centro;
+USE centro;
+
+CREATE TABLE IF NOT EXISTS alumnos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    curso VARCHAR(20) NOT NULL,
+    activo BOOLEAN DEFAULT TRUE
+) ENGINE=InnoDB;</code></pre>
+
+    <h3>10.2. Procedimiento para cambiar un alumno de curso</h3>
+
+    <pre><code>DELIMITER //
+
+CREATE PROCEDURE cambiar_curso_alumno(
+    IN p_id INT,
+    IN p_nuevo_curso VARCHAR(20),
+    OUT p_resultado VARCHAR(100)
+)
+BEGIN
+
+    DECLARE v_total INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET p_resultado = 'Error durante la operación';
+    END;
+
+    START TRANSACTION;
+
+    SELECT COUNT(*)
+    INTO v_total
+    FROM alumnos
+    WHERE id = p_id
+      AND activo = TRUE;
+
+    IF v_total = 0 THEN
+
+        SET p_resultado = 'El alumno no existe o está inactivo';
+
+        ROLLBACK;
+
+    ELSE
+
+        UPDATE alumnos
+        SET curso = p_nuevo_curso
+        WHERE id = p_id;
+
+        COMMIT;
+
+        SET p_resultado = 'Curso actualizado correctamente';
+
+    END IF;
+
+END //
+
+DELIMITER ;</code></pre>
+
+    <h3>10.3. Ejecución del procedimiento</h3>
+
+    <pre><code>CALL cambiar_curso_alumno(
+    1,
+    'DAM',
+    @mensaje
+);
+
+SELECT @mensaje AS resultado;</code></pre>
+
+    <p>
+        El procedimiento realiza las siguientes operaciones:
+    </p>
+
+    <ol>
+        <li>Recibe el identificador del alumno y el nuevo curso.</li>
+        <li>Comprueba si existe un alumno activo con ese identificador.</li>
+        <li>Si no existe, cancela la operación y devuelve un mensaje.</li>
+        <li>Si existe, actualiza su curso.</li>
+        <li>Confirma la transacción.</li>
+        <li>Devuelve el resultado mediante un parámetro OUT.</li>
+    </ol>
+
+    <div class="callout">
+        <strong>Conceptos utilizados en el ejemplo</strong>
+        <ul>
+            <li>Variables locales mediante DECLARE.</li>
+            <li>Asignación de valores mediante SET.</li>
+            <li>Parámetros IN y OUT.</li>
+            <li>Consulta SELECT INTO.</li>
+            <li>Condicional IF ... ELSE.</li>
+            <li>Operación DML UPDATE.</li>
+            <li>Control de errores mediante DECLARE HANDLER.</li>
+            <li>Transacciones mediante COMMIT y ROLLBACK.</li>
+        </ul>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>11. Resumen de conceptos fundamentales</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>DECLARE</td>
+                <td>Declara variables locales dentro de un bloque.</td>
+            </tr>
+            <tr>
+                <td>SET</td>
+                <td>Asigna valores a las variables.</td>
+            </tr>
+            <tr>
+                <td>SELECT INTO</td>
+                <td>Almacena el resultado de una consulta en variables.</td>
+            </tr>
+            <tr>
+                <td>CREATE PROCEDURE</td>
+                <td>Crea un procedimiento almacenado.</td>
+            </tr>
+            <tr>
+                <td>CALL</td>
+                <td>Ejecuta un procedimiento almacenado.</td>
+            </tr>
+            <tr>
+                <td>IN</td>
+                <td>Parámetro de entrada.</td>
+            </tr>
+            <tr>
+                <td>OUT</td>
+                <td>Parámetro de salida.</td>
+            </tr>
+            <tr>
+                <td>INOUT</td>
+                <td>Parámetro de entrada y salida.</td>
+            </tr>
+            <tr>
+                <td>IF / ELSEIF / ELSE</td>
+                <td>Permiten ejecutar instrucciones dependiendo de condiciones.</td>
+            </tr>
+            <tr>
+                <td>WHILE</td>
+                <td>Repite instrucciones mientras se cumple una condición.</td>
+            </tr>
+            <tr>
+                <td>REPEAT</td>
+                <td>Repite instrucciones hasta que se cumple una condición.</td>
+            </tr>
+            <tr>
+                <td>LOOP</td>
+                <td>Permite crear un bucle con salida explícita.</td>
+            </tr>
+            <tr>
+                <td>LEAVE</td>
+                <td>Abandona un bloque etiquetado.</td>
+            </tr>
+            <tr>
+                <td>ITERATE</td>
+                <td>Salta al comienzo de la siguiente iteración.</td>
+            </tr>
+            <tr>
+                <td>DECLARE HANDLER</td>
+                <td>Define cómo actuar ante determinadas condiciones o errores.</td>
+            </tr>
+            <tr>
+                <td>COMMIT</td>
+                <td>Confirma una transacción.</td>
+            </tr>
+            <tr>
+                <td>ROLLBACK</td>
+                <td>Deshace los cambios pendientes de una transacción.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================= -->
+    <h2>12. Ejercicios prácticos de aprendizaje</h2>
+
+    <p>
+        Los siguientes ejercicios permiten practicar la creación de
+        procedimientos almacenados y el uso de estructuras de control
+        en MariaDB.
+    </p>
+
+    <h3>Ejercicio 1. Variables y procedimientos</h3>
+
+    <p>
+        Trabajar con la base de datos <code>centro</code> y su tabla
+        <code>alumnos</code>.
+    </p>
+
+    <ol>
+        <li>Crear un procedimiento que declare una variable entera.</li>
+        <li>Asignarle un valor mediante SET.</li>
+        <li>Mostrar el contenido de la variable mediante SELECT.</li>
+        <li>Crear otro procedimiento que almacene en una variable el número de alumnos de la tabla.</li>
+        <li>Mostrar el resultado de la consulta.</li>
+    </ol>
+
+    <h3>Ejercicio 2. Parámetros de entrada y salida</h3>
+
+    <ol>
+        <li>Crear un procedimiento que reciba el identificador de un alumno mediante IN.</li>
+        <li>Consultar sus datos y devolverlos mediante una consulta SELECT.</li>
+        <li>Crear otro procedimiento que reciba un curso y devuelva el número de alumnos mediante OUT.</li>
+        <li>Crear un procedimiento que utilice INOUT para incrementar una cantidad recibida.</li>
+        <li>Probar los procedimientos con diferentes valores.</li>
+    </ol>
+
+    <h3>Ejercicio 3. Estructuras condicionales</h3>
+
+    <ol>
+        <li>Crear un procedimiento que reciba una cantidad de alumnos.</li>
+        <li>Utilizar IF para comprobar si el grupo está vacío.</li>
+        <li>Utilizar ELSEIF para clasificar los grupos según su tamaño.</li>
+        <li>Utilizar ELSE para gestionar los valores que no encajen en las condiciones anteriores.</li>
+        <li>Ejecutar el procedimiento con diferentes cantidades.</li>
+    </ol>
+
+    <h3>Ejercicio 4. Estructuras repetitivas</h3>
+
+    <ol>
+        <li>Crear un procedimiento que muestre los números del 1 al 10 mediante WHILE.</li>
+        <li>Repetir la operación utilizando REPEAT.</li>
+        <li>Repetir la operación utilizando LOOP y LEAVE.</li>
+        <li>Crear un procedimiento que muestre únicamente los números pares entre 1 y 20 utilizando ITERATE.</li>
+        <li>Comparar el funcionamiento de las tres estructuras.</li>
+    </ol>
+
+    <h3>Ejercicio 5. Automatización de operaciones administrativas</h3>
+
+    <ol>
+        <li>Crear una tabla para registrar operaciones administrativas.</li>
+        <li>Crear un procedimiento que permita registrar una nueva operación.</li>
+        <li>Utilizar parámetros de entrada para recibir la descripción de la operación.</li>
+        <li>Incluir una variable que almacene la fecha actual.</li>
+        <li>Crear una consulta para mostrar el historial de operaciones.</li>
+    </ol>
+
+    <h3>Ejercicio 6. Control de errores</h3>
+
+    <ol>
+        <li>Crear un procedimiento que inserte un nuevo alumno.</li>
+        <li>Definir un manejador EXIT para controlar excepciones SQL.</li>
+        <li>Recuperar el código y el mensaje del error mediante GET DIAGNOSTICS.</li>
+        <li>Probar la inserción de un identificador duplicado.</li>
+        <li>Comprobar el resultado del procedimiento.</li>
+    </ol>
+
+    <h3>Ejercicio 7. Integridad mediante transacciones</h3>
+
+    <ol>
+        <li>Crear una tabla de historial de cambios de curso.</li>
+        <li>Crear un procedimiento que actualice el curso de un alumno.</li>
+        <li>Registrar el cambio en la tabla de historial.</li>
+        <li>Utilizar START TRANSACTION y COMMIT.</li>
+        <li>Incorporar un manejador de errores que ejecute ROLLBACK.</li>
+        <li>Comprobar que una operación fallida no deja cambios parciales.</li>
+    </ol>
+
+    <div class="callout">
+        <strong>Resultado esperado</strong>
+        <p>
+            Al finalizar este bloque, el alumnado debe ser capaz de
+            desarrollar procedimientos almacenados que utilicen variables,
+            parámetros, estructuras condicionales y repetitivas.
+            También debe poder automatizar operaciones administrativas
+            y aplicar mecanismos básicos de control de errores e integridad
+            de la información.
+        </p>
+    </div>
+
+    <hr>
+
+    <h2>13. Relación con los criterios de evaluación</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Criterio</th>
+                <th>Aprendizaje esperado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CA4.4</td>
+                <td>Definir y utilizar procedimientos y secuencias de comandos para automatizar tareas administrativas.</td>
+            </tr>
+            <tr>
+                <td>CA4.7</td>
+                <td>Utilizar estructuras condicionales y repetitivas para controlar la ejecución de los procedimientos.</td>
+            </tr>
+            <tr>
+                <td>CA4.8</td>
+                <td>Aplicar mecanismos de control de errores y transacciones para mantener la integridad y consistencia de los datos.</td>
+            </tr>
+        </tbody>
+    </table>
+
+</main>
+
+</body>
+</html>

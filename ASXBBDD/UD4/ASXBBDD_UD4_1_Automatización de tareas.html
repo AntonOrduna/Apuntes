@@ -1,0 +1,961 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UD - Automatización de tareas administrativas</title>
+    <link rel="stylesheet" href="../../css/estilos.css">
+</head>
+<body>
+
+<main>
+
+    <h1>Automatización de tareas administrativas y herramientas</h1>
+
+    <p>
+        La administración de un sistema gestor de bases de datos implica
+        realizar numerosas operaciones de mantenimiento, configuración,
+        seguridad y supervisión. Muchas de estas operaciones se repiten
+        periódicamente y pueden automatizarse mediante secuencias de comandos.
+    </p>
+
+    <p>
+        En este bloque se estudiará por qué es importante automatizar las
+        tareas administrativas y qué herramientas proporciona MariaDB para
+        crear, almacenar y ejecutar scripts SQL.
+    </p>
+
+    <div class="callout">
+        <strong>Objetivos del bloque</strong>
+        <ul>
+            <li>Comprender la importancia de automatizar tareas administrativas.</li>
+            <li>Identificar las operaciones que pueden automatizarse.</li>
+            <li>Conocer las herramientas disponibles para crear scripts SQL.</li>
+            <li>Ejecutar scripts desde MariaDB Workbench y desde la consola.</li>
+            <li>Diferenciar entre ejecución interactiva y no interactiva.</li>
+        </ul>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>1. Introducción a la automatización de tareas administrativas</h2>
+
+    <h3>1.1. ¿Qué es la automatización?</h3>
+
+    <p>
+        La automatización consiste en utilizar instrucciones, programas o
+        secuencias de comandos para realizar tareas sin necesidad de que
+        un administrador tenga que ejecutarlas manualmente cada vez.
+    </p>
+
+    <p>
+        En la administración de bases de datos, estas tareas pueden incluir
+        la creación de usuarios, la realización de copias de seguridad,
+        la comprobación del estado de las tablas, el mantenimiento de
+        registros o la eliminación de información antigua.
+    </p>
+
+    <p>
+        En lugar de ejecutar individualmente cada instrucción, el
+        administrador puede preparar un script que contenga todas las
+        operaciones necesarias y ejecutarlo cuando sea preciso.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: mantenimiento manual frente a automatizado</h3>
+
+        <p>
+            Imaginemos que una empresa necesita eliminar diariamente los
+            registros temporales de una base de datos cuando tienen más
+            de 30 días.
+        </p>
+
+        <p><strong>Sin automatización:</strong></p>
+        <ol>
+            <li>El administrador se conecta a MariaDB.</li>
+            <li>Selecciona la base de datos correspondiente.</li>
+            <li>Ejecuta una consulta para localizar los registros antiguos.</li>
+            <li>Ejecuta la operación de eliminación.</li>
+            <li>Repite el proceso cada día.</li>
+        </ol>
+
+        <p><strong>Con automatización:</strong></p>
+        <p>
+            Se prepara una secuencia de comandos que realiza la eliminación.
+            Posteriormente, se puede programar su ejecución para que se
+            realice automáticamente cada día.
+        </p>
+    </div>
+
+    <h3>1.2. Ventajas de la automatización</h3>
+
+    <p>
+        La automatización ofrece diferentes ventajas en la administración
+        de un sistema gestor de bases de datos:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Ventaja</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Reducción de errores</td>
+                <td>
+                    Se evita repetir manualmente operaciones que pueden
+                    provocar errores humanos.
+                </td>
+            </tr>
+            <tr>
+                <td>Ahorro de tiempo</td>
+                <td>
+                    Las operaciones repetitivas se ejecutan sin intervención
+                    constante del administrador.
+                </td>
+            </tr>
+            <tr>
+                <td>Repetibilidad</td>
+                <td>
+                    Una misma secuencia de instrucciones puede ejecutarse
+                    varias veces siguiendo el mismo procedimiento.
+                </td>
+            </tr>
+            <tr>
+                <td>Disponibilidad</td>
+                <td>
+                    Algunas tareas pueden ejecutarse fuera del horario
+                    habitual de trabajo.
+                </td>
+            </tr>
+            <tr>
+                <td>Trazabilidad</td>
+                <td>
+                    Es posible registrar las operaciones realizadas y
+                    consultar sus resultados.
+                </td>
+            </tr>
+            <tr>
+                <td>Estandarización</td>
+                <td>
+                    Se garantiza que diferentes administradores utilicen
+                    el mismo procedimiento.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>1.3. Tareas administrativas susceptibles de automatización</h3>
+
+    <p>
+        No todas las operaciones administrativas tienen que ejecutarse
+        manualmente. Muchas pueden prepararse mediante scripts y
+        herramientas de planificación.
+    </p>
+
+    <h4>A. Copias de seguridad</h4>
+
+    <p>
+        Las copias de seguridad permiten recuperar la información cuando
+        se produce un fallo, una eliminación accidental o un problema
+        en el servidor.
+    </p>
+
+    <p>
+        Se pueden automatizar operaciones como:
+    </p>
+
+    <ul>
+        <li>Realizar una copia de seguridad completa de una base de datos.</li>
+        <li>Guardar las copias en un directorio específico.</li>
+        <li>Asignar nombres con la fecha y hora de realización.</li>
+        <li>Eliminar copias antiguas siguiendo una política de retención.</li>
+        <li>Registrar si la copia se ha realizado correctamente.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo de copia de seguridad en MariaDB</h3>
+
+        <p>
+            La herramienta <code>mariadb-dump</code> permite exportar
+            el contenido de una base de datos a un fichero SQL.
+        </p>
+
+        <pre><code>mariadb-dump -u root -p empresa > empresa_backup.sql</code></pre>
+
+        <p>
+            El comando solicita la contraseña del usuario y genera
+            un fichero con la estructura y los datos de la base de datos
+            <code>empresa</code>.
+        </p>
+    </div>
+
+    <h4>B. Tareas de mantenimiento</h4>
+
+    <p>
+        Las tareas de mantenimiento permiten conservar el correcto
+        funcionamiento del sistema gestor.
+    </p>
+
+    <p>Algunas operaciones habituales son:</p>
+
+    <ul>
+        <li>Comprobar el estado de determinadas tablas.</li>
+        <li>Analizar tablas para actualizar estadísticas.</li>
+        <li>Optimizar tablas cuando sea necesario.</li>
+        <li>Eliminar registros temporales u obsoletos.</li>
+        <li>Revisar el espacio ocupado por las bases de datos.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: comprobación de tablas</h3>
+
+        <pre><code>USE empresa;
+
+CHECK TABLE clientes;
+CHECK TABLE pedidos;</code></pre>
+
+        <p>
+            Estas instrucciones permiten comprobar el estado de las tablas
+            indicadas. Su ejecución puede incorporarse a un procedimiento
+            periódico de mantenimiento.
+        </p>
+    </div>
+
+    <h4>C. Comprobaciones y supervisión</h4>
+
+    <p>
+        El administrador también puede automatizar consultas destinadas
+        a comprobar el estado del sistema:
+    </p>
+
+    <ul>
+        <li>Consultar el número de conexiones activas.</li>
+        <li>Comprobar la existencia de determinadas bases de datos.</li>
+        <li>Revisar el número de registros de una tabla.</li>
+        <li>Detectar valores que incumplan determinadas condiciones.</li>
+        <li>Comprobar la disponibilidad de determinados servicios.</li>
+    </ul>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: consultar conexiones activas</h3>
+
+        <pre><code>SHOW STATUS LIKE 'Threads_connected';</code></pre>
+
+        <p>
+            La consulta devuelve el número de conexiones actualmente
+            abiertas en el servidor MariaDB.
+        </p>
+    </div>
+
+    <h4>D. Gestión de usuarios y permisos</h4>
+
+    <p>
+        La administración de usuarios también puede automatizarse.
+        Por ejemplo, una empresa puede necesitar crear periódicamente
+        usuarios para nuevas aplicaciones o aplicar permisos comunes
+        a determinados perfiles.
+    </p>
+
+    <pre><code>CREATE USER 'consulta'@'localhost'
+IDENTIFIED BY 'ClaveSegura123';
+
+GRANT SELECT ON empresa.*
+TO 'consulta'@'localhost';</code></pre>
+
+    <p>
+        Estas instrucciones crean un usuario y le conceden permisos
+        de consulta sobre las tablas de la base de datos <code>empresa</code>.
+    </p>
+
+    <h4>E. Registro de operaciones</h4>
+
+    <p>
+        También es posible automatizar el registro de determinadas
+        operaciones administrativas para disponer de información
+        sobre cuándo se ejecutaron y cuál fue su resultado.
+    </p>
+
+    <p>
+        Por ejemplo, se puede guardar en una tabla de control la fecha
+        de una copia de seguridad, el usuario que la inició y el estado
+        de la operación.
+    </p>
+
+    <h3>1.4. Clasificación de las tareas automatizadas</h3>
+
+    <p>
+        Según su frecuencia de ejecución, podemos clasificar las tareas
+        administrativas de la siguiente manera:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Ejemplo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Puntuales</td>
+                <td>Se ejecutan cuando aparece una necesidad concreta.</td>
+                <td>Crear una base de datos para una aplicación.</td>
+            </tr>
+            <tr>
+                <td>Periódicas</td>
+                <td>Se ejecutan siguiendo una frecuencia determinada.</td>
+                <td>Realizar copias de seguridad cada noche.</td>
+            </tr>
+            <tr>
+                <td>Condicionadas</td>
+                <td>Se ejecutan cuando se cumple una condición o sucede un evento.</td>
+                <td>Registrar una modificación de un pedido.</td>
+            </tr>
+            <tr>
+                <td>De supervisión</td>
+                <td>Comprueban periódicamente el estado del sistema.</td>
+                <td>Comprobar el número de conexiones activas.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Idea importante</strong>
+        <p>
+            Automatizar no significa únicamente ejecutar instrucciones
+            SQL de forma automática. También implica decidir cuándo
+            ejecutarlas, con qué frecuencia, bajo qué condiciones y
+            cómo comprobar que se han realizado correctamente.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>2. Herramientas para crear y ejecutar secuencias de comandos</h2>
+
+    <h3>2.1. ¿Qué es una secuencia de comandos?</h3>
+
+    <p>
+        Una secuencia de comandos o script es un fichero que contiene
+        un conjunto de instrucciones que se ejecutan siguiendo un orden
+        determinado.
+    </p>
+
+    <p>
+        En MariaDB, los scripts SQL contienen instrucciones del lenguaje
+        SQL que permiten realizar operaciones sobre las bases de datos
+        y administrar el servidor.
+    </p>
+
+    <p>
+        Habitualmente se almacenan en ficheros con extensión
+        <code>.sql</code>.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo de script SQL</h3>
+
+        <p>Contenido del fichero <code>crear_empresa.sql</code>:</p>
+
+        <pre><code>-- Creación de la base de datos
+CREATE DATABASE IF NOT EXISTS empresa;
+
+-- Selección de la base de datos
+USE empresa;
+
+-- Creación de una tabla
+CREATE TABLE IF NOT EXISTS departamentos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL
+);
+
+-- Inserción de datos iniciales
+INSERT INTO departamentos (nombre)
+VALUES
+('Administración'),
+('Informática'),
+('Comercial');</code></pre>
+
+        <p>
+            Al ejecutar el fichero se realizan, en orden, las operaciones
+            de creación de la base de datos, creación de la tabla e
+            inserción de los datos iniciales.
+        </p>
+    </div>
+
+    <h3>2.2. Herramientas disponibles</h3>
+
+    <p>
+        Existen diferentes herramientas para redactar y ejecutar scripts
+        SQL en MariaDB. En este curso se utilizarán principalmente
+        MariaDB Workbench y la consola de comandos.
+    </p>
+
+    <h4>A. MariaDB Workbench</h4>
+
+    <p>
+        MariaDB Workbench es una herramienta gráfica que permite conectarse
+        al servidor, administrar bases de datos y ejecutar instrucciones SQL
+        desde un editor.
+    </p>
+
+    <p>Entre sus principales funcionalidades destacan:</p>
+
+    <ul>
+        <li>Crear y editar instrucciones SQL.</li>
+        <li>Ejecutar una instrucción o varias instrucciones seleccionadas.</li>
+        <li>Ejecutar scripts completos.</li>
+        <li>Visualizar los resultados de las consultas.</li>
+        <li>Consultar los mensajes de error.</li>
+        <li>Guardar scripts en ficheros con extensión <code>.sql</code>.</li>
+    </ul>
+
+    <figure>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a1/MySQL_Workbench_editor_screenshot.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original"
+             alt="Interfaz gráfica de MySQL Workbench">
+        <figcaption>
+            Editor SQL de Workbench, utilizado para trabajar con servidores
+            MariaDB compatibles.
+        </figcaption>
+    </figure>
+
+    <div class="callout">
+        <strong>Workbench y MariaDB</strong>
+        <p>
+            Aunque la herramienta se denomine MySQL Workbench, puede
+            utilizarse como cliente gráfico para conectarse a un servidor
+            MariaDB. El servidor empleado en nuestras prácticas es MariaDB,
+            instalado en la máquina virtual Debian.
+        </p>
+    </div>
+
+    <h4>B. Consola de MariaDB</h4>
+
+    <p>
+        MariaDB proporciona una herramienta de línea de comandos que permite
+        conectarse al servidor y ejecutar instrucciones SQL directamente.
+    </p>
+
+    <p>
+        Para acceder a la consola se utiliza el comando
+        <code>mariadb</code>.
+    </p>
+
+    <pre><code>mariadb -u usuario -p</code></pre>
+
+    <p>Los parámetros utilizados son:</p>
+
+    <ul>
+        <li><code>-u</code>: indica el nombre del usuario.</li>
+        <li><code>-p</code>: solicita la contraseña del usuario.</li>
+    </ul>
+
+    <p>
+        Una vez establecida la conexión, aparece el indicador de MariaDB,
+        desde el que se pueden introducir instrucciones SQL.
+    </p>
+
+    <pre><code>MariaDB [(none)]> SHOW DATABASES;
+
+MariaDB [(none)]> USE empresa;
+
+MariaDB [empresa]> SHOW TABLES;
+
+MariaDB [empresa]> SELECT * FROM departamentos;</code></pre>
+
+    <p>
+        La consola es especialmente útil para la administración remota,
+        la ejecución de scripts y la integración con herramientas del
+        sistema operativo.
+    </p>
+
+    <h4>C. Editores de texto y código</h4>
+
+    <p>
+        Los scripts SQL también pueden redactarse mediante editores
+        de texto o entornos de desarrollo.
+    </p>
+
+    <p>Algunas herramientas habituales son:</p>
+
+    <ul>
+        <li>Visual Studio Code.</li>
+        <li>Notepad++.</li>
+        <li>Geany.</li>
+        <li>Vim o Nano.</li>
+    </ul>
+
+    <p>
+        Estos editores permiten crear y modificar ficheros SQL sin
+        necesidad de estar conectados al servidor. Posteriormente,
+        el fichero puede ejecutarse desde Workbench o desde la consola.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: crear un script con Nano en Debian</h3>
+
+        <p>
+            Se puede crear un fichero SQL desde el terminal de Debian
+            mediante el siguiente comando:
+        </p>
+
+        <pre><code>nano crear_empresa.sql</code></pre>
+
+        <p>
+            Una vez abierto el editor, se escriben las instrucciones SQL.
+            El fichero se guarda y queda disponible para ejecutarlo
+            posteriormente desde MariaDB.
+        </p>
+    </div>
+
+    <h3>2.3. Ejecución interactiva de instrucciones</h3>
+
+    <p>
+        La ejecución interactiva consiste en introducir las instrucciones
+        SQL directamente en una herramienta que mantiene una conexión
+        activa con el servidor.
+    </p>
+
+    <p>
+        El administrador escribe una instrucción, la ejecuta y recibe
+        inmediatamente el resultado.
+    </p>
+
+    <p>
+        Este método se puede utilizar tanto desde MariaDB Workbench
+        como desde la consola.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo de ejecución interactiva desde la consola</h3>
+
+        <pre><code>mariadb -u administrador -p
+
+USE empresa;
+
+SELECT * FROM departamentos;
+
+SHOW TABLES;</code></pre>
+
+        <p>
+            Las instrucciones se introducen una a una y MariaDB devuelve
+            el resultado de cada operación.
+        </p>
+    </div>
+
+    <p>
+        La ejecución interactiva resulta útil para:
+    </p>
+
+    <ul>
+        <li>Realizar consultas puntuales.</li>
+        <li>Probar instrucciones antes de incorporarlas a un script.</li>
+        <li>Comprobar errores y corregirlos.</li>
+        <li>Administrar el servidor de forma manual.</li>
+    </ul>
+
+    <h3>2.4. Ejecución no interactiva de scripts</h3>
+
+    <p>
+        La ejecución no interactiva permite ejecutar un conjunto de
+        instrucciones almacenadas en un fichero sin tener que introducir
+        manualmente cada una de ellas.
+    </p>
+
+    <p>
+        Este método es especialmente importante para la automatización,
+        porque permite reutilizar scripts y ejecutarlos desde otros
+        programas o herramientas de planificación.
+    </p>
+
+    <p>
+        MariaDB permite realizar esta operación de diferentes maneras.
+    </p>
+
+    <h4>A. Utilización de SOURCE</h4>
+
+    <p>
+        El comando <code>SOURCE</code> permite ejecutar un fichero SQL
+        desde una sesión abierta de la consola de MariaDB.
+    </p>
+
+    <p>
+        Primero se establece una conexión:
+    </p>
+
+    <pre><code>mariadb -u administrador -p</code></pre>
+
+    <p>
+        Una vez dentro de la consola, se ejecuta:
+    </p>
+
+    <pre><code>SOURCE /home/usuario/scripts/crear_empresa.sql;</code></pre>
+
+    <p>
+        MariaDB lee el fichero y ejecuta las instrucciones que contiene.
+    </p>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        <p>
+            El comando <code>SOURCE</code> se ejecuta dentro de la consola
+            de MariaDB, no directamente en el terminal de Debian.
+            La ruta del fichero debe existir y el usuario del sistema
+            operativo debe tener permisos para leerlo.
+        </p>
+    </div>
+
+    <h4>B. Redirección de entrada desde el terminal</h4>
+
+    <p>
+        Otra posibilidad consiste en ejecutar un fichero SQL directamente
+        desde el terminal utilizando la redirección de entrada
+        <code>&lt;</code>.
+    </p>
+
+    <pre><code>mariadb -u administrador -p empresa < crear_empresa.sql</code></pre>
+
+    <p>
+        En este caso:
+    </p>
+
+    <ul>
+        <li><code>mariadb</code> inicia el cliente de línea de comandos.</li>
+        <li><code>-u administrador</code> indica el usuario de conexión.</li>
+        <li><code>-p</code> solicita la contraseña.</li>
+        <li><code>empresa</code> indica la base de datos inicial.</li>
+        <li><code>&lt; crear_empresa.sql</code> envía el contenido del fichero como entrada.</li>
+    </ul>
+
+    <p>
+        También se puede indicar una ruta completa:
+    </p>
+
+    <pre><code>mariadb -u administrador -p empresa \
+< /home/usuario/scripts/mantenimiento.sql</code></pre>
+
+    <h4>C. Ejecución mediante tubería</h4>
+
+    <p>
+        También se puede enviar el contenido de un fichero a MariaDB
+        mediante una tubería utilizando el comando <code>cat</code>.
+    </p>
+
+    <pre><code>cat mantenimiento.sql | mariadb -u administrador -p empresa</code></pre>
+
+    <p>
+        El funcionamiento es similar al de la redirección de entrada:
+        el contenido del fichero se envía al cliente de MariaDB para
+        su ejecución.
+    </p>
+
+    <h3>2.5. Comparación de los métodos de ejecución</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Método</th>
+                <th>Desde dónde se ejecuta</th>
+                <th>Uso principal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Ejecución interactiva</td>
+                <td>Workbench o consola MariaDB</td>
+                <td>Consultas y administración manual.</td>
+            </tr>
+            <tr>
+                <td><code>SOURCE</code></td>
+                <td>Consola MariaDB</td>
+                <td>Ejecutar un fichero SQL dentro de una sesión.</td>
+            </tr>
+            <tr>
+                <td>Redirección <code>&lt;</code></td>
+                <td>Terminal Debian</td>
+                <td>Ejecutar un fichero SQL desde el sistema operativo.</td>
+            </tr>
+            <tr>
+                <td>Tubería <code>|</code></td>
+                <td>Terminal Debian</td>
+                <td>Enviar la salida de otro comando a MariaDB.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.6. Organización y mantenimiento de los scripts</h3>
+
+    <p>
+        Cuando se trabaja con diferentes scripts SQL, es recomendable
+        mantener una organización clara de los ficheros.
+    </p>
+
+    <p>
+        Por ejemplo, se puede crear un directorio específico para
+        almacenar las secuencias de comandos administrativas:
+    </p>
+
+    <pre><code>mkdir -p ~/scripts/mariadb
+
+cd ~/scripts/mariadb
+
+nano crear_base_datos.sql
+nano mantenimiento.sql
+nano usuarios.sql
+nano consultas_control.sql</code></pre>
+
+    <p>
+        Una posible organización sería:
+    </p>
+
+    <pre><code>scripts/
+└── mariadb/
+    ├── crear_base_datos.sql
+    ├── usuarios.sql
+    ├── mantenimiento.sql
+    ├── consultas_control.sql
+    └── copias_seguridad.sh</code></pre>
+
+    <p>
+        Es conveniente utilizar nombres descriptivos, incluir comentarios
+        y mantener copias de las versiones anteriores de los scripts.
+    </p>
+
+    <h3>2.7. Buenas prácticas al ejecutar scripts</h3>
+
+    <p>
+        La automatización permite ejecutar muchas operaciones rápidamente,
+        pero también puede provocar problemas si los scripts no están
+        correctamente preparados.
+    </p>
+
+    <ul>
+        <li>
+            <strong>Comprobar las instrucciones:</strong>
+            revisar el contenido antes de ejecutar operaciones que puedan
+            modificar o eliminar información.
+        </li>
+        <li>
+            <strong>Utilizar usuarios adecuados:</strong>
+            ejecutar cada script con los permisos mínimos necesarios.
+        </li>
+        <li>
+            <strong>Realizar copias de seguridad:</strong>
+            proteger los datos antes de realizar modificaciones importantes.
+        </li>
+        <li>
+            <strong>Documentar los scripts:</strong>
+            añadir comentarios que expliquen su finalidad y funcionamiento.
+        </li>
+        <li>
+            <strong>Controlar los errores:</strong>
+            revisar los mensajes devueltos por MariaDB después de ejecutar
+            las instrucciones.
+        </li>
+        <li>
+            <strong>Evitar contraseñas visibles:</strong>
+            no incluir contraseñas directamente en los comandos o scripts.
+        </li>
+        <li>
+            <strong>Probar antes de automatizar:</strong>
+            comprobar el funcionamiento manualmente antes de programar
+            ejecuciones periódicas.
+        </li>
+    </ul>
+
+    <div class="advertencia">
+        <strong>Seguridad en la ejecución de scripts</strong>
+        <p>
+            Un script puede contener operaciones destructivas como
+            <code>DROP DATABASE</code>, <code>DROP TABLE</code> o
+            <code>DELETE</code>. Si se ejecuta automáticamente sin
+            comprobaciones, puede provocar pérdidas de información.
+        </p>
+        <p>
+            Por ello, es fundamental revisar los permisos, validar las
+            instrucciones y disponer de copias de seguridad recuperables.
+        </p>
+    </div>
+
+    <!-- ================================================= -->
+    <h2>3. Resumen de conceptos fundamentales</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Automatización</td>
+                <td>Realización de tareas mediante instrucciones o programas sin intervención manual constante.</td>
+            </tr>
+            <tr>
+                <td>Script SQL</td>
+                <td>Fichero que contiene instrucciones SQL para ejecutar operaciones sobre MariaDB.</td>
+            </tr>
+            <tr>
+                <td>MariaDB Workbench</td>
+                <td>Herramienta gráfica para conectarse al servidor y ejecutar instrucciones SQL.</td>
+            </tr>
+            <tr>
+                <td>Consola MariaDB</td>
+                <td>Cliente de línea de comandos que permite administrar el servidor y ejecutar consultas.</td>
+            </tr>
+            <tr>
+                <td>Ejecución interactiva</td>
+                <td>Introducción y ejecución de instrucciones directamente desde una sesión activa.</td>
+            </tr>
+            <tr>
+                <td>Ejecución no interactiva</td>
+                <td>Ejecución de instrucciones almacenadas en ficheros sin introducirlas individualmente.</td>
+            </tr>
+            <tr>
+                <td>SOURCE</td>
+                <td>Comando de la consola MariaDB que permite ejecutar un fichero SQL.</td>
+            </tr>
+            <tr>
+                <td>Redirección</td>
+                <td>Mecanismo del terminal que permite enviar el contenido de un fichero a MariaDB.</td>
+            </tr>
+            <tr>
+                <td>mariadb-dump</td>
+                <td>Herramienta para exportar bases de datos y generar copias de seguridad lógicas.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ================================================= -->
+    <h2>4. Ejercicios prácticos de aprendizaje</h2>
+
+    <p>
+        Los siguientes ejercicios permiten poner en práctica los conceptos
+        explicados en este bloque utilizando el servidor MariaDB instalado
+        en Debian y la herramienta Workbench.
+    </p>
+
+    <h3>Ejercicio 1. Identificación de tareas automatizables</h3>
+
+    <p>
+        Una empresa dispone de una base de datos que contiene información
+        sobre clientes, pedidos, empleados y productos.
+    </p>
+
+    <p>
+        Se necesita identificar qué operaciones administrativas podrían
+        automatizarse y justificar su utilidad.
+    </p>
+
+    <ol>
+        <li>Identificar cinco tareas administrativas que puedan automatizarse.</li>
+        <li>Clasificarlas según sean puntuales, periódicas o condicionadas.</li>
+        <li>Indicar qué herramienta podría utilizarse para cada tarea.</li>
+        <li>Explicar qué ventajas aportaría su automatización.</li>
+    </ol>
+
+    <h3>Ejercicio 2. Creación de un script SQL</h3>
+
+    <p>
+        Crear un fichero llamado <code>centro.sql</code> que contenga
+        las instrucciones necesarias para:
+    </p>
+
+    <ol>
+        <li>Crear una base de datos llamada <code>centro</code>.</li>
+        <li>Seleccionar dicha base de datos.</li>
+        <li>Crear una tabla llamada <code>alumnos</code>.</li>
+        <li>Definir los campos identificador, nombre y correo electrónico.</li>
+        <li>Insertar al menos tres registros de ejemplo.</li>
+        <li>Consultar todos los registros insertados.</li>
+    </ol>
+
+    <h3>Ejercicio 3. Ejecución desde Workbench</h3>
+
+    <p>
+        Utilizar MariaDB Workbench para abrir y ejecutar el fichero
+        <code>centro.sql</code>.
+    </p>
+
+    <ol>
+        <li>Abrir el fichero desde el editor SQL.</li>
+        <li>Ejecutar las instrucciones.</li>
+        <li>Comprobar que la base de datos se ha creado correctamente.</li>
+        <li>Consultar el contenido de la tabla.</li>
+    </ol>
+
+    <h3>Ejercicio 4. Ejecución desde la consola</h3>
+
+    <p>
+        Utilizar el terminal de Debian para ejecutar el mismo fichero
+        SQL mediante dos procedimientos diferentes:
+    </p>
+
+    <ol>
+        <li>Acceder a la consola de MariaDB y ejecutar el fichero mediante <code>SOURCE</code>.</li>
+        <li>Salir de la consola y ejecutar el fichero utilizando la redirección de entrada <code>&lt;</code>.</li>
+        <li>Comprobar que ambos procedimientos ejecutan las instrucciones correctamente.</li>
+        <li>Comparar las diferencias entre los dos métodos.</li>
+    </ol>
+
+    <h3>Ejercicio 5. Copia de seguridad desde el terminal</h3>
+
+    <p>
+        Realizar una copia de seguridad de la base de datos
+        <code>centro</code> utilizando <code>mariadb-dump</code>.
+    </p>
+
+    <ol>
+        <li>Generar un fichero SQL con la copia de seguridad.</li>
+        <li>Comprobar que el fichero se ha creado.</li>
+        <li>Consultar su contenido.</li>
+        <li>Crear una segunda base de datos para realizar una prueba de restauración.</li>
+        <li>Restaurar la copia de seguridad en esa segunda base de datos y comprobar sus tablas y registros.</li>
+    </ol>
+
+    <div class="callout">
+        <strong>Resultado esperado</strong>
+        <p>
+            Al finalizar estos ejercicios, el alumnado debe ser capaz de
+            identificar tareas administrativas automatizables, crear
+            ficheros SQL, ejecutarlos desde diferentes herramientas y
+            realizar una copia de seguridad básica mediante la consola
+            de Debian.
+        </p>
+    </div>
+
+    <hr>
+
+    <h2>5. Relación con los criterios de evaluación</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Criterio</th>
+                <th>Aprendizaje esperado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CA4.1</td>
+                <td>Reconocer la importancia de automatizar tareas administrativas y sus ventajas.</td>
+            </tr>
+            <tr>
+                <td>CA4.2</td>
+                <td>Describir los métodos de ejecución de scripts SQL desde Workbench y la consola.</td>
+            </tr>
+            <tr>
+                <td>CA4.3</td>
+                <td>Identificar las herramientas disponibles para redactar y editar scripts.</td>
+            </tr>
+        </tbody>
+    </table>
+
+</main>
+
+</body>
+</html>
