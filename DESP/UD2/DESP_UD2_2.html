@@ -1,526 +1,419 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seguridad, despliegue y monitorización de aplicaciones web</title>
+    <title>UD - Despliegue de aplicaciones web</title>
     <link rel="stylesheet" href="../../css/estilos.css">
 </head>
 <body>
 
-<div class="container">
-<main class="content">
+<main>
 
-    <h1 class="document-title">Seguridad, despliegue y monitorización de aplicaciones web</h1>
-    <p class="document-subtitle">
-        Hardening de servidores Apache, despliegue de aplicaciones web,
-        virtualización, Docker, gestión de registros y monitorización.
+    <h1>Bloque 2. Despliegue, virtualización y monitorización</h1>
+
+    <p>
+        En este bloque se estudian los procedimientos necesarios para
+        desplegar aplicaciones web de forma segura, documentar la
+        infraestructura, utilizar contenedores para ejecutar servidores
+        web y analizar los registros de actividad.
     </p>
 
-    <!-- BLOQUE 6 -->
-    <section>
-        <h2>6. Seguridad avanzada y documentación del servidor</h2>
-
-        <h3>6.1. ¿Qué es el hardening?</h3>
-
+    <div class="callout">
+        <strong>Objetivo del bloque</strong>
         <p>
-            El <strong>hardening</strong> o endurecimiento de un servidor
-            consiste en aplicar medidas de seguridad para reducir las
-            posibilidades de que un atacante pueda comprometer el sistema.
+            Desplegar una aplicación web segura, documentar la infraestructura,
+            ejecutar el servidor mediante contenedores y analizar sus registros
+            para comprobar su funcionamiento y detectar posibles problemas.
         </p>
+    </div>
 
-        <p>
-            Un servidor web no es seguro únicamente por utilizar HTTPS.
-            También es necesario configurar correctamente los permisos,
-            desactivar funcionalidades innecesarias, mantener el software
-            actualizado y limitar los accesos.
-        </p>
+    <h2>1. Seguridad avanzada del servidor web (Hardening)</h2>
 
-        <p>Los objetivos principales del hardening son:</p>
+    <h3>1.1. Concepto de hardening</h3>
 
-        <ul>
-            <li>Reducir la superficie de ataque.</li>
-            <li>Limitar los privilegios de usuarios y procesos.</li>
-            <li>Evitar la exposición de información sensible.</li>
-            <li>Mantener el software actualizado.</li>
-            <li>Registrar los accesos y errores.</li>
-            <li>Facilitar la recuperación ante incidentes.</li>
-        </ul>
+    <p>
+        El <strong>hardening</strong> es el proceso de aplicar medidas de
+        seguridad a un sistema para reducir su superficie de exposición
+        y minimizar las posibilidades de sufrir ataques.
+    </p>
 
-        <h3>6.2. Principio de mínimo privilegio</h3>
+    <p>
+        En un servidor web Apache no es suficiente con instalar el servicio
+        y comprobar que muestra una página. También es necesario revisar
+        su configuración, limitar los permisos, reducir la información
+        que proporciona y controlar los accesos.
+    </p>
 
-        <p>
-            El principio de mínimo privilegio establece que cada usuario,
-            proceso o servicio debe disponer únicamente de los permisos
-            necesarios para realizar su función.
-        </p>
+    <h3>1.2. Medidas de seguridad en Apache</h3>
 
-        <p>
-            Por ejemplo, un servidor Apache que publica archivos HTML
-            necesita leerlos, pero normalmente no necesita modificarlos.
-        </p>
+    <h4>Ocultar información sobre el servidor</h4>
 
-        <p>Podemos comprobar los permisos de un directorio web con:</p>
+    <p>
+        Apache puede proporcionar información sobre su versión y sobre
+        determinados componentes mediante las cabeceras HTTP y las páginas
+        de error. Esta información puede ayudar a identificar posibles
+        vulnerabilidades.
+    </p>
 
-        <pre><code>ls -ld /var/www/html
-ls -l /var/www/html</code></pre>
+    <p>En el archivo de configuración principal o en un archivo independiente:</p>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 1</span>
-            <h3>Configurar permisos para una web estática</h3>
-
-            <p>
-                Una configuración habitual para una web estática consiste
-                en asignar la propiedad de los archivos a root y permitir
-                su lectura por el resto de usuarios:
-            </p>
-
-            <pre><code>chown -R root:root /var/www/html
-
-find /var/www/html -type d -exec chmod 755 {} \;
-
-find /var/www/html -type f -exec chmod 644 {} \;</code></pre>
-
-            <p>
-                Estos permisos permiten leer los archivos y atravesar
-                los directorios, pero reservan la escritura al propietario.
-            </p>
-        </div>
-
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                Esta configuración es apropiada para contenido estático
-                que no necesita ser modificado por Apache.
-            </p>
-            <p>
-                Una aplicación dinámica puede necesitar permisos específicos
-                sobre determinados directorios, por ejemplo para cargar
-                archivos o almacenar datos. No debemos aplicar estos
-                comandos indiscriminadamente a cualquier aplicación.
-            </p>
-        </div>
-
-        <h3>6.3. Ocultar información innecesaria</h3>
-
-        <p>
-            Apache puede revelar información sobre el servidor en
-            determinadas respuestas HTTP. Podemos reducir parte de
-            esta exposición mediante las siguientes directivas:
-        </p>
-
-        <pre><code>ServerTokens Prod
+    <pre><code>ServerTokens Prod
 ServerSignature Off</code></pre>
 
-        <ul>
-            <li>
-                <code>ServerTokens Prod</code>: reduce la información
-                de versión que aparece en la cabecera <code>Server</code>.
-            </li>
-            <li>
-                <code>ServerSignature Off</code>: desactiva la firma
-                informativa que Apache puede mostrar en páginas generadas
-                por el servidor.
-            </li>
-        </ul>
+    <ul>
+        <li><code>ServerTokens Prod</code>: limita la información de versión que aparece en las cabeceras HTTP.</li>
+        <li><code>ServerSignature Off</code>: evita mostrar información del servidor en páginas generadas por Apache.</li>
+    </ul>
 
-        <p>
-            Estas medidas dificultan la identificación de algunos detalles
-            de la instalación, pero no sustituyen a las actualizaciones
-            ni a la corrección de vulnerabilidades.
-        </p>
+    <h4>Desactivar el listado de directorios</h4>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 2</span>
-            <h3>Aplicar las directivas de seguridad</h3>
+    <p>
+        Cuando un directorio no contiene un archivo de inicio, Apache puede
+        mostrar un listado de sus archivos si está habilitada la opción
+        correspondiente.
+    </p>
 
-            <p>
-                Podemos incorporar las directivas en la configuración
-                global de Apache y comprobar que no existen errores:
-            </p>
-
-            <pre><code>apache2ctl configtest
-systemctl reload apache2</code></pre>
-        </div>
-
-        <h3>6.4. Controlar el acceso a los directorios</h3>
-
-        <p>
-            No todos los directorios de una aplicación deben ser accesibles
-            desde Internet.
-        </p>
-
-        <p>
-            Por ejemplo, no debemos publicar directamente directorios
-            que contengan copias de seguridad, archivos de configuración,
-            credenciales o código que no deba descargarse.
-        </p>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 3</span>
-            <h3>Configurar un directorio público</h3>
-
-            <p>
-                Una configuración básica para un directorio público sería:
-            </p>
-
-            <pre><code>&lt;Directory /var/www/html&gt;
+    <pre><code>&lt;Directory /var/www/html&gt;
     Options -Indexes
     AllowOverride None
     Require all granted
 &lt;/Directory&gt;</code></pre>
 
-            <p>Esta configuración:</p>
+    <p>
+        Con <code>Options -Indexes</code> se evita que los visitantes puedan
+        consultar el listado de archivos de un directorio.
+    </p>
 
-            <ul>
-                <li>Desactiva los listados automáticos de directorios.</li>
-                <li>
-                    Impide que los archivos <code>.htaccess</code>
-                    sobrescriban la configuración en ese directorio.
-                </li>
-                <li>Permite el acceso HTTP a los recursos del directorio.</li>
-            </ul>
-        </div>
+    <h4>Controlar los permisos</h4>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 4</span>
-            <h3>Restringir el acceso a un directorio administrativo</h3>
+    <p>
+        Los archivos de una aplicación web deben tener permisos adecuados.
+        El usuario del servidor web necesita poder leer los archivos públicos,
+        pero no debería tener permisos de escritura innecesarios.
+    </p>
 
-            <p>
-                Para un directorio administrativo podemos establecer
-                una restricción por dirección IP:
-            </p>
+    <pre><code>sudo chown -R root:www-data /var/www/empresa
+sudo find /var/www/empresa -type d -exec chmod 750 {} \;
+sudo find /var/www/empresa -type f -exec chmod 640 {} \;</code></pre>
 
-            <pre><code>&lt;Directory /var/www/html/admin&gt;
-    Options -Indexes
-    AllowOverride None
-    Require ip 192.168.1.0/24
+    <p>
+        En este ejemplo, el propietario es <code>root</code> y el grupo
+        es <code>www-data</code>, que habitualmente utiliza Apache en Debian.
+    </p>
+
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        Los permisos deben adaptarse a cada aplicación. Algunas necesitan
+        directorios concretos con permisos de escritura para subir archivos,
+        almacenar sesiones o generar caché. No se debe conceder escritura
+        a todo el árbol de la aplicación.
+    </div>
+
+    <h4>Limitar los métodos HTTP</h4>
+
+    <p>
+        Los métodos HTTP permiten realizar distintas operaciones sobre los
+        recursos del servidor. Si una aplicación solamente necesita GET
+        y POST, puede limitarse el uso de otros métodos.
+    </p>
+
+    <pre><code>&lt;Directory /var/www/empresa&gt;
+    &lt;LimitExcept GET POST&gt;
+        Require all denied
+    &lt;/LimitExcept&gt;
 &lt;/Directory&gt;</code></pre>
 
-            <p>
-                Esta regla limita el acceso a la red indicada.
-                La dirección de red debe adaptarse a la infraestructura real.
-            </p>
-        </div>
+    <p>
+        Esta configuración deniega los métodos distintos de GET y POST
+        en el directorio indicado. Debe comprobarse que no interfiera
+        con las necesidades de la aplicación.
+    </p>
 
-        <h3>6.5. Mantener el servidor actualizado</h3>
+    <h3>1.3. Otras medidas de seguridad</h3>
+
+    <ul>
+        <li>Mantener actualizado el sistema operativo y Apache.</li>
+        <li>Eliminar módulos que no se utilicen.</li>
+        <li>Utilizar HTTPS para proteger las comunicaciones.</li>
+        <li>Configurar correctamente los permisos de archivos y directorios.</li>
+        <li>Limitar los puertos abiertos mediante un cortafuegos.</li>
+        <li>Evitar utilizar la cuenta de administrador para ejecutar aplicaciones.</li>
+        <li>Realizar copias de seguridad de la configuración y de los datos.</li>
+        <li>Revisar periódicamente los registros de actividad.</li>
+    </ul>
+
+    <h3>1.4. Comprobación de la configuración</h3>
+
+    <p>
+        Antes de aplicar cambios en Apache es recomendable comprobar que
+        los archivos de configuración no contienen errores.
+    </p>
+
+    <pre><code>sudo apache2ctl configtest</code></pre>
+
+    <p>
+        Si la configuración es correcta, se mostrará:
+    </p>
+
+    <pre><code>Syntax OK</code></pre>
+
+    <p>Para recargar la configuración:</p>
+
+    <pre><code>sudo systemctl reload apache2</code></pre>
+
+    <p>Para consultar el estado del servicio:</p>
+
+    <pre><code>sudo systemctl status apache2</code></pre>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: aplicación de medidas de hardening</h3>
 
         <p>
-            Las actualizaciones corrigen errores, solucionan vulnerabilidades
-            y mejoran la estabilidad del sistema.
+            Se dispone de un servidor Apache que aloja una aplicación
+            en <code>/var/www/empresa</code>.
         </p>
 
-        <p>En Debian podemos actualizar los índices e instalar las actualizaciones disponibles:</p>
-
-        <pre><code>apt update
-apt upgrade</code></pre>
-
-        <p>Antes de realizar actualizaciones en producción conviene:</p>
+        <p>Se realizan las siguientes acciones:</p>
 
         <ol>
-            <li>Revisar los cambios y sus posibles incompatibilidades.</li>
-            <li>Realizar copias de seguridad.</li>
-            <li>Probar las actualizaciones en un entorno de pruebas cuando sea posible.</li>
-            <li>Aplicarlas en una ventana de mantenimiento adecuada.</li>
-            <li>Comprobar el funcionamiento del servidor después de la actualización.</li>
+            <li>Ocultar la versión de Apache.</li>
+            <li>Desactivar la firma del servidor.</li>
+            <li>Deshabilitar el listado de directorios.</li>
+            <li>Revisar los permisos de los archivos.</li>
+            <li>Comprobar la sintaxis de la configuración.</li>
+            <li>Recargar el servicio y verificar el funcionamiento.</li>
         </ol>
+    </div>
 
-        <p>
-            También debemos revisar periódicamente los módulos habilitados
-            y desactivar los que no sean necesarios.
-        </p>
+    <h2>2. Documentación técnica del servidor</h2>
 
-        <h3>6.6. Protección de las comunicaciones</h3>
+    <h3>2.1. Importancia de la documentación</h3>
 
-        <p>
-            Para proteger las comunicaciones entre el cliente y el servidor
-            debemos utilizar HTTPS con una configuración TLS adecuada.
-        </p>
+    <p>
+        La documentación técnica recoge la información necesaria para
+        comprender, administrar, mantener y recuperar un servidor web.
+        Permite que otros administradores puedan conocer cómo está
+        configurado el sistema sin tener que investigar toda su estructura.
+    </p>
 
-        <p>Las principales medidas son:</p>
+    <h3>2.2. Información que debe documentarse</h3>
 
-        <ul>
-            <li>Utilizar certificados válidos para los nombres de dominio publicados.</li>
-            <li>Proteger la clave privada del certificado.</li>
-            <li>Mantener actualizados Apache y las bibliotecas criptográficas.</li>
-            <li>Evitar protocolos y algoritmos obsoletos.</li>
-            <li>Redirigir HTTP a HTTPS cuando corresponda.</li>
-            <li>Renovar los certificados antes de que caduquen.</li>
-            <li>Evitar transmitir credenciales y datos sensibles por conexiones sin cifrar.</li>
-        </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Elemento</th>
+                <th>Información que debe incluirse</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sistema operativo</td>
+                <td>Distribución, versión y características del servidor.</td>
+            </tr>
+            <tr>
+                <td>Servidor web</td>
+                <td>Versión de Apache, estado y puerto de escucha.</td>
+            </tr>
+            <tr>
+                <td>Configuración</td>
+                <td>Archivos principales y directivas modificadas.</td>
+            </tr>
+            <tr>
+                <td>Hosts virtuales</td>
+                <td>Dominios, directorios raíz y puertos utilizados.</td>
+            </tr>
+            <tr>
+                <td>Seguridad</td>
+                <td>Autenticación, permisos, certificados y restricciones.</td>
+            </tr>
+            <tr>
+                <td>Aplicaciones</td>
+                <td>Ubicación, dependencias, versiones y configuración.</td>
+            </tr>
+            <tr>
+                <td>Logs</td>
+                <td>Ubicación de los registros y procedimientos de consulta.</td>
+            </tr>
+            <tr>
+                <td>Mantenimiento</td>
+                <td>Copias de seguridad, actualizaciones y recuperación.</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 5</span>
-            <h3>Comprobar el certificado de un servidor</h3>
+    <h3>2.3. Recomendaciones de administración</h3>
 
-            <p>
-                Para comprobar el certificado presentado por un servidor
-                podemos utilizar OpenSSL:
-            </p>
+    <ul>
+        <li>Documentar todos los cambios importantes.</li>
+        <li>Guardar copias de los archivos de configuración originales.</li>
+        <li>Indicar los comandos necesarios para iniciar, detener y reiniciar servicios.</li>
+        <li>Registrar las versiones de los componentes instalados.</li>
+        <li>No incluir contraseñas ni claves privadas en documentación pública.</li>
+        <li>Actualizar la documentación cuando se modifique la infraestructura.</li>
+    </ul>
 
-            <pre><code>openssl s_client \
-    -connect ejemplo.com:443 \
-    -servername ejemplo.com</code></pre>
+    <div class="ejemplo">
+        <h3>Ejemplo: inventario de un servidor</h3>
 
-            <p>
-                El nombre <code>ejemplo.com</code> debe sustituirse
-                por el dominio real del servidor.
-            </p>
-        </div>
+        <pre><code>Servidor: servidor-web
+Sistema operativo: Debian
+Servidor HTTP: Apache 2.4
+Puerto HTTP: 80
+Puerto HTTPS: 443
 
-        <h3>6.7. Copias de seguridad</h3>
+Aplicaciones:
+- Empresa: /var/www/empresa
+- Tienda: /var/www/tienda
 
-        <p>
-            Una copia de seguridad permite recuperar la configuración
-            y los datos después de un fallo, un borrado accidental
-            o un incidente de seguridad.
-        </p>
+Configuración:
+- /etc/apache2/apache2.conf
+- /etc/apache2/sites-available/
 
-        <p>En un servidor Apache debemos considerar, como mínimo:</p>
+Registros:
+- /var/log/apache2/access.log
+- /var/log/apache2/error.log
 
-        <ul>
-            <li><code>/etc/apache2/</code>: configuración del servidor.</li>
-            <li>
-                <code>/var/www/</code>: contenido web, si se encuentra
-                en esa ubicación.
-            </li>
-            <li>
-                Certificados y claves necesarios, con protección especial
-                para las claves privadas.
-            </li>
-            <li>Bases de datos y archivos de datos de las aplicaciones.</li>
-            <li>Archivos de configuración de servicios auxiliares.</li>
-        </ul>
+Servicio:
+- systemctl start apache2
+- systemctl stop apache2
+- systemctl reload apache2</code></pre>
+    </div>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 6</span>
-            <h3>Realizar una copia de seguridad de Apache</h3>
+    <h2>3. Despliegue de aplicaciones web</h2>
 
-            <p>
-                Podemos crear un archivo comprimido con toda la configuración
-                de Apache:
-            </p>
+    <h3>3.1. Concepto de despliegue</h3>
 
-            <pre><code>tar -czf apache-config.tar.gz /etc/apache2</code></pre>
+    <p>
+        El despliegue de una aplicación web consiste en preparar el entorno
+        servidor, instalar los componentes necesarios, copiar los archivos
+        de la aplicación, configurar sus dependencias y ponerla a disposición
+        de los usuarios.
+    </p>
 
-            <p>
-                Este comando genera un archivo comprimido con la configuración.
-                La copia debe trasladarse a una ubicación adecuada, con acceso
-                restringido, y no debería almacenarse únicamente en el mismo
-                disco del servidor.
-            </p>
-        </div>
+    <p>
+        Una aplicación desarrollada en un entorno local no siempre puede
+        trasladarse directamente a producción. Es necesario adaptar su
+        configuración al servidor donde se ejecutará.
+    </p>
 
-        <p>
-            Una estrategia de copias de seguridad debe contemplar también
-            la frecuencia, la retención, la ubicación externa y las pruebas
-            periódicas de restauración.
-        </p>
+    <h3>3.2. Estructura de una aplicación web</h3>
 
-        <h3>6.8. Documentación técnica del servidor</h3>
+    <p>
+        Una aplicación web puede contener diferentes tipos de archivos:
+    </p>
 
-        <p>
-            La documentación permite conocer cómo está configurado el servidor,
-            facilita su mantenimiento y ayuda a otros administradores
-            a reproducir la instalación.
-        </p>
+    <ul>
+        <li><strong>Archivos públicos:</strong> HTML, CSS, JavaScript e imágenes.</li>
+        <li><strong>Archivos de aplicación:</strong> código PHP, Java u otros lenguajes.</li>
+        <li><strong>Configuración:</strong> parámetros de conexión y variables de entorno.</li>
+        <li><strong>Dependencias:</strong> bibliotecas y componentes externos.</li>
+        <li><strong>Datos:</strong> archivos subidos, documentos y otros recursos.</li>
+    </ul>
 
-        <p>Una documentación técnica debería incluir:</p>
+    <p>
+        Una estructura sencilla de una aplicación PHP podría ser:
+    </p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Apartado</th>
-                    <th>Información que debe contener</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Identificación</td>
-                    <td>Nombre del servidor, sistema operativo y versión de Apache.</td>
-                </tr>
-                <tr>
-                    <td>Red</td>
-                    <td>Dirección IP, nombres de dominio y puertos utilizados.</td>
-                </tr>
-                <tr>
-                    <td>Configuración</td>
-                    <td>Archivos principales y directivas modificadas.</td>
-                </tr>
-                <tr>
-                    <td>Sitios virtuales</td>
-                    <td>Dominios, directorios raíz y archivos de configuración.</td>
-                </tr>
-                <tr>
-                    <td>Seguridad</td>
-                    <td>Certificados, autenticación, permisos y restricciones.</td>
-                </tr>
-                <tr>
-                    <td>Aplicaciones</td>
-                    <td>Tecnologías utilizadas, dependencias y procedimiento de despliegue.</td>
-                </tr>
-                <tr>
-                    <td>Registros</td>
-                    <td>Ubicación de los logs y procedimientos de análisis.</td>
-                </tr>
-                <tr>
-                    <td>Copias de seguridad</td>
-                    <td>Qué se copia, cuándo y cómo se restaura.</td>
-                </tr>
-                <tr>
-                    <td>Mantenimiento</td>
-                    <td>Actualizaciones, renovaciones y comprobaciones periódicas.</td>
-                </tr>
-            </tbody>
-        </table>
+    <pre><code>empresa/
+├── public/
+│   ├── index.php
+│   ├── css/
+│   ├── js/
+│   └── img/
+├── src/
+├── config/
+├── vendor/
+├── storage/
+└── composer.json</code></pre>
 
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                No se deben incluir contraseñas, claves privadas ni otros
-                secretos directamente en el documento. Es preferible indicar
-                dónde se almacenan de forma segura y quién tiene acceso.
-            </p>
-        </div>
+    <p>
+        El directorio <code>public</code> contiene los archivos accesibles
+        desde el navegador. El resto de directorios deben permanecer fuera
+        del acceso público directo siempre que sea posible.
+    </p>
 
-        <div class="practice">
-            <span class="block-label">Ejercicio práctico no evaluable</span>
-            <h3>Ejercicio 1. Seguridad y documentación del servidor</h3>
+    <h3>3.3. Instalación de dependencias</h3>
 
-            <ol>
-                <li>Revisa los permisos del directorio web.</li>
-                <li>Aplica medidas básicas de hardening.</li>
-                <li>Desactiva los listados de directorios.</li>
-                <li>Comprueba la configuración TLS.</li>
-                <li>Realiza una copia de seguridad de la configuración de Apache.</li>
-                <li>Redacta un documento técnico con las medidas aplicadas.</li>
-            </ol>
-        </div>
-    </section>
+    <p>
+        Las aplicaciones necesitan determinados componentes para funcionar:
+        intérpretes, módulos, bibliotecas y servicios externos.
+    </p>
 
+    <p>Por ejemplo, para ejecutar aplicaciones PHP con Apache en Debian:</p>
 
-    <!-- BLOQUE 7 -->
-    <section>
-        <h2>7. Despliegue de aplicaciones web</h2>
+    <pre><code>sudo apt update
+sudo apt install apache2 php libapache2-mod-php</code></pre>
 
-        <h3>7.1. ¿Qué significa desplegar una aplicación?</h3>
+    <p>
+        Si la aplicación utiliza MariaDB y necesita conectarse desde PHP:
+    </p>
 
-        <p>
-            Desplegar una aplicación web consiste en instalarla y configurarla
-            en un servidor para que los usuarios puedan acceder a ella.
-        </p>
+    <pre><code>sudo apt install mariadb-server php-mysql</code></pre>
 
-        <p>
-            El proceso no consiste únicamente en copiar archivos. También
-            puede requerir instalar dependencias, configurar variables
-            de entorno, preparar una base de datos, establecer permisos,
-            habilitar HTTPS y comprobar el funcionamiento.
-        </p>
+    <p>
+        Para comprobar la versión de PHP:
+    </p>
 
-        <p>Las tareas habituales son:</p>
+    <pre><code>php -v</code></pre>
 
-        <ol>
-            <li>Preparar el servidor.</li>
-            <li>Instalar las dependencias.</li>
-            <li>Copiar o descargar la aplicación.</li>
-            <li>Configurar la aplicación.</li>
-            <li>Preparar la base de datos, si existe.</li>
-            <li>Ajustar los permisos.</li>
-            <li>Configurar Apache.</li>
-            <li>Realizar pruebas.</li>
-            <li>Revisar los registros y documentar el despliegue.</li>
-        </ol>
+    <h4>Gestión de dependencias con Composer</h4>
 
-        <h3>7.2. Tipos de aplicaciones web</h3>
+    <p>
+        Composer permite gestionar las bibliotecas externas utilizadas
+        por proyectos PHP. Las dependencias se declaran en el archivo
+        <code>composer.json</code>.
+    </p>
 
-        <p>Podemos distinguir varios tipos de aplicaciones:</p>
+    <pre><code>composer install --no-dev --optimize-autoloader</code></pre>
 
-        <h4>Aplicaciones estáticas</h4>
+    <p>
+        Este comando instala las dependencias necesarias para producción,
+        excluyendo las de desarrollo y optimizando la carga automática.
+    </p>
 
-        <p>
-            Están formadas principalmente por HTML, CSS, JavaScript e imágenes.
-            Apache puede servirlas directamente.
-        </p>
+    <h3>3.4. Configuración de la aplicación</h3>
 
-        <h4>Aplicaciones dinámicas</h4>
+    <p>
+        Una aplicación necesita parámetros que pueden variar dependiendo
+        del entorno en el que se ejecute.
+    </p>
 
-        <p>
-            Generan contenido en función de los datos, las peticiones o
-            la sesión del usuario. Pueden utilizar PHP, Python, Java,
-            Node.js u otras tecnologías.
-        </p>
+    <p>Algunos ejemplos son:</p>
 
-        <h4>Aplicaciones con base de datos</h4>
+    <ul>
+        <li>Dirección del servidor de base de datos.</li>
+        <li>Nombre de la base de datos.</li>
+        <li>Usuario y contraseña de conexión.</li>
+        <li>Modo de funcionamiento: desarrollo o producción.</li>
+        <li>Rutas de almacenamiento de archivos.</li>
+        <li>Configuración del correo electrónico.</li>
+    </ul>
 
-        <p>
-            Necesitan conectarse a un sistema gestor de bases de datos
-            como MySQL o PostgreSQL.
-        </p>
+    <div class="advertencia">
+        <strong>Seguridad:</strong>
+        Las credenciales de conexión no deben almacenarse en archivos
+        accesibles desde el navegador ni incluirse directamente en
+        repositorios públicos. Es recomendable utilizar variables
+        de entorno o archivos de configuración protegidos.
+    </div>
 
-        <div class="knowledge">
-            <span class="block-label">Conocimiento clave</span>
-            <p>
-                Cada tecnología requiere una configuración específica.
-                Por ejemplo, instalar Apache no es suficiente para ejecutar
-                una aplicación PHP si el entorno PHP necesario no está
-                instalado y configurado.
-            </p>
-        </div>
+    <h3>3.5. Configuración del VirtualHost</h3>
 
-        <h3>7.3. Desplegar una aplicación estática</h3>
+    <p>
+        Apache puede utilizar un host virtual para dirigir las peticiones
+        de un dominio hacia el directorio público de una aplicación.
+    </p>
 
-        <p>
-            Vamos a desplegar una web sencilla en Debian.
-        </p>
+    <p>Ejemplo de configuración para <code>empresa.local</code>:</p>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 1</span>
-            <h3>Crear una aplicación web estática</h3>
-
-            <p>Primero creamos el directorio de publicación:</p>
-
-            <pre><code>mkdir -p /var/www/empresa</code></pre>
-
-            <p>Creamos el archivo principal:</p>
-
-            <pre><code>nano /var/www/empresa/index.html</code></pre>
-
-            <p>Contenido del archivo:</p>
-
-            <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="es"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;title&gt;Mi aplicación&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;Aplicación desplegada&lt;/h1&gt;
-    &lt;p&gt;El servidor Apache está funcionando.&lt;/p&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-
-            <p>
-                Configuramos los permisos para una web estática:
-            </p>
-
-            <pre><code>chown -R root:root /var/www/empresa
-
-find /var/www/empresa -type d -exec chmod 755 {} \;
-
-find /var/www/empresa -type f -exec chmod 644 {} \;</code></pre>
-        </div>
-
-        <p>Después configuramos un sitio virtual:</p>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 2</span>
-            <h3>Configurar el VirtualHost de la aplicación</h3>
-
-            <pre><code>&lt;VirtualHost *:80&gt;
+    <pre><code>&lt;VirtualHost *:80&gt;
     ServerName empresa.local
-    DocumentRoot /var/www/empresa
 
-    &lt;Directory /var/www/empresa&gt;
+    DocumentRoot /var/www/empresa/public
+
+    &lt;Directory /var/www/empresa/public&gt;
         Options -Indexes
         AllowOverride None
         Require all granted
@@ -530,1245 +423,860 @@ find /var/www/empresa -type f -exec chmod 644 {} \;</code></pre>
     CustomLog ${APACHE_LOG_DIR}/empresa_access.log combined
 &lt;/VirtualHost&gt;</code></pre>
 
-            <p>
-                Guardamos el archivo en
-                <code>/etc/apache2/sites-available/empresa.conf</code>
-                y habilitamos el sitio:
-            </p>
+    <p>
+        Para habilitar el sitio:
+    </p>
 
-            <pre><code>a2ensite empresa.conf
-apache2ctl configtest
-systemctl reload apache2</code></pre>
+    <pre><code>sudo a2ensite empresa.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2</code></pre>
 
-            <p>
-                Si el nombre <code>empresa.local</code> está correctamente
-                configurado en el sistema de resolución de nombres del cliente,
-                podremos acceder a:
-            </p>
+    <h3>3.6. Comprobación del despliegue</h3>
 
-            <pre><code>http://empresa.local</code></pre>
-        </div>
+    <p>
+        Una vez desplegada la aplicación es necesario comprobar:
+    </p>
 
-        <div class="example">
-            <span class="block-label">Prueba desde terminal con curl</span>
-            <h3>Comprobar el despliegue de la aplicación</h3>
+    <ul>
+        <li>Que Apache está funcionando.</li>
+        <li>Que el dominio resuelve correctamente.</li>
+        <li>Que la aplicación se muestra en el navegador.</li>
+        <li>Que los recursos CSS, JavaScript e imágenes se cargan.</li>
+        <li>Que las conexiones a la base de datos funcionan.</li>
+        <li>Que los permisos son adecuados.</li>
+        <li>Que no aparecen errores en los registros.</li>
+    </ul>
 
-            <p>
-                Desde Debian podemos comprobar el funcionamiento del sitio
-                utilizando la cabecera <code>Host</code>:
-            </p>
+    <div class="ejemplo">
+        <h3>Ejemplo: comprobación de errores</h3>
 
-            <pre><code>curl -i -H "Host: empresa.local" http://localhost/</code></pre>
-
-            <p>
-                También podemos comprobar únicamente las cabeceras:
-            </p>
-
-            <pre><code>curl -I -H "Host: empresa.local" http://localhost/</code></pre>
-
-            <p>
-                Si el despliegue es correcto, deberíamos obtener una respuesta
-                <code>200 OK</code>.
-            </p>
-        </div>
-
-        <h3>7.4. Despliegue de aplicaciones dinámicas</h3>
+        <pre><code>sudo tail -f /var/log/apache2/error.log</code></pre>
 
         <p>
-            Las aplicaciones dinámicas necesitan un entorno de ejecución
-            adecuado.
+            El comando permite visualizar los nuevos mensajes que se
+            incorporan al registro de errores mientras se realizan
+            peticiones a la aplicación.
         </p>
+    </div>
 
-        <p>
-            Por ejemplo, para una aplicación PHP con Apache podemos instalar
-            los componentes necesarios con:
-        </p>
+    <h2>4. Virtualización y contenedores</h2>
 
-        <pre><code>apt install php libapache2-mod-php php-mysql</code></pre>
+    <h3>4.1. Concepto de virtualización</h3>
 
-        <p>Los paquetes tienen las siguientes funciones:</p>
+    <p>
+        La virtualización permite ejecutar entornos informáticos aislados
+        sobre una misma infraestructura física. Cada entorno puede disponer
+        de su propio sistema operativo, aplicaciones y configuración.
+    </p>
 
-        <ul>
-            <li>
-                <code>php</code>: instala el intérprete de PHP.
-            </li>
-            <li>
-                <code>libapache2-mod-php</code>: permite integrar PHP
-                con Apache mediante su módulo correspondiente.
-            </li>
-            <li>
-                <code>php-mysql</code>: proporciona soporte para conectarse
-                a MySQL o MariaDB.
-            </li>
-        </ul>
+    <p>Existen diferentes tecnologías:</p>
 
-        <p>
-            Las necesidades exactas dependen de la aplicación y de la versión
-            de PHP requerida.
-        </p>
+    <ul>
+        <li><strong>Máquinas virtuales:</strong> ejecutan un sistema operativo completo sobre un hipervisor.</li>
+        <li><strong>Contenedores:</strong> ejecutan aplicaciones aisladas compartiendo el núcleo del sistema operativo anfitrión.</li>
+    </ul>
 
-        <p>
-            Una aplicación dinámica también puede ejecutarse mediante
-            un servidor de aplicaciones independiente, utilizando Apache
-            como proxy inverso. En ese caso, la configuración y las
-            dependencias serán diferentes.
-        </p>
+    <h3>4.2. Máquinas virtuales y contenedores</h3>
 
-        <h3>7.5. Configuración de la aplicación</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Característica</th>
+                <th>Máquina virtual</th>
+                <th>Contenedor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Sistema operativo</td>
+                <td>Incluye un sistema operativo completo.</td>
+                <td>Comparte el núcleo del anfitrión.</td>
+            </tr>
+            <tr>
+                <td>Consumo</td>
+                <td>Generalmente mayor.</td>
+                <td>Generalmente menor.</td>
+            </tr>
+            <tr>
+                <td>Arranque</td>
+                <td>Más lento.</td>
+                <td>Más rápido.</td>
+            </tr>
+            <tr>
+                <td>Aislamiento</td>
+                <td>A nivel de máquina virtual.</td>
+                <td>A nivel de procesos y recursos.</td>
+            </tr>
+            <tr>
+                <td>Uso habitual</td>
+                <td>Entornos completos y sistemas operativos diferentes.</td>
+                <td>Despliegue de aplicaciones y servicios.</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <p>Las aplicaciones pueden necesitar parámetros específicos, como:</p>
+    <h3>4.3. Introducción a Docker</h3>
 
-        <ul>
-            <li>Dirección del servidor de base de datos.</li>
-            <li>Nombre de la base de datos.</li>
-            <li>Usuario de conexión.</li>
-            <li>Claves de API.</li>
-            <li>Modo de ejecución.</li>
-            <li>Directorio de archivos temporales.</li>
-            <li>Configuración de correo electrónico.</li>
-            <li>URL pública de la aplicación.</li>
-        </ul>
+    <p>
+        Docker es una plataforma que permite crear, distribuir y ejecutar
+        aplicaciones mediante contenedores.
+    </p>
 
-        <p>
-            Estos valores deben configurarse de forma adecuada al entorno.
-        </p>
+    <p>
+        Un contenedor incorpora la aplicación y los componentes necesarios
+        para ejecutarla, lo que facilita reproducir el entorno en diferentes
+        equipos y servidores.
+    </p>
 
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                Las contraseñas y claves secretas no deben incorporarse
-                al repositorio del código ni publicarse dentro del directorio
-                web.
-            </p>
-            <p>
-                En una aplicación dinámica, los directorios de carga de archivos,
-                caché o sesiones pueden necesitar permisos de escritura.
-                Es preferible conceder esos permisos solo a los directorios
-                que realmente lo requieran.
-            </p>
-        </div>
+    <h4>Conceptos fundamentales</h4>
 
-        <h3>7.6. Comprobaciones posteriores al despliegue</h3>
+    <ul>
+        <li><strong>Imagen:</strong> plantilla que contiene el sistema de archivos y los componentes necesarios para ejecutar un servicio.</li>
+        <li><strong>Contenedor:</strong> instancia ejecutable de una imagen.</li>
+        <li><strong>Dockerfile:</strong> archivo que define cómo construir una imagen.</li>
+        <li><strong>Volumen:</strong> mecanismo para conservar datos fuera del ciclo de vida del contenedor.</li>
+        <li><strong>Red:</strong> permite la comunicación entre contenedores y otros sistemas.</li>
+        <li><strong>Registro:</strong> repositorio donde se almacenan y distribuyen imágenes.</li>
+    </ul>
 
-        <p>
-            Una vez desplegada la aplicación, debemos verificar que funciona
-            correctamente.
-        </p>
+    <h3>4.4. Comandos básicos de Docker</h3>
 
-        <p>Comandos útiles:</p>
+    <p>Descargar una imagen de Apache:</p>
 
-        <pre><code>apache2ctl configtest
-systemctl status apache2
-curl -I http://localhost
-tail -n 50 /var/log/apache2/error.log</code></pre>
+    <pre><code>docker pull httpd</code></pre>
 
-        <p>También debemos comprobar:</p>
+    <p>Consultar las imágenes disponibles:</p>
 
-        <ul>
-            <li>Que la página principal carga correctamente.</li>
-            <li>Que los recursos estáticos se sirven sin errores.</li>
-            <li>Que las rutas de la aplicación funcionan.</li>
-            <li>Que la conexión a la base de datos es correcta.</li>
-            <li>Que los permisos son adecuados.</li>
-            <li>Que HTTPS funciona, si está configurado.</li>
-            <li>Que no se muestran mensajes de error internos al usuario.</li>
-        </ul>
+    <pre><code>docker images</code></pre>
 
-        <div class="practice">
-            <span class="block-label">Ejercicio práctico no evaluable</span>
-            <h3>Ejercicio 2. Despliegue de una aplicación web</h3>
+    <p>Crear y ejecutar un contenedor:</p>
 
-            <ol>
-                <li>Despliega una aplicación estática en Debian.</li>
-                <li>Crea un sitio virtual para la aplicación.</li>
-                <li>Configura los permisos de los archivos.</li>
-                <li>Comprueba el acceso desde un cliente.</li>
-                <li>Realiza una petición utilizando <code>curl</code>.</li>
-                <li>Revisa los registros de Apache.</li>
-                <li>Documenta las operaciones realizadas.</li>
-            </ol>
-
-            <p>
-                Como ampliación, se puede desplegar una aplicación PHP
-                con conexión a una base de datos.
-            </p>
-        </div>
-    </section>
-
-
-    <!-- BLOQUE 8 -->
-    <section>
-        <h2>8. Virtualización, contenedores y Docker Compose</h2>
-
-        <h3>8.1. Virtualización y contenedores</h3>
-
-        <p>
-            La virtualización permite ejecutar entornos informáticos aislados
-            sobre una misma infraestructura física.
-        </p>
-
-        <p>Existen dos enfoques frecuentes:</p>
-
-        <h4>Máquinas virtuales</h4>
-
-        <p>
-            Una máquina virtual ejecuta un sistema operativo completo
-            sobre un hipervisor. Cada máquina dispone de recursos
-            virtualizados, como CPU, memoria, almacenamiento y red.
-        </p>
-
-        <h4>Contenedores</h4>
-
-        <p>
-            Un contenedor ejecuta una aplicación y sus dependencias
-            de forma aislada, compartiendo el kernel del sistema operativo
-            anfitrión.
-        </p>
-
-        <div class="knowledge">
-            <span class="block-label">Conocimiento clave</span>
-            <p>
-                Los contenedores suelen ser más ligeros que las máquinas
-                virtuales, aunque ambos enfoques tienen usos diferentes
-                y pueden combinarse.
-            </p>
-        </div>
-
-        <h3>8.2. Conceptos fundamentales de Docker</h3>
-
-        <p>
-            Docker es una plataforma que permite construir, distribuir
-            y ejecutar aplicaciones en contenedores.
-        </p>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Concepto</th>
-                    <th>Descripción</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Imagen</td>
-                    <td>Plantilla utilizada para crear contenedores.</td>
-                </tr>
-                <tr>
-                    <td>Contenedor</td>
-                    <td>Instancia ejecutable de una imagen.</td>
-                </tr>
-                <tr>
-                    <td>Dockerfile</td>
-                    <td>Archivo con las instrucciones para construir una imagen.</td>
-                </tr>
-                <tr>
-                    <td>Volumen</td>
-                    <td>Mecanismo para conservar datos fuera del ciclo de vida del contenedor.</td>
-                </tr>
-                <tr>
-                    <td>Red</td>
-                    <td>Permite la comunicación entre contenedores y otros servicios.</td>
-                </tr>
-                <tr>
-                    <td>Registro</td>
-                    <td>Servicio que almacena y distribuye imágenes.</td>
-                </tr>
-                <tr>
-                    <td>Docker Compose</td>
-                    <td>Herramienta para definir y gestionar aplicaciones con varios servicios.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <p>
-            Una imagen puede utilizarse para crear varios contenedores.
-            Cada contenedor tiene su propio ciclo de vida, aunque puede
-            compartir redes y volúmenes con otros.
-        </p>
-
-        <h3>8.3. Instalar y comprobar Docker</h3>
-
-        <p>
-            En un entorno Debian de laboratorio, una vez instalado Docker
-            desde una fuente adecuada, podemos comprobar su funcionamiento
-            con:
-        </p>
-
-        <pre><code>docker --version
-docker compose version
-docker run hello-world</code></pre>
-
-        <p>
-            La instalación de Docker Engine debe seguir las instrucciones
-            correspondientes a la versión de Debian utilizada y a la fuente
-            de paquetes elegida.
-        </p>
-
-        <p>
-            En un entorno de producción, conviene utilizar repositorios
-            oficiales o paquetes gestionados de forma controlada y mantener
-            Docker actualizado.
-        </p>
-
-        <h3>8.4. Desplegar Apache en un contenedor</h3>
-
-        <p>
-            Podemos ejecutar Apache mediante una imagen oficial basada
-            en HTTP Server.
-        </p>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 1</span>
-            <h3>Ejecutar un contenedor Apache</h3>
-
-            <pre><code>docker run -d \
-    --name web1 \
+    <pre><code>docker run -d \
+    --name servidor-web \
     -p 8080:80 \
-    httpd:2.4</code></pre>
+    httpd</code></pre>
 
-            <p>Significado de las opciones:</p>
+    <p>
+        En este ejemplo:
+    </p>
 
-            <ul>
-                <li><code>-d</code>: ejecuta el contenedor en segundo plano.</li>
-                <li><code>--name web1</code>: asigna el nombre web1.</li>
-                <li>
-                    <code>-p 8080:80</code>: publica el puerto 80 del
-                    contenedor en el puerto 8080 del anfitrión.
-                </li>
-                <li><code>httpd:2.4</code>: indica la imagen que se utilizará.</li>
-            </ul>
+    <ul>
+        <li><code>-d</code>: ejecuta el contenedor en segundo plano.</li>
+        <li><code>--name</code>: asigna un nombre al contenedor.</li>
+        <li><code>-p 8080:80</code>: relaciona el puerto 8080 del anfitrión con el puerto 80 del contenedor.</li>
+        <li><code>httpd</code>: imagen utilizada.</li>
+    </ul>
 
-            <p>Podemos acceder desde el navegador a:</p>
+    <p>
+        Para acceder al servidor se utiliza:
+        <code>http://localhost:8080</code>.
+    </p>
 
-            <pre><code>http://localhost:8080</code></pre>
+    <h4>Consultar y administrar contenedores</h4>
 
-            <p>
-                Si el navegador está en otro equipo, debemos sustituir
-                <code>localhost</code> por la dirección IP del anfitrión
-                Docker y asegurarnos de que el puerto está accesible.
-            </p>
-        </div>
-
-        <p>Comandos básicos para gestionar el contenedor:</p>
-
-        <pre><code># Mostrar contenedores en ejecución
+    <pre><code># Ver contenedores en ejecución
 docker ps
 
-# Mostrar todos los contenedores
+# Ver todos los contenedores
 docker ps -a
 
-# Consultar los registros
-docker logs web1
+# Detener un contenedor
+docker stop servidor-web
 
-# Detener el contenedor
-docker stop web1
+# Iniciar un contenedor
+docker start servidor-web
 
-# Iniciar un contenedor detenido
-docker start web1
+# Reiniciar un contenedor
+docker restart servidor-web
 
 # Eliminar un contenedor detenido
-docker rm web1</code></pre>
+docker rm servidor-web
 
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                <code>docker rm</code> elimina un contenedor detenido,
-                pero no elimina automáticamente la imagen de la que procede.
-            </p>
-        </div>
+# Consultar los registros
+docker logs servidor-web</code></pre>
 
-        <div class="example">
-            <span class="block-label">Prueba desde terminal con curl</span>
-            <h3>Comprobar Apache dentro del contenedor</h3>
+    <h3>4.5. Despliegue de una aplicación mediante volúmenes</h3>
 
-            <p>
-                Desde la máquina anfitriona podemos comprobar que el puerto
-                publicado responde:
-            </p>
+    <p>
+        Los volúmenes y montajes permiten compartir archivos entre el
+        sistema anfitrión y un contenedor. De esta forma se pueden
+        modificar los archivos de una aplicación sin tener que construir
+        una nueva imagen cada vez.
+    </p>
 
-            <pre><code>curl -I http://localhost:8080</code></pre>
+    <p>
+        Por ejemplo, si se dispone de una aplicación HTML en el directorio
+        <code>./web</code>:
+    </p>
 
-            <p>
-                Para obtener también el contenido de la página:
-            </p>
+    <pre><code>docker run -d \
+    --name web-empresa \
+    -p 8080:80 \
+    -v ./web:/usr/local/apache2/htdocs:ro \
+    httpd</code></pre>
 
-            <pre><code>curl -i http://localhost:8080</code></pre>
-        </div>
+    <p>
+        El contenido del directorio <code>web</code> del anfitrión se
+        muestra desde el servidor Apache del contenedor.
+        La opción <code>:ro</code> monta los archivos en modo lectura.
+    </p>
 
-        <h3>8.5. Crear una imagen propia con un Dockerfile</h3>
+    <h3>4.6. Construcción de imágenes con Dockerfile</h3>
 
-        <p>
-            Para desplegar nuestra propia web, podemos construir una imagen
-            que incorpore el contenido.
-        </p>
+    <p>
+        Un Dockerfile permite definir los pasos necesarios para construir
+        una imagen personalizada.
+    </p>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 2</span>
-            <h3>Crear una imagen personalizada de Apache</h3>
+    <div class="ejemplo">
+        <h3>Ejemplo: imagen Apache con una aplicación web</h3>
 
-            <p>Creamos un directorio de proyecto:</p>
+        <p>Estructura del proyecto:</p>
 
-            <pre><code>mkdir web-docker
-cd web-docker</code></pre>
+        <pre><code>proyecto/
+├── Dockerfile
+└── web/
+    ├── index.html
+    └── estilos.css</code></pre>
 
-            <p>Creamos un archivo <code>index.html</code>:</p>
+        <p>Contenido del Dockerfile:</p>
 
-            <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="es"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;title&gt;Web en Docker&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;Mi web en un contenedor&lt;/h1&gt;
-    &lt;p&gt;Apache está ejecutándose mediante Docker.&lt;/p&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
+        <pre><code>FROM httpd:2.4
 
-            <p>Creamos un archivo llamado <code>Dockerfile</code>:</p>
-
-            <pre><code>FROM httpd:2.4
-
-COPY index.html /usr/local/apache2/htdocs/index.html
+COPY ./web/ /usr/local/apache2/htdocs/
 
 EXPOSE 80</code></pre>
 
-            <p>Las instrucciones tienen las siguientes funciones:</p>
+        <p>Construir la imagen:</p>
 
-            <ul>
-                <li><code>FROM</code>: define la imagen base.</li>
-                <li>
-                    <code>COPY</code>: copia el archivo al directorio
-                    de publicación de Apache.
-                </li>
-                <li>
-                    <code>EXPOSE</code>: documenta el puerto utilizado
-                    por el servicio; por sí solo no publica el puerto
-                    en el anfitrión.
-                </li>
-            </ul>
+        <pre><code>docker build -t empresa-web .</code></pre>
 
-            <p>Construimos la imagen:</p>
+        <p>Ejecutar el contenedor:</p>
 
-            <pre><code>docker build -t mi-web:1.0 .</code></pre>
-
-            <p>Ejecutamos el contenedor:</p>
-
-            <pre><code>docker run -d \
-    --name mi-web \
+        <pre><code>docker run -d \
+    --name empresa \
     -p 8080:80 \
-    mi-web:1.0</code></pre>
-
-            <p>La web estará disponible en:</p>
-
-            <pre><code>http://localhost:8080</code></pre>
-        </div>
-
-        <div class="example">
-            <span class="block-label">Prueba desde terminal con curl</span>
-            <h3>Comprobar la imagen personalizada</h3>
-
-            <p>
-                Una vez iniciado el contenedor, podemos comprobar que
-                Apache sirve el archivo incorporado en la imagen:
-            </p>
-
-            <pre><code>curl -i http://localhost:8080</code></pre>
-
-            <p>
-                Deberíamos encontrar en la respuesta el texto
-                <code>Mi web en un contenedor</code>.
-            </p>
-        </div>
-
-        <h3>8.6. Volúmenes y persistencia</h3>
+    empresa-web</code></pre>
 
         <p>
-            Los contenedores son reemplazables. Si un contenedor se elimina,
-            los datos escritos exclusivamente en su capa de escritura
-            pueden perderse.
+            Al acceder a <code>http://localhost:8080</code> se mostrará
+            la página web incluida en la imagen.
         </p>
+    </div>
 
-        <p>
-            Los volúmenes permiten conservar datos fuera del ciclo de vida
-            de un contenedor.
-        </p>
+    <h3>4.7. Redes de Docker</h3>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 3</span>
-            <h3>Montar un directorio del anfitrión</h3>
+    <p>
+        Las redes permiten que varios contenedores se comuniquen entre sí.
+        Por ejemplo, una aplicación web puede necesitar comunicarse con
+        un contenedor que ejecuta MariaDB.
+    </p>
 
-            <p>
-                Para una web estática en desarrollo, podemos montar
-                un directorio del anfitrión:
-            </p>
+    <p>Crear una red:</p>
 
-            <pre><code>docker run -d \
-    --name web-volumen \
-    -p 8080:80 \
-    -v "$PWD":/usr/local/apache2/htdocs:ro \
-    httpd:2.4</code></pre>
+    <pre><code>docker network create red-empresa</code></pre>
 
-            <p>
-                La opción <code>:ro</code> monta el directorio como
-                solo lectura dentro del contenedor.
-            </p>
+    <p>Consultar las redes disponibles:</p>
 
-            <p>
-                Esto facilita modificar los archivos del anfitrión
-                sin reconstruir la imagen en cada cambio.
-            </p>
-        </div>
+    <pre><code>docker network ls</code></pre>
 
-        <p>
-            En producción, conviene elegir entre imágenes inmutables,
-            volúmenes o montajes de directorios según las necesidades
-            de la aplicación. Los datos persistentes deben tener
-            una estrategia de copia de seguridad.
-        </p>
+    <p>
+        Los contenedores conectados a una misma red pueden comunicarse
+        utilizando sus nombres de servicio o contenedor, según la
+        configuración de la red.
+    </p>
 
-        <h3>8.7. Redes de Docker</h3>
+    <h3>4.8. Docker Compose</h3>
 
-        <p>
-            Las redes permiten que varios contenedores se comuniquen
-            entre sí.
-        </p>
+    <p>
+        Docker Compose permite definir y gestionar varios servicios
+        relacionados mediante un archivo YAML, normalmente denominado
+        <code>compose.yaml</code>.
+    </p>
 
-        <p>
-            Por ejemplo, una aplicación web y una base de datos pueden
-            conectarse a una red privada de Docker sin publicar el puerto
-            de la base de datos en el anfitrión.
-        </p>
+    <p>
+        En lugar de ejecutar varios comandos independientes, se describe
+        la infraestructura completa en un único archivo.
+    </p>
 
-        <p>Podemos consultar las redes disponibles:</p>
+    <div class="ejemplo">
+        <h3>Ejemplo: Apache y MariaDB con Docker Compose</h3>
 
-        <pre><code>docker network ls</code></pre>
+        <p>Estructura del proyecto:</p>
 
-        <p>Crear una red:</p>
+        <pre><code>empresa/
+├── compose.yaml
+└── web/
+    └── index.html</code></pre>
 
-        <pre><code>docker network create red-web</code></pre>
+        <p>Archivo <code>compose.yaml</code>:</p>
 
-        <p>Conectar un contenedor a una red:</p>
+        <pre><code>services:
 
-        <pre><code>docker network connect red-web mi-web</code></pre>
-
-        <p>
-            En un despliegue real con varios servicios, es preferible
-            definir las redes dentro de Docker Compose para que
-            la infraestructura sea reproducible.
-        </p>
-
-        <h3>8.8. Docker Compose</h3>
-
-        <p>
-            Docker Compose permite describir una aplicación formada
-            por varios servicios en un archivo YAML.
-        </p>
-
-        <p>
-            Por ejemplo, podemos definir un servidor web Apache con
-            un volumen para el contenido estático.
-        </p>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 4</span>
-            <h3>Desplegar Apache con Docker Compose</h3>
-
-            <p>Creamos el archivo <code>compose.yaml</code>:</p>
-
-            <pre><code>services:
   web:
     image: httpd:2.4
-    container_name: web-compose
+    container_name: empresa-web
     ports:
       - "8080:80"
     volumes:
-      - ./html:/usr/local/apache2/htdocs:ro
-    restart: unless-stopped</code></pre>
+      - ./web:/usr/local/apache2/htdocs:ro
+    depends_on:
+      - db
 
-            <p>Creamos el directorio de contenido:</p>
+  db:
+    image: mariadb:11
+    container_name: empresa-db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: empresa
+      MARIADB_USER: empresa
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - datos_db:/var/lib/mysql
 
-            <pre><code>mkdir -p html</code></pre>
-
-            <p>Creamos <code>html/index.html</code>:</p>
-
-            <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html lang="es"&gt;
-&lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    &lt;title&gt;Docker Compose&lt;/title&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;h1&gt;Servidor web con Docker Compose&lt;/h1&gt;
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-
-            <p>Iniciamos el servicio:</p>
-
-            <pre><code>docker compose up -d</code></pre>
-
-            <p>Consultamos su estado:</p>
-
-            <pre><code>docker compose ps</code></pre>
-
-            <p>Consultamos los logs:</p>
-
-            <pre><code>docker compose logs -f web</code></pre>
-
-            <p>Detenemos y eliminamos los recursos del proyecto:</p>
-
-            <pre><code>docker compose down</code></pre>
-        </div>
+volumes:
+  datos_db:</code></pre>
 
         <p>
-            La opción <code>down</code> elimina los contenedores y las redes
-            creadas por Compose para el proyecto, pero normalmente conserva
-            los volúmenes nombrados salvo que se indique lo contrario.
-            Los archivos de la carpeta <code>html</code> permanecen
-            en el anfitrión.
+            Las contraseñas se obtienen de variables de entorno, por
+            ejemplo desde un archivo <code>.env</code> que no debe
+            publicarse en el repositorio.
         </p>
 
-        <div class="example">
-            <span class="block-label">Prueba desde terminal con curl</span>
-            <h3>Comprobar el servicio de Docker Compose</h3>
+        <p>Para iniciar los servicios:</p>
 
-            <p>
-                Una vez iniciado el proyecto, podemos comprobar que
-                el servidor web responde:
-            </p>
+        <pre><code>docker compose up -d</code></pre>
 
-            <pre><code>curl -i http://localhost:8080</code></pre>
+        <p>Consultar su estado:</p>
 
-            <p>
-                También podemos comprobar el estado del servicio:
-            </p>
+        <pre><code>docker compose ps</code></pre>
 
-            <pre><code>docker compose ps</code></pre>
-        </div>
+        <p>Consultar los registros:</p>
 
-        <h3>8.9. Contenedores y nube</h3>
+        <pre><code>docker compose logs</code></pre>
 
-        <p>
-            Los contenedores también pueden desplegarse en plataformas
-            de nube.
-        </p>
+        <p>Detener los servicios:</p>
 
-        <p>El proceso general suele ser:</p>
+        <pre><code>docker compose down</code></pre>
+    </div>
 
-        <ol>
-            <li>Construir la imagen de la aplicación.</li>
-            <li>Publicar la imagen en un registro.</li>
-            <li>Crear el servicio o contenedor en la plataforma elegida.</li>
-            <li>Configurar las variables de entorno y los secretos.</li>
-            <li>Asignar recursos y establecer las redes.</li>
-            <li>Configurar el acceso externo y HTTPS.</li>
-            <li>Configurar el almacenamiento persistente.</li>
-            <li>Establecer comprobaciones de salud, registros y monitorización.</li>
-        </ol>
+    <div class="advertencia">
+        <strong>Importante:</strong>
+        En producción no deben utilizarse contraseñas sencillas ni
+        publicarse archivos <code>.env</code>. También es necesario
+        gestionar las actualizaciones de imágenes, los permisos,
+        las copias de seguridad y la persistencia de los datos.
+        El ejemplo utiliza una imagen de MariaDB para ilustrar la
+        organización de servicios; Apache y MariaDB necesitan
+        configuración adicional para que una aplicación PHP pueda
+        comunicarse con la base de datos.
+    </div>
 
-        <p>
-            Una plataforma gestionada puede asumir parte de las tareas
-            de infraestructura, pero sigue siendo necesario controlar
-            los permisos, las actualizaciones, la configuración y los datos.
-        </p>
+    <h3>4.9. Introducción al despliegue en la nube</h3>
 
-        <div class="practice">
-            <span class="block-label">Ejercicio práctico no evaluable</span>
-            <h3>Ejercicio 3. Despliegue de Apache con Docker</h3>
+    <p>
+        La computación en la nube permite utilizar recursos informáticos
+        proporcionados por un proveedor externo, sin necesidad de disponer
+        de toda la infraestructura física.
+    </p>
 
-            <ol>
-                <li>Ejecuta Apache dentro de un contenedor.</li>
-                <li>Crea una imagen personalizada mediante un Dockerfile.</li>
-                <li>Publica el puerto del contenedor.</li>
-                <li>Comprueba el acceso utilizando <code>curl</code>.</li>
-                <li>Monta un directorio de contenido.</li>
-                <li>Crea un archivo <code>compose.yaml</code>.</li>
-                <li>Despliega el servicio con Docker Compose.</li>
-                <li>Consulta el estado y los logs.</li>
-                <li>Explica las diferencias entre una instalación tradicional y un servidor web en contenedor.</li>
-            </ol>
-        </div>
-    </section>
+    <p>Entre los servicios habituales se encuentran:</p>
 
+    <ul>
+        <li><strong>IaaS:</strong> infraestructura como servicio. Proporciona máquinas virtuales, redes y almacenamiento.</li>
+        <li><strong>PaaS:</strong> plataforma como servicio. Ofrece un entorno preparado para desplegar aplicaciones.</li>
+        <li><strong>SaaS:</strong> software como servicio. Proporciona aplicaciones completas accesibles a través de Internet.</li>
+        <li><strong>Contenedores gestionados:</strong> permiten ejecutar aplicaciones contenerizadas sin administrar directamente todos los servidores.</li>
+    </ul>
 
-    <!-- BLOQUE 9 -->
-    <section>
-        <h2>9. Gestión de logs, monitorización y análisis</h2>
+    <p>
+        Un despliegue en la nube puede incluir máquinas virtuales,
+        contenedores, bases de datos gestionadas, almacenamiento externo,
+        balanceadores de carga y servicios de monitorización.
+    </p>
 
-        <p>
-            <strong>Criterio de evaluación:</strong> CA2.10 — Instalar,
-            configurar y utilizar herramientas de gestión de logs
-            para su monitorización, consolidación y análisis en tiempo real.
-        </p>
+    <h2>5. Gestión y monitorización de logs</h2>
 
-        <p>
-            <strong>Contenidos:</strong> C2.10 — Conjuntos de herramientas
-            de gestión de logs y apoyo a la toma de decisiones.
-        </p>
+    <h3>5.1. Concepto de log</h3>
 
-        <h3>9.1. ¿Qué son los logs?</h3>
+    <p>
+        Un log o registro es un archivo o conjunto de datos donde se
+        almacenan acontecimientos producidos durante la ejecución de
+        un sistema o aplicación.
+    </p>
 
-        <p>
-            Los logs o registros son archivos o eventos que almacenan
-            información sobre el funcionamiento de un sistema.
-        </p>
+    <p>
+        Los registros permiten conocer qué ha sucedido en el servidor,
+        cuándo se ha producido un error, qué usuarios han realizado
+        peticiones y cómo ha respondido la aplicación.
+    </p>
 
-        <p>
-            En un servidor web, permiten conocer qué peticiones se reciben,
-            qué respuestas se generan y qué errores se producen.
-        </p>
+    <h3>5.2. Logs de Apache</h3>
 
-        <p>Los registros ayudan a:</p>
+    <p>
+        Apache utiliza principalmente dos tipos de registros:
+    </p>
 
-        <ul>
-            <li>Detectar fallos de configuración.</li>
-            <li>Investigar errores de las aplicaciones.</li>
-            <li>Identificar peticiones sospechosas.</li>
-            <li>Analizar el uso del servidor.</li>
-            <li>Medir la evolución del tráfico.</li>
-            <li>Detectar posibles incidentes de seguridad.</li>
-        </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Registro</th>
+                <th>Contenido</th>
+                <th>Ubicación habitual en Debian</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Access log</td>
+                <td>Peticiones recibidas, direcciones IP, recursos solicitados y códigos HTTP.</td>
+                <td><code>/var/log/apache2/access.log</code></td>
+            </tr>
+            <tr>
+                <td>Error log</td>
+                <td>Errores de ejecución, problemas de configuración y advertencias.</td>
+                <td><code>/var/log/apache2/error.log</code></td>
+            </tr>
+        </tbody>
+    </table>
 
-        <p>
-            Los logs no sustituyen a las métricas ni a las trazas de una
-            aplicación, aunque las tres fuentes pueden combinarse para
-            obtener una visión más completa del sistema.
-        </p>
+    <h3>5.3. Consultar los registros</h3>
 
-        <h3>9.2. Logs de Apache</h3>
+    <p>
+        Linux proporciona diferentes herramientas para consultar y analizar
+        archivos de registro.
+    </p>
 
-        <p>
-            En Debian, los registros de Apache se almacenan habitualmente en:
-        </p>
+    <h4>Visualizar el contenido</h4>
 
-        <pre><code>/var/log/apache2/</code></pre>
+    <pre><code>cat /var/log/apache2/access.log</code></pre>
 
-        <p>Los dos archivos principales son:</p>
+    <h4>Consultar las últimas líneas</h4>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Archivo</th>
-                    <th>Función</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>access.log</code></td>
-                    <td>Registra las peticiones recibidas.</td>
-                </tr>
-                <tr>
-                    <td><code>error.log</code></td>
-                    <td>Registra errores y otros mensajes del servidor.</td>
-                </tr>
-            </tbody>
-        </table>
+    <pre><code>tail -n 20 /var/log/apache2/access.log</code></pre>
 
-        <p>
-            Cada sitio virtual puede utilizar sus propios archivos de registro
-            mediante las directivas <code>CustomLog</code> y <code>ErrorLog</code>.
-        </p>
+    <h4>Monitorizar en tiempo real</h4>
 
-        <div class="example">
-            <span class="block-label">Ejemplo 1</span>
-            <h3>Configurar registros independientes para un VirtualHost</h3>
+    <pre><code>tail -f /var/log/apache2/access.log</code></pre>
 
-            <pre><code>&lt;VirtualHost *:80&gt;
+    <p>
+        Esta última opción permite observar las nuevas peticiones que
+        recibe Apache mientras se utiliza la aplicación.
+    </p>
+
+    <h4>Buscar errores HTTP</h4>
+
+    <pre><code>grep "404" /var/log/apache2/access.log</code></pre>
+
+    <p>
+        Este comando busca las líneas que contienen el código 404,
+        que indica que el recurso solicitado no se ha encontrado.
+    </p>
+
+    <h3>5.4. Códigos de estado HTTP</h3>
+
+    <p>
+        Los códigos HTTP permiten identificar el resultado de una petición.
+        Son especialmente útiles para analizar los registros de acceso.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Familia</th>
+                <th>Significado</th>
+                <th>Ejemplos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1xx</td>
+                <td>Respuestas informativas.</td>
+                <td>100 Continue</td>
+            </tr>
+            <tr>
+                <td>2xx</td>
+                <td>Petición procesada correctamente.</td>
+                <td>200 OK, 201 Created</td>
+            </tr>
+            <tr>
+                <td>3xx</td>
+                <td>Redirecciones.</td>
+                <td>301 Moved Permanently, 302 Found</td>
+            </tr>
+            <tr>
+                <td>4xx</td>
+                <td>Errores relacionados con la petición del cliente.</td>
+                <td>403 Forbidden, 404 Not Found</td>
+            </tr>
+            <tr>
+                <td>5xx</td>
+                <td>Errores internos del servidor.</td>
+                <td>500 Internal Server Error, 503 Service Unavailable</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>5.5. Configuración de registros por sitio virtual</h3>
+
+    <p>
+        Cuando Apache aloja diferentes sitios virtuales, es recomendable
+        mantener registros independientes para cada uno.
+    </p>
+
+    <pre><code>&lt;VirtualHost *:80&gt;
     ServerName empresa.local
-    DocumentRoot /var/www/empresa
+    DocumentRoot /var/www/empresa/public
 
     ErrorLog ${APACHE_LOG_DIR}/empresa_error.log
     CustomLog ${APACHE_LOG_DIR}/empresa_access.log combined
 &lt;/VirtualHost&gt;</code></pre>
 
-            <p>
-                Esta configuración permite separar los registros de la web
-                de los registros de otros sitios alojados en el mismo servidor.
-            </p>
-        </div>
+    <p>
+        De esta forma es posible analizar la actividad de cada aplicación
+        de manera independiente.
+    </p>
 
-        <h3>9.3. Interpretar el registro de accesos</h3>
+    <h3>5.6. Rotación de logs</h3>
 
-        <p>
-            Una línea habitual del formato <code>combined</code> tiene
-            una estructura semejante a esta:
-        </p>
+    <p>
+        Los registros pueden crecer continuamente y ocupar grandes
+        cantidades de espacio en disco. La rotación de logs permite
+        administrar su tamaño y conservar un histórico de actividad.
+    </p>
 
-        <pre><code>192.168.1.20 - - [20/Oct/2026:18:30:12 +0200] "GET /index.html HTTP/1.1" 200 1250 "-" "Mozilla/5.0"</code></pre>
+    <p>
+        En Debian se utiliza habitualmente <code>logrotate</code>.
+        Apache suele disponer de una configuración en:
+    </p>
 
-        <p>Podemos interpretar sus campos de la siguiente manera:</p>
+    <pre><code>/etc/logrotate.d/apache2</code></pre>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Campo</th>
-                    <th>Significado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>192.168.1.20</code></td>
-                    <td>Dirección del cliente registrada por Apache.</td>
-                </tr>
-                <tr>
-                    <td>Fecha y hora</td>
-                    <td>Momento de la petición.</td>
-                </tr>
-                <tr>
-                    <td><code>GET</code></td>
-                    <td>Método HTTP utilizado.</td>
-                </tr>
-                <tr>
-                    <td><code>/index.html</code></td>
-                    <td>Recurso solicitado.</td>
-                </tr>
-                <tr>
-                    <td><code>HTTP/1.1</code></td>
-                    <td>Versión del protocolo de la petición.</td>
-                </tr>
-                <tr>
-                    <td><code>200</code></td>
-                    <td>Código de respuesta HTTP.</td>
-                </tr>
-                <tr>
-                    <td><code>1250</code></td>
-                    <td>Tamaño de la respuesta en bytes, según el formato de registro.</td>
-                </tr>
-                <tr>
-                    <td><code>"-"</code></td>
-                    <td>No se ha registrado un referente en ese campo.</td>
-                </tr>
-                <tr>
-                    <td><code>Mozilla/5.0</code></td>
-                    <td>Cadena de agente de usuario del cliente.</td>
-                </tr>
-            </tbody>
-        </table>
+    <p>
+        Un ejemplo simplificado de configuración sería:
+    </p>
 
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                La dirección registrada no siempre corresponde a la IP original
-                del usuario. Si existen proxies inversos o balanceadores,
-                será necesario interpretar correctamente esa infraestructura.
-            </p>
-        </div>
-
-        <h3>9.4. Códigos de estado HTTP</h3>
-
-        <p>
-            Los códigos de estado ayudan a interpretar el resultado
-            de una petición.
-        </p>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Significado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><code>200 OK</code></td>
-                    <td>La petición se ha atendido correctamente.</td>
-                </tr>
-                <tr>
-                    <td><code>301 Moved Permanently</code></td>
-                    <td>Redirección permanente.</td>
-                </tr>
-                <tr>
-                    <td><code>302 Found</code></td>
-                    <td>Redirección temporal en el uso habitual.</td>
-                </tr>
-                <tr>
-                    <td><code>400 Bad Request</code></td>
-                    <td>Petición incorrecta.</td>
-                </tr>
-                <tr>
-                    <td><code>401 Unauthorized</code></td>
-                    <td>Se requieren credenciales válidas.</td>
-                </tr>
-                <tr>
-                    <td><code>403 Forbidden</code></td>
-                    <td>El acceso está prohibido.</td>
-                </tr>
-                <tr>
-                    <td><code>404 Not Found</code></td>
-                    <td>El recurso no se encuentra.</td>
-                </tr>
-                <tr>
-                    <td><code>500 Internal Server Error</code></td>
-                    <td>Error interno del servidor o de la aplicación.</td>
-                </tr>
-                <tr>
-                    <td><code>502 Bad Gateway</code></td>
-                    <td>Un proxy o pasarela ha recibido una respuesta no válida del servidor ascendente.</td>
-                </tr>
-                <tr>
-                    <td><code>503 Service Unavailable</code></td>
-                    <td>Servicio temporalmente no disponible.</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <p>
-            Una gran cantidad de respuestas 404 puede indicar enlaces rotos,
-            errores de configuración o intentos de búsqueda de recursos
-            inexistentes. No implica necesariamente un ataque.
-        </p>
-
-        <h3>9.5. Consultar los logs en tiempo real</h3>
-
-        <p>
-            Podemos utilizar diferentes comandos para consultar los registros
-            de Apache desde la terminal.
-        </p>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 2</span>
-            <h3>Consultar los registros de Apache</h3>
-
-            <p>Para visualizar las últimas líneas del registro de accesos:</p>
-
-            <pre><code>tail -f /var/log/apache2/access.log</code></pre>
-
-            <p>Para consultar los errores:</p>
-
-            <pre><code>tail -f /var/log/apache2/error.log</code></pre>
-
-            <p>Para mostrar las últimas 100 líneas:</p>
-
-            <pre><code>tail -n 100 /var/log/apache2/access.log</code></pre>
-        </div>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 3</span>
-            <h3>Buscar respuestas 404</h3>
-
-            <p>
-                Para buscar respuestas con código 404 en un registro
-                que utilice el formato habitual de Apache:
-            </p>
-
-            <pre><code>grep '" 404 ' /var/log/apache2/access.log</code></pre>
-        </div>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 4</span>
-            <h3>Contar las peticiones por dirección IP</h3>
-
-            <p>
-                Podemos agrupar las líneas por el primer campo y mostrar
-                primero las direcciones que aparecen con mayor frecuencia:
-            </p>
-
-            <pre><code>awk '{print $1}' /var/log/apache2/access.log | sort | uniq -c | sort -nr</code></pre>
-
-            <p>
-                Este comando permite identificar las direcciones IP que
-                aparecen con mayor frecuencia en el registro.
-            </p>
-        </div>
-
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                El resultado debe interpretarse con cuidado: una dirección IP
-                puede corresponder a un proxy, una red compartida o un sistema
-                automatizado legítimo.
-            </p>
-        </div>
-
-        <h3>9.6. Rotación de logs</h3>
-
-        <p>
-            Los registros pueden crecer mucho y ocupar espacio en disco.
-        </p>
-
-        <p>
-            La rotación de logs permite archivar los registros antiguos,
-            iniciar nuevos archivos y eliminar o comprimir registros
-            que superen una determinada antigüedad.
-        </p>
-
-        <p>
-            En Debian suele utilizarse <code>logrotate</code>, que puede
-            configurarse para Apache.
-        </p>
-
-        <p>Comprobamos si está instalado:</p>
-
-        <pre><code>dpkg -l logrotate</code></pre>
-
-        <p>Podemos revisar la configuración específica:</p>
-
-        <pre><code>cat /etc/logrotate.d/apache2</code></pre>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 5</span>
-            <h3>Ejemplo de configuración de logrotate</h3>
-
-            <pre><code>/var/log/apache2/*.log {
-    daily
-    missingok
-    rotate 14
+    <pre><code>/var/log/apache2/*.log {
+    weekly
+    rotate 8
     compress
     delaycompress
+    missingok
     notifempty
-    create 640 root adm
     sharedscripts
     postrotate
-        if pgrep -x apache2 > /dev/null; then
-            systemctl reload apache2 > /dev/null 2>&1 || true
+        if systemctl is-active --quiet apache2; then
+            systemctl reload apache2
         fi
     endscript
 }</code></pre>
 
-            <p>En esta configuración:</p>
+    <p>
+        En este ejemplo:
+    </p>
 
-            <ul>
-                <li><code>daily</code>: solicita una rotación diaria.</li>
-                <li><code>rotate 14</code>: conserva hasta 14 archivos rotados.</li>
-                <li><code>compress</code>: comprime los archivos rotados.</li>
-                <li><code>delaycompress</code>: retrasa la compresión del archivo más reciente.</li>
-                <li><code>notifempty</code>: no rota archivos vacíos.</li>
-                <li><code>create</code>: define los permisos y el propietario de los nuevos archivos.</li>
-            </ul>
-        </div>
+    <ul>
+        <li><code>weekly</code>: realiza la rotación semanalmente.</li>
+        <li><code>rotate 8</code>: conserva ocho archivos rotados.</li>
+        <li><code>compress</code>: comprime los registros antiguos.</li>
+        <li><code>delaycompress</code>: retrasa la compresión del último archivo rotado.</li>
+        <li><code>missingok</code>: no genera errores si el archivo no existe.</li>
+        <li><code>notifempty</code>: no rota archivos vacíos.</li>
+    </ul>
 
-        <p>
-            La política exacta depende de la distribución, el volumen
-            de tráfico y las necesidades de conservación. Es preferible
-            revisar la configuración ya proporcionada por Debian antes
-            de modificarla.
-        </p>
+    <h3>5.7. Monitorización del servidor</h3>
 
-        <h3>9.7. Monitorización del servidor</h3>
+    <p>
+        La monitorización consiste en observar continuamente el estado
+        y el comportamiento de un sistema para detectar problemas,
+        medir su rendimiento y anticiparse a posibles incidencias.
+    </p>
 
-        <p>
-            La monitorización consiste en observar el estado del sistema
-            de manera continuada para detectar problemas y conocer
-            su rendimiento.
-        </p>
+    <p>Algunos parámetros importantes son:</p>
 
-        <p>Podemos monitorizar diferentes aspectos:</p>
+    <ul>
+        <li>Uso de CPU.</li>
+        <li>Memoria RAM disponible.</li>
+        <li>Espacio libre en disco.</li>
+        <li>Número de conexiones activas.</li>
+        <li>Peticiones HTTP recibidas.</li>
+        <li>Tiempo de respuesta.</li>
+        <li>Errores HTTP 4xx y 5xx.</li>
+        <li>Disponibilidad del servicio.</li>
+    </ul>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Elemento</th>
-                    <th>Qué se puede observar</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>CPU</td>
-                    <td>Uso del procesador.</td>
-                </tr>
-                <tr>
-                    <td>Memoria</td>
-                    <td>Memoria disponible y consumo de los procesos.</td>
-                </tr>
-                <tr>
-                    <td>Disco</td>
-                    <td>Espacio libre y crecimiento de los logs.</td>
-                </tr>
-                <tr>
-                    <td>Red</td>
-                    <td>Tráfico, conexiones y errores de comunicación.</td>
-                </tr>
-                <tr>
-                    <td>Apache</td>
-                    <td>Estado del servicio, peticiones y errores.</td>
-                </tr>
-                <tr>
-                    <td>Aplicación</td>
-                    <td>Tiempo de respuesta, errores y disponibilidad.</td>
-                </tr>
-                <tr>
-                    <td>Contenedores</td>
-                    <td>Estado, consumo de recursos y reinicios.</td>
-                </tr>
-            </tbody>
-        </table>
+    <h4>Herramientas básicas de Linux</h4>
 
-        <p>Algunas herramientas básicas de Linux son:</p>
-
-        <pre><code># Procesos y consumo de recursos
-top
-
-# Memoria
+    <pre><code># Uso de memoria
 free -h
 
-# Espacio en disco
+# Espacio disponible
 df -h
 
-# Tiempo de actividad del sistema
-uptime
+# Procesos en ejecución
+top
 
 # Estado del servicio Apache
-systemctl status apache2</code></pre>
+systemctl status apache2
 
-        <p>
-            Estas herramientas permiten realizar comprobaciones manuales,
-            aunque no proporcionan por sí solas una plataforma centralizada
-            de monitorización.
-        </p>
+# Conexiones de red
+ss -tulpen</code></pre>
 
-        <h3>9.8. Herramientas de análisis y centralización</h3>
+    <h3>5.8. Herramientas de análisis de logs</h3>
 
-        <p>
-            Cuando existen varios servidores, revisar los archivos de forma
-            manual resulta poco eficiente. Por ello pueden utilizarse
-            herramientas que recojan, almacenen, busquen y representen
-            los registros de manera centralizada.
-        </p>
+    <p>
+        Cuando un servidor genera miles o millones de registros, la consulta
+        manual deja de ser suficiente. Existen herramientas que permiten
+        recopilar, procesar, visualizar y analizar grandes volúmenes de datos.
+    </p>
 
-        <h4>GoAccess</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Herramienta</th>
+                <th>Funcionalidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>GoAccess</td>
+                <td>Analiza registros de servidores web y genera informes estadísticos y visualizaciones.</td>
+            </tr>
+            <tr>
+                <td>ELK Stack</td>
+                <td>Elasticsearch, Logstash y Kibana permiten almacenar, procesar y visualizar registros.</td>
+            </tr>
+            <tr>
+                <td>Prometheus</td>
+                <td>Recopila y almacena métricas para monitorizar sistemas y servicios.</td>
+            </tr>
+            <tr>
+                <td>Grafana</td>
+                <td>Permite crear paneles de visualización de métricas y datos.</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <p>
-            Analizador de logs web que permite obtener estadísticas sobre
-            visitas, recursos solicitados, códigos HTTP, agentes de usuario
-            y otras métricas. Puede utilizarse desde terminal o generar
-            informes HTML.
-        </p>
+    <h3>5.9. Análisis de logs con GoAccess</h3>
 
-        <h4>Grafana</h4>
+    <p>
+        GoAccess es una herramienta de análisis de registros web que
+        permite obtener información estadística sobre el uso de un
+        servidor Apache.
+    </p>
 
-        <p>
-            Plataforma para visualizar métricas y otras fuentes de datos
-            mediante paneles. Se utiliza habitualmente junto con sistemas
-            de recopilación y almacenamiento de métricas o logs.
-        </p>
+    <p>Instalación en Debian:</p>
 
-        <h4>Prometheus</h4>
+    <pre><code>sudo apt update
+sudo apt install goaccess</code></pre>
 
-        <p>
-            Sistema de monitorización orientado a métricas temporales,
-            consultas y alertas. Puede recoger métricas de servicios
-            y sistemas mediante exportadores.
-        </p>
+    <p>Generar un informe en HTML:</p>
 
-        <h4>Elastic Stack</h4>
-
-        <p>
-            Conjunto de herramientas que permite recopilar, indexar,
-            buscar, analizar y visualizar grandes volúmenes de datos,
-            incluidos registros de servidores web.
-        </p>
-
-        <div class="knowledge">
-            <span class="block-label">Conocimiento clave</span>
-            <p>
-                Estas herramientas tienen finalidades relacionadas,
-                pero no idénticas:
-            </p>
-            <ul>
-                <li>GoAccess está especializado en analizar registros web.</li>
-                <li>Prometheus se centra en métricas.</li>
-                <li>Grafana permite visualizar diferentes fuentes de datos.</li>
-                <li>Elastic Stack ofrece capacidades de indexación y búsqueda de registros a gran escala.</li>
-            </ul>
-        </div>
-
-        <h3>9.9. Ejemplo de análisis con GoAccess</h3>
-
-        <p>
-            En Debian podemos instalar GoAccess mediante APT si está
-            disponible en los repositorios configurados:
-        </p>
-
-        <pre><code>apt update
-apt install goaccess</code></pre>
-
-        <div class="example">
-            <span class="block-label">Ejemplo 6</span>
-            <h3>Generar un informe HTML de Apache</h3>
-
-            <p>
-                Para analizar el registro de accesos de Apache y generar
-                un informe HTML:
-            </p>
-
-            <pre><code>goaccess /var/log/apache2/access.log \
+    <pre><code>sudo goaccess \
+    /var/log/apache2/access.log \
     --log-format=COMBINED \
-    -o informe.html</code></pre>
+    -o /var/www/html/informe.html</code></pre>
 
-            <p>
-                El archivo <code>informe.html</code> contiene un informe
-                estadístico de las peticiones registradas.
-            </p>
-        </div>
+    <p>
+        El archivo generado contiene información sobre:
+    </p>
 
-        <div class="knowledge">
-            <span class="block-label">Importante</span>
-            <p>
-                El informe debe publicarse o consultarse de forma segura,
-                ya que los registros pueden contener información sobre
-                usuarios, direcciones IP, rutas y parámetros de las peticiones.
-            </p>
-            <p>
-                No conviene dejar el informe accesible públicamente
-                sin protección.
-            </p>
-        </div>
+    <ul>
+        <li>Número de peticiones realizadas.</li>
+        <li>Visitantes y direcciones IP.</li>
+        <li>Recursos más solicitados.</li>
+        <li>Códigos de estado HTTP.</li>
+        <li>Navegadores y sistemas operativos.</li>
+        <li>Distribución temporal de las peticiones.</li>
+    </ul>
 
-        <h3>9.10. Big Data y toma de decisiones</h3>
+    <div class="advertencia">
+        <strong>Precaución:</strong>
+        Los informes de análisis pueden contener información sensible
+        sobre la actividad de los usuarios. No deben publicarse sin
+        aplicar las medidas de acceso y protección adecuadas.
+    </div>
+
+    <h3>5.10. Big Data y análisis de registros</h3>
+
+    <p>
+        En infraestructuras grandes, los servidores pueden generar una
+        cantidad de registros que requiere herramientas especializadas
+        para su almacenamiento y análisis.
+    </p>
+
+    <p>
+        El análisis de grandes volúmenes de logs permite:
+    </p>
+
+    <ul>
+        <li>Identificar patrones de acceso.</li>
+        <li>Detectar comportamientos anómalos.</li>
+        <li>Localizar errores frecuentes.</li>
+        <li>Analizar la evolución del tráfico.</li>
+        <li>Identificar recursos con mayor demanda.</li>
+        <li>Mejorar la capacidad y el rendimiento de la infraestructura.</li>
+    </ul>
+
+    <p>
+        Por ejemplo, un incremento repentino de respuestas HTTP 500 puede
+        indicar un problema en la aplicación. Un elevado número de
+        respuestas 404 puede señalar enlaces incorrectos o intentos
+        de localizar recursos inexistentes.
+    </p>
+
+    <div class="ejemplo">
+        <h3>Ejemplo: análisis de incidencias</h3>
 
         <p>
-            Cuando una infraestructura recibe millones de peticiones,
-            los registros pueden alcanzar volúmenes muy grandes.
+            Un administrador observa que el número de errores 500 aumenta
+            durante las horas de mayor actividad.
         </p>
 
-        <p>
-            Las técnicas de análisis de datos permiten identificar patrones
-            y tendencias que resultarían difíciles de observar manualmente.
-        </p>
+        <ol>
+            <li>Consulta los registros de acceso para localizar las peticiones afectadas.</li>
+            <li>Revisa el registro de errores de Apache.</li>
+            <li>Comprueba el estado de los procesos y el uso de memoria.</li>
+            <li>Identifica si el problema está relacionado con la aplicación, la base de datos o los recursos del servidor.</li>
+            <li>Aplica las medidas correctoras y comprueba si disminuyen los errores.</li>
+        </ol>
+    </div>
 
-        <p>Por ejemplo:</p>
+    <hr>
 
-        <ul>
-            <li>Detectar un aumento repentino de errores HTTP.</li>
-            <li>Identificar las rutas que generan más tráfico.</li>
-            <li>Comparar el número de peticiones entre periodos.</li>
-            <li>Localizar horas de mayor demanda.</li>
-            <li>Detectar patrones de solicitudes anómalas.</li>
-            <li>Estimar necesidades futuras de recursos.</li>
-        </ul>
+    <h2>6. Ejercicios prácticos de repaso</h2>
 
-        <p>
-            El análisis debe tener en cuenta la calidad de los datos,
-            los posibles falsos positivos, la privacidad y el contexto
-            de la infraestructura.
-        </p>
+    <p>
+        Los siguientes ejercicios permiten practicar los principales
+        procedimientos estudiados en este bloque.
+    </p>
 
-        <p>
-            Una frecuencia elevada de peticiones desde una misma IP,
-            por ejemplo, no demuestra por sí sola que exista un ataque.
-        </p>
+    <h3>Ejercicio 1. Aplicación de medidas de seguridad</h3>
 
-        <div class="practice">
-            <span class="block-label">Ejercicio práctico no evaluable</span>
-            <h3>Ejercicio 4. Gestión y análisis de logs</h3>
+    <p>
+        Sobre un servidor Apache instalado en Debian, realiza una revisión
+        de seguridad que incluya la ocultación de información del servidor,
+        la desactivación del listado de directorios y la revisión de los
+        permisos de una aplicación web.
+    </p>
 
-            <ol>
-                <li>Localiza los logs de Apache.</li>
-                <li>Genera peticiones correctas e incorrectas para producir diferentes códigos HTTP.</li>
-                <li>Consulta los logs en tiempo real.</li>
-                <li>Busca respuestas 404 y 500.</li>
-                <li>Analiza las IP que más aparecen en los registros.</li>
-                <li>Revisa la configuración de logrotate.</li>
-                <li>Genera un informe con GoAccess.</li>
-                <li>Redacta conclusiones sobre el funcionamiento del servidor.</li>
-            </ol>
-        </div>
-    </section>
+    <p>
+        Comprueba que Apache sigue funcionando correctamente después
+        de aplicar los cambios.
+    </p>
+
+    <h3>Ejercicio 2. Documentación técnica</h3>
+
+    <p>
+        Elabora un inventario técnico de un servidor web que incluya
+        información del sistema operativo, versión de Apache, hosts
+        virtuales, directorios de aplicaciones, configuración de seguridad,
+        certificados, registros y comandos de administración.
+    </p>
+
+    <h3>Ejercicio 3. Despliegue de una aplicación web</h3>
+
+    <p>
+        Despliega una aplicación web en Apache utilizando un VirtualHost
+        propio. Configura su directorio público, instala las dependencias
+        necesarias y comprueba su funcionamiento desde un navegador.
+    </p>
+
+    <h3>Ejercicio 4. Despliegue mediante Docker</h3>
+
+    <p>
+        Crea un Dockerfile para generar una imagen personalizada de Apache
+        que incluya una aplicación web. Construye la imagen, ejecuta un
+        contenedor y comprueba el acceso desde el navegador.
+    </p>
+
+    <h3>Ejercicio 5. Infraestructura con Docker Compose</h3>
+
+    <p>
+        Define mediante Docker Compose una infraestructura formada por
+        un servidor web y una base de datos MariaDB. Configura los
+        servicios, la comunicación entre ellos y la persistencia de
+        los datos.
+    </p>
+
+    <h3>Ejercicio 6. Análisis de registros</h3>
+
+    <p>
+        Genera diferentes peticiones a un servidor Apache, incluyendo
+        accesos correctos y solicitudes a recursos inexistentes.
+        Consulta los registros, identifica los códigos HTTP y genera
+        un informe estadístico utilizando GoAccess.
+    </p>
+
+    <h2>7. Resumen de conceptos fundamentales</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Concepto</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Hardening</td>
+                <td>Aplicación de medidas para reducir las vulnerabilidades del servidor.</td>
+            </tr>
+            <tr>
+                <td>Documentación técnica</td>
+                <td>Registro de la configuración, administración y mantenimiento del sistema.</td>
+            </tr>
+            <tr>
+                <td>Despliegue</td>
+                <td>Preparación e instalación de una aplicación en un entorno servidor.</td>
+            </tr>
+            <tr>
+                <td>Virtualización</td>
+                <td>Creación de entornos informáticos aislados sobre una infraestructura física.</td>
+            </tr>
+            <tr>
+                <td>Imagen Docker</td>
+                <td>Plantilla utilizada para crear contenedores.</td>
+            </tr>
+            <tr>
+                <td>Contenedor</td>
+                <td>Instancia ejecutable y aislada de una imagen.</td>
+            </tr>
+            <tr>
+                <td>Dockerfile</td>
+                <td>Archivo que define cómo construir una imagen.</td>
+            </tr>
+            <tr>
+                <td>Docker Compose</td>
+                <td>Herramienta para definir y gestionar aplicaciones con varios servicios.</td>
+            </tr>
+            <tr>
+                <td>Volumen</td>
+                <td>Mecanismo para conservar datos fuera del ciclo de vida del contenedor.</td>
+            </tr>
+            <tr>
+                <td>Log</td>
+                <td>Registro de acontecimientos producidos por un sistema o aplicación.</td>
+            </tr>
+            <tr>
+                <td>Rotación de logs</td>
+                <td>Proceso de administración y conservación de registros.</td>
+            </tr>
+            <tr>
+                <td>Monitorización</td>
+                <td>Supervisión del estado, rendimiento y disponibilidad del servidor.</td>
+            </tr>
+            <tr>
+                <td>GoAccess</td>
+                <td>Herramienta para analizar registros de servidores web.</td>
+            </tr>
+            <tr>
+                <td>Big Data</td>
+                <td>Tratamiento y análisis de grandes volúmenes de datos.</td>
+            </tr>
+        </tbody>
+    </table>
 
 </main>
-</div>
-
-<footer class="site-footer">Apuntes de clase</footer>
 
 </body>
 </html>
